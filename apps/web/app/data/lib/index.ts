@@ -10,10 +10,19 @@ let airports: StaticAirport[] = [];
 let pilotId: string = "";
 
 export async function init(pilot: PilotLong, trackPoints: Required<TrackPoint>[]): Promise<void> {
-	airports = await initAirports(pilot);
+	mapService.resetMap();
 
-	mapService.setFeatures({ airports, trackPoints, pilots: [getPilotShort(pilot, trackPoints[0])], sunTime: new Date(trackPoints[0].timestamp) });
-	mapService.setClickedFeature("pilot", pilot.id, true);
+	airports = await initAirports(pilot);
+	await mapService.setFeatures({
+		airports,
+		trackPoints,
+		pilots: [getPilotShort(pilot, trackPoints[0])],
+		sunTime: new Date(trackPoints[0].timestamp),
+		autoTrackId: pilot.id,
+	});
+
+	mapService.focusFeatures({ airports: airports.map((a) => a.id) });
+	mapService.addClickFeature("pilot", pilot.id, true);
 	mapService.fitFeatures({ airports: airports.map((a) => a.id), rememberView: false });
 
 	pilotId = pilot.id;

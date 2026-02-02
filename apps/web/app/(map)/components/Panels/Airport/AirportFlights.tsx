@@ -154,8 +154,8 @@ function ListItem({
 			onClick={() => {
 				router.push(`/pilot/${pilot.id}`);
 			}}
-			onPointerEnter={() => mapService.setHoveredFeature("pilot", pilot.id)}
-			onPointerLeave={() => mapService.setHoveredFeature()}
+			onPointerEnter={() => mapService.addHoverFeature("pilot", pilot.id)}
+			onPointerLeave={() => mapService.removeHoverFeature()}
 		>
 			<div className={`panel-airport-flights-delay ${getDelayColorFromDates(schedTime, estTime) ?? ""}`}></div>
 			<div className="panel-airport-flights-times">

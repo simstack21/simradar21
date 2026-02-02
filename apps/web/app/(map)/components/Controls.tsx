@@ -4,9 +4,9 @@ import { usePathname, useRouter } from "next/navigation";
 import "./Controls.css";
 import { useState } from "react";
 import Icon from "@/components/Icon/Icon";
+import { ToggleSwitch } from "@/components/Input/Input";
 import { useFiltersStore, useMapRotationStore, useMapVisibilityStore } from "@/storage/zustand";
 import { mapService } from "../lib";
-import { ToggleSwitch } from "@/components/Input/Input";
 
 export default function Controls() {
 	const router = useRouter();

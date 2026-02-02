@@ -21,10 +21,10 @@ import { PilotUser } from "@/components/Panel/Pilot/PilotUser";
 import { getSpriteOffset, setHeight } from "@/components/Panel/utils";
 import Spinner from "@/components/Spinner/Spinner";
 import { decodeTrackPoints } from "@/lib/map/tracks";
+import type { PilotPanelStatic } from "@/types/panels";
 import { fetchApi } from "@/utils/api";
 import { type WsData, type WsPresence, wsClient } from "@/utils/ws";
 import NotFoundPanel from "../shared/NotFound";
-import { PilotPanelStatic } from "@/types/panels";
 
 type AccordionSection = "info" | "charts" | "pilot" | null;
 type MapInteraction = "route" | "follow" | null;

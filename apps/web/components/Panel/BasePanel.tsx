@@ -3,16 +3,16 @@
 import "./BasePanel.css";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
-import { useFiltersStore, useMapVisibilityStore } from "@/storage/zustand";
+import { useFiltersStore } from "@/storage/zustand";
 
 export default function BasePanel({ children }: { children: React.ReactNode }) {
-	const pathname = usePathname();
+	const _pathname = usePathname();
 
-	const [open, setOpen] = useState(true);
+	const [open, _setOpen] = useState(true);
 
-	const prevPath = useRef<string | null>(null);
+	const _prevPath = useRef<string | null>(null);
 
-	const { isHidden } = useMapVisibilityStore();
+	// const { isHidden } = useMapVisibilityStore();
 	const { active } = useFiltersStore();
 
 	// useEffect(() => {

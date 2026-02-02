@@ -1,21 +1,21 @@
 "use client";
 
-import { decodeTrackPoints } from "@/lib/map/tracks";
-import { PilotPanelStatic } from "@/types/panels";
-import { fetchApi } from "@/utils/api";
-import { DeltaTrackPoint, PilotLong, TrackPoint } from "@sr24/types/interface";
+import type { DeltaTrackPoint, PilotLong, TrackPoint } from "@sr24/types/interface";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
-import { mapService } from "../../lib";
-import { getCachedAirline, getCachedAirport } from "@/storage/cache";
-import { wsClient, WsData, WsPresence } from "@/utils/ws";
-import Spinner from "@/components/Spinner/Spinner";
-import Icon, { getAirlineIcon } from "@/components/Icon/Icon";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import flightStatusSprite from "@/assets/images/sprites/flightStatusSprite.png";
+import Icon, { getAirlineIcon } from "@/components/Icon/Icon";
 import { getDelayColorFromDates, getSpriteOffset } from "@/components/Panel/utils";
-import { convertTime } from "@/utils/helpers";
+import Spinner from "@/components/Spinner/Spinner";
+import { decodeTrackPoints } from "@/lib/map/tracks";
+import { getCachedAirline, getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
+import type { PilotPanelStatic } from "@/types/panels";
+import { fetchApi } from "@/utils/api";
+import { convertTime } from "@/utils/helpers";
+import { type WsData, type WsPresence, wsClient } from "@/utils/ws";
+import { mapService } from "../../lib";
 
 export default function MultiPilotPanel({ id }: { id: string }) {
 	const router = useRouter();
@@ -33,7 +33,7 @@ export default function MultiPilotPanel({ id }: { id: string }) {
 
 	const lastMessageSeqRef = useRef<number | null>(null);
 
-	const [trackPoints, setTrackPoints] = useState<TrackPoint[]>([]);
+	const [_trackPoints, setTrackPoints] = useState<TrackPoint[]>([]);
 	const [staticData, setStaticData] = useState<PilotPanelStatic>({
 		airline: null,
 		departure: null,

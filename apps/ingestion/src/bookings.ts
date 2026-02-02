@@ -15,9 +15,10 @@ export async function updateBookingsData(): Promise<void> {
 	const parsedBookings = parseBookings(bookings);
 
 	const twoDaysFromNow = now + 2 * 24 * 60 * 60 * 1000;
+	const oneDayAgo = now - 1 * 24 * 60 * 60 * 1000;
 	const limitedBookings = parsedBookings.filter((booking) => {
 		const bookingStart = new Date(booking.start).getTime();
-		return bookingStart <= twoDaysFromNow;
+		return bookingStart <= twoDaysFromNow && bookingStart >= oneDayAgo;
 	});
 
 	const sortedBookings = limitedBookings.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());

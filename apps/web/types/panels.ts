@@ -1,4 +1,4 @@
-import { StaticAirline, StaticAirport } from "@sr24/types/db";
+import type { StaticAirline, StaticAirport } from "@sr24/types/db";
 
 export interface PilotPanelStatic {
 	airline: StaticAirline | null;

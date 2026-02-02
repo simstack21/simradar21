@@ -13,7 +13,6 @@ export function getStroke(start: TrackPoint, end: TrackPoint): Stroke {
 	return new Stroke({
 		color: `${start.color}90`,
 		width: 3,
-
 	});
 }
 

@@ -269,7 +269,7 @@ export class ControllerService {
 				if (!this.set.has(id)) {
 					toast.info(MessageBox, { data: { title: "Controller Disconnected", message: `A viewed controller has disconnected.` } });
 					this.highlighted.delete(id);
-					removedIds.push(`sector_${id}`);
+					removedIds.push(`sector_${id.replace(/^(tracon_|fir_|airport_)/, "")}`);
 				}
 			}
 		}
@@ -279,6 +279,11 @@ export class ControllerService {
 
 	public moveToFeature(id: string, view?: View | undefined): Feature<Point> | null {
 		const labelFeature = this.labelSource.getFeatureById(`sector_${id}`) as Feature<Point> | undefined;
+		if (labelFeature) {
+			const type = labelFeature.get("type");
+			this.addHighlighted(`${type}_${id}`);
+		}
+
 		if (!view) return labelFeature || null;
 
 		const geom = labelFeature?.getGeometry();
@@ -290,8 +295,6 @@ export class ControllerService {
 			duration: 200,
 			zoom: 7,
 		});
-
-		this.addHighlighted(id);
 
 		return labelFeature || null;
 	}

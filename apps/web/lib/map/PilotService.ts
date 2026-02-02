@@ -433,6 +433,9 @@ export class PilotService {
 			const item = this.map.get(id);
 			feature = item?.feature;
 		}
+		if (feature) {
+			this.addHighlighted(id);
+		}
 
 		if (!view) return feature || null;
 
@@ -445,8 +448,6 @@ export class PilotService {
 			duration: 200,
 			zoom: 10,
 		});
-
-		this.addHighlighted(id);
 
 		return feature || null;
 	}

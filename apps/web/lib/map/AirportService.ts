@@ -174,6 +174,9 @@ export class AirportService {
 		if (!feature) {
 			feature = this.map.get(id);
 		}
+		if (feature) {
+			this.addHighlighted(id);
+		}
 
 		if (!view) return feature || null;
 
@@ -186,8 +189,6 @@ export class AirportService {
 			duration: 200,
 			zoom: 8,
 		});
-
-		this.addHighlighted(id);
 
 		return feature || null;
 	}

@@ -2,8 +2,8 @@ import { MapLibreLayer } from "@geoblocks/ol-maplibre-layer";
 import type { StaticAirport } from "@sr24/types/db";
 import type { AirportDelta, AirportShort, ControllerDelta, ControllerMerged, PilotDelta, PilotShort, TrackPoint } from "@sr24/types/interface";
 import type { StyleSpecification } from "maplibre-gl";
-import { type Feature, MapBrowserEvent, Map as OlMap, type Overlay, View } from "ol";
-import { click, pointerMove } from "ol/events/condition";
+import { type Feature, type MapBrowserEvent, Map as OlMap, type Overlay, View } from "ol";
+import { click } from "ol/events/condition";
 import type BaseEvent from "ol/events/Event";
 import type { Extent } from "ol/extent";
 import type { Point } from "ol/geom";
@@ -230,19 +230,16 @@ export class MapService {
 			this.map?.on("pointermove", this.onPointerMove);
 		}
 
-		if (!this.options?.disableInteractions) {
-			this.clickSelect = new Select({
-				condition: click,
-				toggleCondition: () => this.multiView === true,
-				hitTolerance: MapService.HIT_TOLERANCE,
-				layers: MapService.LAYER_FILTER,
-				style: null,
-			});
-			this.map?.addInteraction(this.clickSelect);
-			this.clickSelect.on("select", this.onClickSelect);
-
-			this.map?.on("singleclick", this.onMapClick);
-		}
+		this.clickSelect = new Select({
+			condition: click,
+			toggleCondition: () => this.multiView === true,
+			hitTolerance: MapService.HIT_TOLERANCE,
+			layers: MapService.LAYER_FILTER,
+			style: null,
+		});
+		this.map?.addInteraction(this.clickSelect);
+		this.clickSelect.on("select", this.onClickSelect);
+		this.map?.on("singleclick", this.onMapClick);
 	}
 
 	public removeEventListeners() {
@@ -319,8 +316,6 @@ export class MapService {
 	private clearHover = () => {
 		if (!this.map) return;
 
-		this.map.getTargetElement().style.cursor = "";
-
 		if (this.hoverOverlay) {
 			this.map.removeOverlay(this.hoverOverlay);
 			this.hoverOverlay = null;
@@ -335,6 +330,8 @@ export class MapService {
 
 	private onClickSelect = async (e: SelectEvent) => {
 		const isManual = !!e.mapBrowserEvent;
+		if (isManual && this.options?.disableInteractions) return;
+
 		const map = e.mapBrowserEvent?.map || this.map;
 		const selected = (this.multiView ? e.selected : [e.selected[0]]) as (Feature<Point> | undefined)[];
 		const deselected = (this.multiView ? e.deselected : [e.deselected[0]]) as (Feature<Point> | undefined)[];
@@ -410,14 +407,15 @@ export class MapService {
 			}
 		}
 
-		if (selected[0]) {
+		if (selected.length > 0 && isManual) {
 			this.unfocusFeatures();
 		}
 	};
 
 	private onMapClick = (e: MapBrowserEvent) => {
-		const map = e.map;
+		if (this.options?.disableInteractions) return;
 
+		const map = e.map;
 		const hit = map.hasFeatureAtPixel(e.pixel, {
 			hitTolerance: MapService.HIT_TOLERANCE,
 			layerFilter: MapService.LAYER_FILTER,
@@ -575,8 +573,13 @@ export class MapService {
 		}
 
 		if (removedIds.length > 0) {
-			const path = Array.from(this.multiPath).join("%2C");
-			this.options?.onNavigate?.(`/multi/?selected=${path}`);
+			if (this.multiView) {
+				const path = Array.from(this.multiPath).join("%2C");
+				this.options?.onNavigate?.(this.multiPath.size > 0 ? `/multi/?selected=${path}` : `/multi`);
+			} else {
+				this.options?.onNavigate?.(`/`);
+				this.multiPath.clear();
+			}
 		}
 
 		this.renderFeatures();
@@ -727,8 +730,6 @@ export class MapService {
 
 	public addClickFeature(type?: string, id?: string, init?: boolean): void {
 		if (!id || !type) return;
-
-		this.unfocusFeatures();
 
 		const view = this.options?.disableCenterOnPageLoad || this.multiView === true || !init ? undefined : this.map?.getView();
 		let clickFeature: Feature<Point> | null = null;
