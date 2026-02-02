@@ -56,12 +56,11 @@ export class MapService {
 
 	private multiView: boolean | undefined;
 	private multiPath = new Set<string>();
-	private hoverToken = 0;
+	private hovering = false;
 	private hoverFeature: Feature<Point> | null = null;
-	private clickFeatures = new Map<string, Feature<Point>>();
 	private hoverOverlay: Overlay | null = null;
+	private clickFeatures = new Map<string, Feature<Point>>();
 	private clickOverlays = new Map<string, Overlay>();
-	private hoverSelect: Select | undefined;
 	private clickSelect: Select | undefined;
 
 	private lastExtent: Extent | null = null;
@@ -228,14 +227,7 @@ export class MapService {
 		const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
 		if (!isTouch) {
-			this.hoverSelect = new Select({
-				condition: pointerMove,
-				hitTolerance: MapService.HIT_TOLERANCE,
-				layers: MapService.LAYER_FILTER,
-				style: null,
-			});
-			this.map?.addInteraction(this.hoverSelect);
-			this.hoverSelect.on("select", this.onHoverSelect);
+			this.map?.on("pointermove", this.onPointerMove);
 		}
 
 		if (!this.options?.disableInteractions) {
@@ -255,11 +247,8 @@ export class MapService {
 
 	public removeEventListeners() {
 		this.map?.un("moveend", this.onMoveEnd);
-		if (this.hoverSelect) {
-			this.hoverSelect.un("select", this.onHoverSelect);
-			this.map?.removeInteraction(this.hoverSelect);
-			this.hoverSelect = undefined;
-		}
+		this.map?.un("pointermove", this.onPointerMove);
+
 		if (this.clickSelect) {
 			this.clickSelect.un("select", this.onClickSelect);
 			this.map?.removeInteraction(this.clickSelect);
@@ -279,39 +268,69 @@ export class MapService {
 		localStorage.setItem("simradar21-map-view", JSON.stringify({ center, zoom, rotation }));
 	};
 
-	private onHoverSelect = async (e: SelectEvent) => {
-		const token = ++this.hoverToken;
+	private onPointerMove = async (e: MapBrowserEvent) => {
+		if (this.hovering) return;
+		this.hovering = true;
 
-		const map = e.mapBrowserEvent?.map || this.map;
-		const selected = e.selected[0] as Feature<Point>;
+		const map = e.map;
+		const feature =
+			map.forEachFeatureAtPixel(e.pixel, (f) => f as Feature<Point>, {
+				hitTolerance: MapService.HIT_TOLERANCE,
+				layerFilter: MapService.LAYER_FILTER,
+			}) ?? null;
 
-		map.getTargetElement().style.cursor = selected ? "pointer" : "";
+		map.getTargetElement().style.cursor = feature ? "pointer" : "";
+
+		if (feature === this.hoverFeature) {
+			this.hovering = false;
+			return;
+		}
+
+		this.clearHover();
+
+		if (!feature) {
+			this.hovering = false;
+			return;
+		}
+
+		const id = feature.getId()?.toString() || null;
+		if (!id || this.clickFeatures.has(id)) {
+			this.hovering = false;
+			return;
+		}
+
+		feature.set("hovered", true);
+		this.controllerService.hoverSector(feature, true, "hovered");
+
+		const overlay = await createOverlay(feature, this.getCachedAirport(feature), this.getCachedController(feature));
+
+		if (this.hoverFeature !== null) {
+			this.hovering = false;
+			return;
+		}
+
+		this.hoverFeature = feature;
+		this.hoverOverlay = overlay;
+		map.addOverlay(overlay);
+
+		this.hovering = false;
+	};
+
+	private clearHover = () => {
+		if (!this.map) return;
+
+		this.map.getTargetElement().style.cursor = "";
 
 		if (this.hoverOverlay) {
-			map.removeOverlay(this.hoverOverlay);
+			this.map.removeOverlay(this.hoverOverlay);
 			this.hoverOverlay = null;
 		}
+
 		if (this.hoverFeature) {
 			this.hoverFeature.set("hovered", false);
 			this.controllerService.hoverSector(this.hoverFeature, false, "hovered");
 			this.hoverFeature = null;
 		}
-
-		const id = selected?.getId()?.toString() || null;
-		if (!id || this.clickFeatures.has(id)) return;
-
-		selected.set("hovered", true);
-		this.controllerService.hoverSector(selected, true, "hovered");
-
-		const overlay = await createOverlay(selected, this.getCachedAirport(selected), this.getCachedController(selected));
-
-		if (token !== this.hoverToken) {
-			return;
-		}
-
-		this.hoverFeature = selected;
-		this.hoverOverlay = overlay;
-		map.addOverlay(overlay);
 	};
 
 	private onClickSelect = async (e: SelectEvent) => {
@@ -751,13 +770,26 @@ export class MapService {
 		}
 
 		if (this.hoverFeature) {
-			this.hoverSelect?.toggleFeature(this.hoverFeature);
+			this.hoverFeature.set("hovered", true);
+			this.controllerService.hoverSector(this.hoverFeature, true, "hovered");
+
+			this.hoverOverlay = await createOverlay(
+				this.hoverFeature,
+				this.getCachedAirport(this.hoverFeature),
+				this.getCachedController(this.hoverFeature),
+			);
+			this.map?.addOverlay(this.hoverOverlay);
 		}
 	}
 
 	public removeHoverFeature(): void {
-		if (this.hoverFeature) {
-			this.hoverSelect?.toggleFeature(this.hoverFeature);
+		this.hoverFeature?.set("hovered", false);
+		this.controllerService.hoverSector(this.hoverFeature, false, "hovered");
+		this.hoverFeature = null;
+
+		if (this.hoverOverlay) {
+			this.map?.removeOverlay(this.hoverOverlay);
+			this.hoverOverlay = null;
 		}
 	}
 
