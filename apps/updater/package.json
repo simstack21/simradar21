@@ -16,7 +16,7 @@
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.948.0",
+		"@aws-sdk/client-s3": "^3.980.0",
 		"@sr24/db": "*",
 		"@sr24/types": "*",
 		"axios": "^1.13.2",
