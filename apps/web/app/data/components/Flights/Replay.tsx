@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import useSWR from "swr";
 import Spinner from "@/components/Spinner/Spinner";
 import { decodeTrackPoints } from "@/lib/map/tracks";
-import { fetchApi } from "@/utils/api";
+import { fetchApi } from "@/lib/api";
 import { init, updatePilot } from "../../lib";
 import { ReplayControl } from "./ReplayControl";
 import ReplayMap from "./ReplayMap";

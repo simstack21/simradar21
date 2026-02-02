@@ -1,7 +1,7 @@
 import type { IAltimeter, IMetar, Visibility } from "metar-taf-parser";
 import Icon from "@/components/Icon/Icon";
 import { useSettingsStore } from "@/storage/zustand";
-import { convertAltitude, convertTemperature, convertTime } from "@/utils/helpers";
+import { convertAltitude, convertTemperature, convertTime } from "@/lib/helpers";
 
 function getAltimeter(altimeter: IAltimeter | undefined): string {
 	if (!altimeter) {

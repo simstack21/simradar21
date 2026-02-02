@@ -22,8 +22,8 @@ import { getSpriteOffset, setHeight } from "@/components/Panel/utils";
 import Spinner from "@/components/Spinner/Spinner";
 import { decodeTrackPoints } from "@/lib/map/tracks";
 import type { PilotPanelStatic } from "@/types/panels";
-import { fetchApi } from "@/utils/api";
-import { type WsData, type WsPresence, wsClient } from "@/utils/ws";
+import { fetchApi } from "@/lib/api";
+import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
 import NotFoundPanel from "../shared/NotFound";
 
 type AccordionSection = "info" | "charts" | "pilot" | null;

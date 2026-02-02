@@ -12,8 +12,8 @@ import { getDelayColorFromDates } from "@/components/Panel/utils";
 import Spinner from "@/components/Spinner/Spinner";
 import { getCachedAirline, getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
-import { fetchApi } from "@/utils/api";
-import { convertTime } from "@/utils/helpers";
+import { fetchApi } from "@/lib/api";
+import { convertTime } from "@/lib/helpers";
 
 const LIMIT = 20;
 

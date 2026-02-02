@@ -1,5 +1,5 @@
 import type { FIRFeature, SimAwareTraconFeature, StaticAircraft, StaticAirline, StaticAirport } from "@sr24/types/db";
-import { fetchApi } from "@/utils/api";
+import { fetchApi } from "@/lib/api";
 import { dxGetAirline, dxGetAirport, dxGetFirs, dxGetTracons } from "./dexie";
 
 const cachedAirports: Map<string, StaticAirport> = new Map();

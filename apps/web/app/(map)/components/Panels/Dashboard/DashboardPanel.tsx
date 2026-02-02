@@ -10,7 +10,7 @@ import "./DashboardPanel.css";
 import useSWR from "swr";
 import Icon from "@/components/Icon/Icon";
 import Spinner from "@/components/Spinner/Spinner";
-import { fetchApi } from "@/utils/api";
+import { fetchApi } from "@/lib/api";
 
 function storeOpenSections(sections: string[]) {
 	if (typeof window === "undefined") return;

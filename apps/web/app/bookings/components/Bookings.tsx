@@ -4,7 +4,7 @@ import type { Booking } from "@sr24/types/interface";
 import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import Spinner from "@/components/Spinner/Spinner";
-import { fetchApi } from "@/utils/api";
+import { fetchApi } from "@/lib/api";
 import { init, setFeaturesByTime } from "../lib";
 import { BookingsControl } from "./BookingsControls";
 import BookingsMap from "./BookingsMap";

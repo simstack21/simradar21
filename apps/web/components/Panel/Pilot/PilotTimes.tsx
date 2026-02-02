@@ -1,7 +1,7 @@
 import type { StaticAirport } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
 import { useSettingsStore } from "@/storage/zustand";
-import { convertTime } from "@/utils/helpers";
+import { convertTime } from "@/lib/helpers";
 import { getDelayColorFromDates } from "../utils";
 
 function getTimeStatus(times: PilotLong["times"]): { off: boolean; on: boolean } {

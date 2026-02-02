@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChooseSwitch } from "@/components/Input/Input";
 import { useSettingsStore } from "@/storage/zustand";
-import { convertTime } from "@/utils/helpers";
+import { convertTime } from "@/lib/helpers";
 
 export function DashboardHistory({ history }: { history: DashboardData["history"] }) {
 	const { timeZone, timeFormat } = useSettingsStore();

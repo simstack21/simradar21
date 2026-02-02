@@ -9,7 +9,7 @@ import Icon from "@/components/Icon/Icon";
 import { setHeight } from "@/components/Panel/utils";
 import Spinner from "@/components/Spinner/Spinner";
 import { getCachedFir, getCachedTracon } from "@/storage/cache";
-import { fetchApi } from "@/utils/api";
+import { fetchApi } from "@/lib/api";
 import { ControllerInfo } from "../shared/ControllerInfo";
 import NotFoundPanel from "../shared/NotFound";
 import { SectorTitle } from "./SectorTitle";

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { mapService } from "@/app/(map)/lib";
 import Icon from "@/components/Icon/Icon";
 import { useSettingsStore } from "@/storage/zustand";
-import { convertTime } from "@/utils/helpers";
+import { convertTime } from "@/lib/helpers";
 
 export function DashboardEvents({ events, ref, openSection }: { events: VatsimEvent[]; ref: React.Ref<HTMLDivElement>; openSection: string[] }) {
 	const [selected, setSelected] = useState<number | null>(null);

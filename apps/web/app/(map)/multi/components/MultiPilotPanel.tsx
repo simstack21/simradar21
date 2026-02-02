@@ -12,9 +12,9 @@ import { decodeTrackPoints } from "@/lib/map/tracks";
 import { getCachedAirline, getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
 import type { PilotPanelStatic } from "@/types/panels";
-import { fetchApi } from "@/utils/api";
-import { convertTime } from "@/utils/helpers";
-import { type WsData, type WsPresence, wsClient } from "@/utils/ws";
+import { fetchApi } from "@/lib/api";
+import { convertTime } from "@/lib/helpers";
+import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
 import { mapService } from "../../lib";
 
 export default function MultiPilotPanel({ id }: { id: string }) {

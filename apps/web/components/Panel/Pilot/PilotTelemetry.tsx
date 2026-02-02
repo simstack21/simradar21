@@ -1,7 +1,7 @@
 import type { PilotLong, TrackPoint } from "@sr24/types/interface";
 import Icon from "@/components/Icon/Icon";
 import { useSettingsStore } from "@/storage/zustand";
-import { convertAltitude, convertSpeed, convertVerticalSpeed } from "@/utils/helpers";
+import { convertAltitude, convertSpeed, convertVerticalSpeed } from "@/lib/helpers";
 
 export function PilotTelemetry({ pilot, trackPoint }: { pilot: PilotLong; trackPoint?: TrackPoint }) {
 	const { altitudeUnit, speedUnit, verticalSpeedUnit } = useSettingsStore();

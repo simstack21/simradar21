@@ -1,6 +1,6 @@
 import type { StaticAirline, StaticAirport } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
-import { fetchApi } from "@/utils/api";
+import { fetchApi } from "@/lib/api";
 import type { Match, PilotMatch, PilotResult } from "./types";
 
 const SEARCH_HISTORY_KEY = "simradar-search-history";

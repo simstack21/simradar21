@@ -4,7 +4,7 @@ import { RangeSwitch } from "@/components/Input/Input";
 import { REPLAY_SPEEDS } from "./Bookings";
 import "@/components/Map/ReplayControl/ReplayControl.css";
 import { useSettingsStore } from "@/storage/zustand";
-import { convertTime } from "@/utils/helpers";
+import { convertTime } from "@/lib/helpers";
 
 export function BookingsControl({
 	progress,

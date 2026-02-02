@@ -8,7 +8,7 @@ import FlagSprite from "@/assets/images/sprites/flagSprite42.png";
 import Icon, { getAirlineIcon } from "@/components/Icon/Icon";
 import { useSettingsStore } from "@/storage/zustand";
 import type { PilotProperties } from "@/types/ol";
-import { convertAltitude, convertSpeed, convertTime, convertVerticalSpeed } from "@/utils/helpers";
+import { convertAltitude, convertSpeed, convertTime, convertVerticalSpeed } from "@/lib/helpers";
 
 export function PilotOverlay({ feature, airline }: { feature: Feature<Point>; airline: StaticAirline | null }) {
 	const { planeOverlay, altitudeUnit, verticalSpeedUnit, speedUnit } = useSettingsStore();

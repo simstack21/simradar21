@@ -1,7 +1,7 @@
 import type { StaticAirport } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
 import { useSettingsStore } from "@/storage/zustand";
-import { convertDistance, haversineDistance } from "@/utils/helpers";
+import { convertDistance, haversineDistance } from "@/lib/helpers";
 
 function formatTimeDelta(minutes: number): string {
 	if (minutes < 60) {

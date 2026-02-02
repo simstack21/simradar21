@@ -2,7 +2,7 @@ import type { AirportLong } from "@sr24/types/interface";
 import { CloudQuantity, Descriptive, type IMetar, Intensity, type IWind, Phenomenon } from "metar-taf-parser";
 import { getDelayColorFromNumber } from "@/components/Panel/utils";
 import { useSettingsStore } from "@/storage/zustand";
-import { convertSpeed, convertTemperature } from "@/utils/helpers";
+import { convertSpeed, convertTemperature } from "@/lib/helpers";
 
 function getConditions(metar: IMetar): string {
 	if (metar.cavok) {

@@ -2,7 +2,7 @@ import type { TrackPoint } from "@sr24/types/interface";
 import { Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import Icon from "@/components/Icon/Icon";
 import { useSettingsStore } from "@/storage/zustand";
-import { convertAltitude, convertSpeed, convertTime } from "@/utils/helpers";
+import { convertAltitude, convertSpeed, convertTime } from "@/lib/helpers";
 
 export function PilotCharts({
 	trackPoints,

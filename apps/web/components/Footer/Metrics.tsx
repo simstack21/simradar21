@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { type WsData, type WsPresence, wsClient } from "@/utils/ws";
+import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
 import Icon from "../Icon/Icon";
 
 function getTimestamp(date: Date | string): string {
