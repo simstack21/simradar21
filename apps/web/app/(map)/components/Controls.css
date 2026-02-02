@@ -3,7 +3,7 @@
 	right: 1rem;
 	top: 4rem;
 	display: flex;
-	gap: 5px;
+	gap: 10px;
 	z-index: 1;
 }
 
@@ -33,15 +33,24 @@
 	color: var(--color-main-text);
 }
 
+.map-control-item.upper {
+	font-size: var(--font-size-normal);
+	gap: 5px;
+}
+
+.map-control-item.upper label {
+	box-shadow: var(--box-shadow);
+}
+
 .map-control-item use {
 	color: var(--color-main-text);
 }
 
-.map-control-item:hover {
+.map-control-item:not(.upper):hover {
 	background: var(--color-hover);
 }
 
-.map-control-item:hover use {
+.map-control-item:not(.upper):hover use {
 	color: white;
 }
 

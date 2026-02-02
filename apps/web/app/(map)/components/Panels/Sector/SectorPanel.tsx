@@ -71,7 +71,7 @@ export default function SectorPanel({ callsign }: { callsign: string }) {
 		);
 
 	return (
-		<>
+		<div className="panel">
 			<div className="panel-header">
 				<div className="panel-id">{callsign}</div>
 				<button className="panel-close" type="button" onClick={() => mapService.resetMap()}>
@@ -92,6 +92,6 @@ export default function SectorPanel({ callsign }: { callsign: string }) {
 					<ControllerInfo controllers={controllers} sector={staticData.feature} openSection={openSection} ref={controllersRef} />
 				</div>
 			)}
-		</>
+		</div>
 	);
 }

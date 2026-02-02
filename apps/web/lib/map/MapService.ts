@@ -39,8 +39,8 @@ type StatsListener = (stats: Stats) => void;
 export class MapService {
 	private static readonly MAP_PADDING = [204, 116, 140, 436];
 	private static readonly HIT_TOLERANCE = 5;
-	private static readonly LAYER_FILTER = (layer: Layer) => {
-		const type = layer.get("type");
+	private static readonly LAYER_FILTER = (layer: Layer | undefined) => {
+		const type = layer?.get("type");
 		return type === "airport_main" || type === "pilot_main" || type === "sector_label";
 	};
 	private options: Options | null = null;
@@ -54,7 +54,7 @@ export class MapService {
 	private controllerService = new ControllerService();
 	private trackService = new TrackService();
 
-	private multiView = false;
+	private multiView: boolean | undefined;
 	private multiPath = new Set<string>();
 	private hoverToken = 0;
 	private hoverFeature: Feature<Point> | null = null;
@@ -171,7 +171,19 @@ export class MapService {
 		this.renderFeatures();
 	}
 
-	public setView({ rotation, zoomStep, center, zoom }: { rotation?: number; zoomStep?: number; center?: [number, number]; zoom?: number }): void {
+	public setView({
+		rotation,
+		zoomStep,
+		center,
+		zoom,
+		multi,
+	}: {
+		rotation?: number;
+		zoomStep?: number;
+		center?: [number, number];
+		zoom?: number;
+		multi?: boolean;
+	}): void {
 		const view = this.map?.getView();
 		if (!view) return;
 
@@ -193,13 +205,21 @@ export class MapService {
 		if (zoom !== undefined) {
 			view.setZoom(zoom);
 		}
+		if (multi !== undefined) {
+			this.setMultiView(multi);
+		}
 	}
 
-	public setMultiView(enabled: boolean, init?: boolean): void {
-		this.multiView = enabled;
-		if (!init) {
-			this.resetMap();
+	private setMultiView(enabled: boolean): void {
+		if (this.multiView === undefined) {
+			this.multiView = enabled;
+			return;
 		}
+
+		if (this.multiView !== enabled) {
+			this.resetMap(false);
+		}
+		this.multiView = enabled;
 	}
 
 	public addEventListeners() {
@@ -216,14 +236,12 @@ export class MapService {
 			});
 			this.map?.addInteraction(this.hoverSelect);
 			this.hoverSelect.on("select", this.onHoverSelect);
-
-			this.map?.getTargetElement().addEventListener("mouseout", this.onHoverOut);
 		}
 
 		if (!this.options?.disableInteractions) {
 			this.clickSelect = new Select({
 				condition: click,
-				toggleCondition: () => this.multiView,
+				toggleCondition: () => this.multiView === true,
 				hitTolerance: MapService.HIT_TOLERANCE,
 				layers: MapService.LAYER_FILTER,
 				style: null,
@@ -241,8 +259,6 @@ export class MapService {
 			this.hoverSelect.un("select", this.onHoverSelect);
 			this.map?.removeInteraction(this.hoverSelect);
 			this.hoverSelect = undefined;
-
-			this.map?.getTargetElement().removeEventListener("mouseout", this.onHoverOut);
 		}
 		if (this.clickSelect) {
 			this.clickSelect.un("select", this.onClickSelect);
@@ -393,21 +409,6 @@ export class MapService {
 		}
 	};
 
-	private onHoverOut = () => {
-		this.hoverToken++;
-		const map = this.map;
-
-		if (this.hoverOverlay) {
-			map?.removeOverlay(this.hoverOverlay);
-			this.hoverOverlay = null;
-		}
-		if (this.hoverFeature) {
-			this.hoverFeature.set("hovered", false);
-			this.controllerService.hoverSector(this.hoverFeature, false, "hovered");
-			this.hoverFeature = null;
-		}
-	};
-
 	private navigate(id: string, type: string, isManual: boolean, mode: "add" | "delete"): void {
 		if (!this.multiView && isManual) {
 			this.options?.onNavigate?.(mode === "add" ? `/${type}/${id}` : `/`);
@@ -420,7 +421,7 @@ export class MapService {
 
 		if (this.multiPath.size > 0) {
 			const path = Array.from(this.multiPath).join("%2C");
-			this.options?.onNavigate?.(`/multi/${path}`);
+			this.options?.onNavigate?.(`/multi/?selected=${path}`);
 		} else {
 			this.options?.onNavigate?.(`/multi`);
 		}
@@ -529,16 +530,16 @@ export class MapService {
 		controllers?: ControllerDelta;
 		sunTime?: Date;
 	}): Promise<void> {
-		let resetNeeded = false;
+		const removedIds: string[] = [];
 
 		if (pilots) {
-			resetNeeded = this.pilotService.updateFeatures(pilots) || resetNeeded;
+			removedIds.push(...this.pilotService.updateFeatures(pilots));
 		}
 		if (airports) {
 			// resetNeeded = this.airportService.updateFeatures(airports) || resetNeeded;
 		}
 		if (controllers) {
-			resetNeeded = (await this.controllerService.updateFeatures(controllers)) || resetNeeded;
+			removedIds.push(...(await this.controllerService.updateFeatures(controllers)));
 		}
 		if (sunTime) {
 			this.sunService.setFeatures(sunTime);
@@ -546,8 +547,17 @@ export class MapService {
 
 		this.updateRelatives();
 
-		if (resetNeeded) {
-			this.resetMap(true);
+		for (const id of removedIds) {
+			const clickFeature = this.clickFeatures.get(id);
+			if (clickFeature) {
+				this.clickSelect?.toggleFeature(clickFeature);
+				this.multiPath.delete(id);
+			}
+		}
+
+		if (removedIds.length > 0) {
+			const path = Array.from(this.multiPath).join("%2C");
+			this.options?.onNavigate?.(`/multi/?selected=${path}`);
 		}
 
 		this.renderFeatures();
@@ -696,45 +706,38 @@ export class MapService {
 		}
 	}
 
-	public setClickedFeature(type: string | undefined, id: string | undefined, init?: boolean): void {
+	public addClickFeature(type?: string, id?: string, init?: boolean): void {
 		if (!id || !type) return;
-		if (!this.multiView && this.clickFeatures?.get(`${type}_${id}`)) return;
 
 		this.unfocusFeatures();
-		if (!init && !this.multiView) {
-			this.resetMap(false);
+
+		const view = this.options?.disableCenterOnPageLoad || this.multiView === true || !init ? undefined : this.map?.getView();
+		let clickFeature: Feature<Point> | null = null;
+
+		if (type === "pilot") {
+			clickFeature = this.pilotService.moveToFeature(id, view);
+		}
+		if (type === "airport") {
+			clickFeature = this.airportService.moveToFeature(id, view);
+		}
+		if (type === "sector") {
+			clickFeature = this.controllerService.moveToFeature(id, view);
 		}
 
-		const view = this.options?.disableCenterOnPageLoad || this.multiView ? undefined : this.map?.getView();
-		const ids = this.multiView ? id.split("%2C") : [`${type}_${id}`];
-
-		for (const fullId of ids) {
-			const [t, i] = fullId.split("_");
-			let clickFeature: Feature<Point> | null = null;
-
-			if (t === "pilot") {
-				clickFeature = this.pilotService.moveToFeature(i, view);
-			}
-			if (t === "airport") {
-				clickFeature = this.airportService.moveToFeature(i, view);
-			}
-			if (t === "sector") {
-				clickFeature = this.controllerService.moveToFeature(i, view);
-			}
-
-			const id = clickFeature?.getId()?.toString() || null;
-			if (!id || !clickFeature || this.clickFeatures?.get(id)) continue;
-
-			this.clickSelect?.toggleFeature(clickFeature);
-		}
+		if (!clickFeature || this.clickFeatures?.get(`${type}_${id}`)) return;
+		this.clickSelect?.toggleFeature(clickFeature);
 	}
 
-	public async setHoveredFeature(type?: string, id?: string): Promise<void> {
-		if (!id && !type && this.hoverFeature) {
-			this.hoverSelect?.toggleFeature(this.hoverFeature);
-			return;
-		}
+	public removeClickFeature(type?: string, id?: string): void {
+		if (!id || !type) return;
 
+		const clickFeature = this.clickFeatures?.get(`${type}_${id}`);
+		if (!clickFeature) return;
+
+		this.clickSelect?.toggleFeature(clickFeature);
+	}
+
+	public async addHoverFeature(type?: string, id?: string): Promise<void> {
 		if (!id || !type) return;
 
 		if (type === "pilot") {
@@ -747,6 +750,12 @@ export class MapService {
 			this.hoverFeature = this.controllerService.moveToFeature(id);
 		}
 
+		if (this.hoverFeature) {
+			this.hoverSelect?.toggleFeature(this.hoverFeature);
+		}
+	}
+
+	public removeHoverFeature(): void {
 		if (this.hoverFeature) {
 			this.hoverSelect?.toggleFeature(this.hoverFeature);
 		}

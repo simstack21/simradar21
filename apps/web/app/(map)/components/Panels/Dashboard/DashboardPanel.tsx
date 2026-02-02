@@ -60,7 +60,7 @@ export default function DashboardPanel() {
 	if (!data || isLoading) return <Spinner />;
 
 	return (
-		<>
+		<div className="panel">
 			<div className="panel-container dashboard">
 				<button
 					className={`panel-container-header${openSection.includes("history") ? " open" : ""}`}
@@ -100,6 +100,6 @@ export default function DashboardPanel() {
 					<DashboardEvents events={data.events} ref={eventsRef} openSection={openSection} />
 				</div>
 			</div>
-		</>
+		</div>
 	);
 }

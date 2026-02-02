@@ -212,7 +212,7 @@ export class PilotService {
 		}
 	}
 
-	public updateFeatures(delta: PilotDelta): boolean {
+	public updateFeatures(delta: PilotDelta): string[] {
 		const pilotsInDelta = new Set<string>();
 
 		for (const p of delta.updated) {
@@ -293,17 +293,19 @@ export class PilotService {
 			this.map.delete(id);
 		}
 
+		const removedIds: string[] = [];
+
 		if (this.highlighted.size > 0) {
 			for (const id of this.highlighted) {
 				if (!this.map.has(id)) {
-					toast.info(MessageBox, { data: { title: "Pilot Disconnected", message: `The viewed pilot has disconnected.` } });
+					toast.info(MessageBox, { data: { title: `Pilot Disconnected`, message: `A viewed pilot has disconnected.` } });
 					this.highlighted.delete(id);
-					return true;
+					removedIds.push(`pilot_${id}`);
 				}
 			}
 		}
 
-		return false;
+		return removedIds;
 	}
 
 	private calculateVelocities(pilot: PilotShort): { vx: number; vy: number } {

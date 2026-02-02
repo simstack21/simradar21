@@ -10,11 +10,10 @@ export const mapService = new MapService();
 let initialized = false;
 let lastMessageSeq: number | null = null;
 
-export async function init(pathname: string): Promise<void> {
+export async function init(pathname: string, searchParams: URLSearchParams): Promise<void> {
 	if (initialized) {
-		const type = pathname.split("/")[1];
-		const id = pathname.split("/")[2];
-		mapService.setClickedFeature(type, id);
+		mapService.setView({ multi: pathname.startsWith("/multi") });
+		setClickedFromPath(pathname, searchParams);
 		return;
 	}
 
@@ -42,17 +41,37 @@ export async function init(pathname: string): Promise<void> {
 	wsClient.addListener(handleMessage);
 
 	initFilters();
-
-	if (pathname.startsWith("/multi")) {
-		mapService.setMultiView(true, true);
-	}
-
-	if (pathname !== "") {
-		const type = pathname.split("/")[1];
-		const id = pathname.split("/")[2];
-		mapService.setClickedFeature(type, id, true);
-	}
+	mapService.setView({ multi: pathname.startsWith("/multi") });
+	setClickedFromPath(pathname, searchParams);
 	initialized = true;
+}
+
+let lastIds: string[] = [];
+
+function setClickedFromPath(pathname: string, searchParams: URLSearchParams): void {
+	if (pathname.startsWith("/multi")) {
+		const selected = searchParams.get("selected");
+		const ids = selected ? selected.split(",") : [];
+
+		for (const fullId of ids) {
+			const [type, id] = fullId.split(/_(.+)/);
+			if (!type || !id) continue;
+			mapService.addClickFeature(type, id, !initialized);
+		}
+
+		for (const fullId of lastIds) {
+			if (!ids.includes(fullId)) {
+				const [type, id] = fullId.split(/_(.+)/);
+				if (!type || !id) continue;
+				mapService.removeClickFeature(type, id);
+			}
+		}
+
+		lastIds = ids;
+	} else {
+		const [type, id] = pathname.split("/").slice(1, 3);
+		mapService.addClickFeature(type, id, !initialized);
+	}
 }
 
 function initFilters(): void {

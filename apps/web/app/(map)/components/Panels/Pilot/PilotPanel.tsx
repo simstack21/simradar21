@@ -1,6 +1,5 @@
 "use client";
 
-import type { StaticAirline, StaticAirport } from "@sr24/types/db";
 import type { DeltaTrackPoint, PilotLong, TrackPoint } from "@sr24/types/interface";
 import { useEffect, useRef, useState } from "react";
 import { getCachedAirline, getCachedAirport } from "@/storage/cache";
@@ -25,12 +24,8 @@ import { decodeTrackPoints } from "@/lib/map/tracks";
 import { fetchApi } from "@/utils/api";
 import { type WsData, type WsPresence, wsClient } from "@/utils/ws";
 import NotFoundPanel from "../shared/NotFound";
+import { PilotPanelStatic } from "@/types/panels";
 
-export interface PilotPanelStatic {
-	airline: StaticAirline | null;
-	departure: StaticAirport | null;
-	arrival: StaticAirport | null;
-}
 type AccordionSection = "info" | "charts" | "pilot" | null;
 type MapInteraction = "route" | "follow" | null;
 
@@ -190,7 +185,7 @@ export default function PilotPanel({ id }: { id: string }) {
 	const flightNumber = staticData.airline?.iata ? staticData.airline.iata + callsignNumber : pilotData.callsign;
 
 	return (
-		<>
+		<div className="panel">
 			<div className="panel-header">
 				<div className="panel-id">{pilotData.callsign}</div>
 				<button className="panel-close" type="button" onClick={() => mapService.resetMap()}>
@@ -260,6 +255,6 @@ export default function PilotPanel({ id }: { id: string }) {
 					<p>More</p>
 				</button>
 			</div>
-		</>
+		</div>
 	);
 }

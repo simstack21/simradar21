@@ -167,7 +167,7 @@ export class ControllerService {
 		this.labelSource.addFeatures(labelFeatures);
 	}
 
-	public async updateFeatures(controllers: ControllerDelta): Promise<boolean> {
+	public async updateFeatures(controllers: ControllerDelta): Promise<string[]> {
 		const controllersInDelta = new Set<string>();
 
 		for (const c of controllers.updated) {
@@ -262,17 +262,19 @@ export class ControllerService {
 			this.set.delete(id);
 		}
 
+		const removedIds: string[] = [];
+
 		if (this.highlighted.size > 0) {
 			for (const id of this.highlighted) {
 				if (!this.set.has(id)) {
-					toast.info(MessageBox, { data: { title: "Controller Disconnected", message: `The viewed controller has disconnected.` } });
+					toast.info(MessageBox, { data: { title: "Controller Disconnected", message: `A viewed controller has disconnected.` } });
 					this.highlighted.delete(id);
-					return true;
+					removedIds.push(`sector_${id}`);
 				}
 			}
 		}
 
-		return false;
+		return removedIds;
 	}
 
 	public moveToFeature(id: string, view?: View | undefined): Feature<Point> | null {
