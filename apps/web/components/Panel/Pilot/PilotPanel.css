@@ -155,7 +155,7 @@
 
 #panel-pilot-aircraft {
 	grid-template-columns: repeat(2, 1fr);
-	grid-template-rows: auto repeat(2, 1fr);
+	grid-template-rows: auto 1fr;
 }
 
 #panel-pilot-aircraft > :nth-child(1) {

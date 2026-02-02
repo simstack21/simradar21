@@ -1,19 +1,24 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import "./Controls.css";
 import { useState } from "react";
 import Icon from "@/components/Icon/Icon";
+import { ToggleSwitch } from "@/components/Input/Input";
 import { useFiltersStore, useMapRotationStore, useMapVisibilityStore } from "@/storage/zustand";
 import { mapService } from "../lib";
 
 export default function Controls() {
 	const router = useRouter();
+	const pathname = usePathname();
+
 	const [isFullscreen, setIsFullscreen] = useState(false);
 
 	const { active: filterActive } = useFiltersStore();
 	const { isHidden, setHidden } = useMapVisibilityStore();
 	const { rotation, setRotation } = useMapRotationStore();
+
+	const isMultiView = pathname.startsWith("/multi");
 
 	const onFullscreen = async () => {
 		try {
@@ -46,9 +51,16 @@ export default function Controls() {
 
 	return (
 		<>
-			<button type="button" className="map-control-item" id="map-control-hide" onClick={() => setHidden(!isHidden)}>
-				<Icon name={isHidden ? "eye" : "eye-crossed"} size={22} />
-			</button>
+			<div id="map-controls-upper">
+				<div className="map-control-item upper">
+					<p>Multi View</p>
+					<ToggleSwitch checked={isMultiView} onChange={(e) => router.push(e.target.checked ? "/multi" : "/")} />
+				</div>
+				<div className="map-control-item upper">
+					<Icon name={isHidden ? "eye-crossed" : "eye"} size={22} />
+					<ToggleSwitch checked={isHidden} onChange={(e) => setHidden(e.target.checked)} />
+				</div>
+			</div>
 			<div id="map-controls" className={isHidden ? "hidden" : ""}>
 				<button type="button" className="map-control-item" onClick={onFullscreen}>
 					<Icon name={isFullscreen ? "resize-decrease" : "resize-increase"} size={22} />

@@ -27,7 +27,7 @@ export class ControllerService {
 	private labelLayer: VectorLayer | null = null;
 
 	private set = new Set<string>();
-	private highlighted: string | null = null;
+	private highlighted = new Set<string>();
 
 	private styleVars: ControllerStyleVars = {};
 
@@ -99,12 +99,16 @@ export class ControllerService {
 		}
 	}
 
-	public setHighlighted(id: string): void {
-		this.highlighted = id;
+	public addHighlighted(id: string): void {
+		this.highlighted.add(id);
+	}
+
+	public removeHighlighted(id: string): void {
+		this.highlighted.delete(id);
 	}
 
 	public clearHighlighted(): void {
-		this.highlighted = null;
+		this.highlighted.clear();
 	}
 
 	public async setFeatures(controllers: ControllerMerged[]) {
@@ -163,7 +167,7 @@ export class ControllerService {
 		this.labelSource.addFeatures(labelFeatures);
 	}
 
-	public async updateFeatures(controllers: ControllerDelta): Promise<boolean> {
+	public async updateFeatures(controllers: ControllerDelta): Promise<string[]> {
 		const controllersInDelta = new Set<string>();
 
 		for (const c of controllers.updated) {
@@ -258,17 +262,28 @@ export class ControllerService {
 			this.set.delete(id);
 		}
 
-		if (this.highlighted && !this.set.has(`tracon_${this.highlighted}`) && !this.set.has(`fir_${this.highlighted}`)) {
-			toast.info(MessageBox, { data: { title: "Controller Disconnected", message: `The viewed controller has disconnected.` } });
-			this.highlighted = null;
-			return true;
+		const removedIds: string[] = [];
+
+		if (this.highlighted.size > 0) {
+			for (const id of this.highlighted) {
+				if (!this.set.has(id)) {
+					toast.info(MessageBox, { data: { title: "Controller Disconnected", message: `A viewed controller has disconnected.` } });
+					this.highlighted.delete(id);
+					removedIds.push(`sector_${id.replace(/^(tracon_|fir_|airport_)/, "")}`);
+				}
+			}
 		}
 
-		return false;
+		return removedIds;
 	}
 
 	public moveToFeature(id: string, view?: View | undefined): Feature<Point> | null {
 		const labelFeature = this.labelSource.getFeatureById(`sector_${id}`) as Feature<Point> | undefined;
+		if (labelFeature) {
+			const type = labelFeature.get("type");
+			this.addHighlighted(`${type}_${id}`);
+		}
+
 		if (!view) return labelFeature || null;
 
 		const geom = labelFeature?.getGeometry();
@@ -280,8 +295,6 @@ export class ControllerService {
 			duration: 200,
 			zoom: 7,
 		});
-
-		this.setHighlighted(id);
 
 		return labelFeature || null;
 	}

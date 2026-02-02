@@ -85,14 +85,19 @@ export class AirportService {
 		this.renderPending = true;
 
 		if (this.isFocused) {
-			this.source.clear();
+			const newFeatures: Feature<Point>[] = [];
+
 			this.focused.forEach((id) => {
 				const feature = this.map.get(id);
 				if (feature) {
-					this.source.addFeature(feature);
+					newFeatures.push(feature);
 				}
 			});
 
+			this.source.clear();
+			this.source.addFeatures(newFeatures);
+
+			this.rendered = new Set(newFeatures.map((f) => f.getId() as string));
 			this.renderPending = false;
 			return;
 		}
@@ -152,8 +157,12 @@ export class AirportService {
 		this.renderPending = false;
 	}
 
-	public setHighlighted(id: string): void {
+	public addHighlighted(id: string): void {
 		this.highlighted.add(id);
+	}
+
+	public removeHighlighted(id: string): void {
+		this.highlighted.delete(id);
 	}
 
 	public clearHighlighted(): void {
@@ -164,6 +173,9 @@ export class AirportService {
 		let feature = this.source.getFeatureById(`airport_${id}`) as Feature<Point> | undefined;
 		if (!feature) {
 			feature = this.map.get(id);
+		}
+		if (feature) {
+			this.addHighlighted(id);
 		}
 
 		if (!view) return feature || null;
@@ -177,8 +189,6 @@ export class AirportService {
 			duration: 200,
 			zoom: 8,
 		});
-
-		this.setHighlighted(id);
 
 		return feature || null;
 	}

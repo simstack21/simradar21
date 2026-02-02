@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import "./Map.css";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import Initializer from "@/components/Initializer/Initializer";
 import BasePanel from "@/components/Panel/BasePanel";
@@ -14,6 +14,7 @@ import Controls from "./Controls";
 export default function OMap({ children }: { children?: React.ReactNode }) {
 	const router = useRouter();
 	const pathname = usePathname();
+	const searchParams = useSearchParams();
 
 	const { theme } = useTheme();
 	const {
@@ -53,8 +54,8 @@ export default function OMap({ children }: { children?: React.ReactNode }) {
 	}, [router, setRotation, setPilotCount]);
 
 	useEffect(() => {
-		init(pathname);
-	}, [pathname]);
+		init(pathname, searchParams);
+	}, [pathname, searchParams]);
 
 	useEffect(() => {
 		mapService.setTheme(theme);

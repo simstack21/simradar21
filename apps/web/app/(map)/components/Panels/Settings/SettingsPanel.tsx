@@ -21,7 +21,7 @@ export default function SettingsPanel() {
 	}, [session]);
 
 	return (
-		<>
+		<div className="panel">
 			<div className="panel-header">
 				<div className="panel-id">Settings</div>
 				<button className="panel-close" type="button" onClick={() => mapService.resetMap()}>
@@ -38,7 +38,7 @@ export default function SettingsPanel() {
 					Reset all settings
 				</button>
 			</div>
-		</>
+		</div>
 	);
 }
 

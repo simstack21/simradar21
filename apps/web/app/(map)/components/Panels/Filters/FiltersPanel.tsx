@@ -96,7 +96,7 @@ export default function FiltersPanel() {
 	}, []);
 
 	return (
-		<>
+		<div className="panel">
 			<div className="panel-header">
 				<div className="panel-id">Filters</div>
 				<button className="panel-close" type="button" onClick={() => mapService.resetMap()}>
@@ -172,7 +172,7 @@ export default function FiltersPanel() {
 					</div>
 				)}
 			</div>
-		</>
+		</div>
 	);
 }
 

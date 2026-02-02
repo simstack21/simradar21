@@ -162,8 +162,12 @@ export class PilotService {
 		return true;
 	}
 
-	public setHighlighted(id: string): void {
+	public addHighlighted(id: string): void {
 		this.highlighted.add(id);
+	}
+
+	public removeHighlighted(id: string): void {
+		this.highlighted.delete(id);
 	}
 
 	public clearHighlighted(): void {
@@ -208,7 +212,7 @@ export class PilotService {
 		}
 	}
 
-	public updateFeatures(delta: PilotDelta): boolean {
+	public updateFeatures(delta: PilotDelta): string[] {
 		const pilotsInDelta = new Set<string>();
 
 		for (const p of delta.updated) {
@@ -289,17 +293,19 @@ export class PilotService {
 			this.map.delete(id);
 		}
 
+		const removedIds: string[] = [];
+
 		if (this.highlighted.size > 0) {
 			for (const id of this.highlighted) {
 				if (!this.map.has(id)) {
-					toast.info(MessageBox, { data: { title: "Pilot Disconnected", message: `The viewed pilot has disconnected.` } });
+					toast.info(MessageBox, { data: { title: `Pilot Disconnected`, message: `A viewed pilot has disconnected.` } });
 					this.highlighted.delete(id);
-					return true;
+					removedIds.push(`pilot_${id}`);
 				}
 			}
 		}
 
-		return false;
+		return removedIds;
 	}
 
 	private calculateVelocities(pilot: PilotShort): { vx: number; vy: number } {
@@ -323,14 +329,19 @@ export class PilotService {
 		this.renderPending = true;
 
 		if (this.isFocused) {
-			this.source.clear();
+			const newFeatures: Feature<Point>[] = [];
+
 			this.focused.forEach((id) => {
-				const item = this.map.get(id);
-				if (item) {
-					this.source.addFeature(item.feature);
+				const feature = this.map.get(id);
+				if (feature?.feature) {
+					newFeatures.push(feature.feature);
 				}
 			});
 
+			this.source.clear();
+			this.source.addFeatures(newFeatures);
+
+			this.rendered = new Set(newFeatures.map((f) => f.getId() as string));
 			this.renderPending = false;
 			return;
 		}
@@ -422,6 +433,9 @@ export class PilotService {
 			const item = this.map.get(id);
 			feature = item?.feature;
 		}
+		if (feature) {
+			this.addHighlighted(id);
+		}
 
 		if (!view) return feature || null;
 
@@ -434,8 +448,6 @@ export class PilotService {
 			duration: 200,
 			zoom: 10,
 		});
-
-		this.setHighlighted(id);
 
 		return feature || null;
 	}

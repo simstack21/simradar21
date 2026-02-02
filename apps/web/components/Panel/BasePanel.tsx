@@ -1,44 +1,50 @@
 "use client";
 
-import Spinner from "@/components/Spinner/Spinner";
 import "./BasePanel.css";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { useFiltersStore, useMapVisibilityStore } from "@/storage/zustand";
+import { useRef, useState } from "react";
+import { useFiltersStore } from "@/storage/zustand";
 
 export default function BasePanel({ children }: { children: React.ReactNode }) {
-	const pathname = usePathname();
+	const _pathname = usePathname();
 
-	const [open, setOpen] = useState(true);
+	const [open, _setOpen] = useState(true);
 
-	const prevPath = useRef<string | null>(null);
+	const _prevPath = useRef<string | null>(null);
 
-	const { isHidden } = useMapVisibilityStore();
+	// const { isHidden } = useMapVisibilityStore();
 	const { active } = useFiltersStore();
 
-	useEffect(() => {
-		const type = pathname.split("/")[1] || "";
+	// useEffect(() => {
+	// 	const type = pathname.split("/")[1] || "";
 
-		if (prevPath.current === null && !isHidden) {
-			prevPath.current = type;
-			return;
-		}
+	// 	if (prevPath.current === null && !isHidden) {
+	// 		prevPath.current = type;
+	// 		return;
+	// 	}
 
-		let openTimeout: NodeJS.Timeout | undefined;
+	// 	let openTimeout: NodeJS.Timeout | undefined;
+	// 	let isAnimated = false;
 
-		setOpen(false);
-		openTimeout = setTimeout(() => setOpen(type === "" ? !isHidden : true), 300);
+	// 	if (prevPath.current !== type && !isHidden) {
+	// 		isAnimated = true;
+	// 		setOpen(false);
+	// 	}
 
-		prevPath.current = type;
+	// 	if (prevPath.current !== type) {
+	// 		setOpen(false);
+	// 		openTimeout = setTimeout(() => setOpen(type === "" ? !isHidden : true), 300);
+	// 	}
 
-		return () => {
-			clearTimeout(openTimeout);
-		};
-	}, [pathname, isHidden]);
+	// 	prevPath.current = type;
+
+	// 	return () => {
+	// 		clearTimeout(openTimeout);
+	// 	};
+	// }, [pathname, isHidden]);
 
 	return (
-		<div className={`panel${open ? "" : " hide"}`} style={{ maxHeight: `calc(100% - ${active ? 9.5 : 7}rem)` }}>
-			{!open && <Spinner />}
+		<div className={`panel-wrapper${open ? "" : " hide"}`} style={{ maxHeight: `calc(100% - ${active ? 9.5 : 7}rem)` }}>
 			{children}
 		</div>
 	);

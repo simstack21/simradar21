@@ -18,7 +18,7 @@ export default function AirportPanel({ icao, children }: { icao: string; childre
 	};
 
 	return (
-		<>
+		<div className="panel">
 			<div className="panel-header">
 				<div className="panel-id">{icao}</div>
 				<button className="panel-close" type="button" onClick={() => mapService.resetMap()}>
@@ -62,6 +62,6 @@ export default function AirportPanel({ icao, children }: { icao: string; childre
 					<p>{shared ? "Copied!" : "Share"}</p>
 				</button>
 			</div>
-		</>
+		</div>
 	);
 }
