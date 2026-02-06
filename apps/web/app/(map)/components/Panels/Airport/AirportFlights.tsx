@@ -10,10 +10,10 @@ import { mapService } from "@/app/(map)/lib";
 import { getAirlineIcon } from "@/components/Icon/Icon";
 import { getDelayColorFromDates } from "@/components/Panel/utils";
 import Spinner from "@/components/Spinner/Spinner";
-import { getCachedAirline, getCachedAirport } from "@/storage/cache";
-import { useSettingsStore } from "@/storage/zustand";
 import { fetchApi } from "@/lib/api";
 import { convertTime } from "@/lib/helpers";
+import { getCachedAirline, getCachedAirport } from "@/storage/cache";
+import { useSettingsStore } from "@/storage/zustand";
 
 const LIMIT = 20;
 

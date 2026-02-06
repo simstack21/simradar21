@@ -2,8 +2,8 @@ import type { DashboardData } from "@sr24/types/interface";
 import { useMemo, useState } from "react";
 import { Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChooseSwitch } from "@/components/Input/Input";
-import { useSettingsStore } from "@/storage/zustand";
 import { convertTime } from "@/lib/helpers";
+import { useSettingsStore } from "@/storage/zustand";
 
 export function DashboardHistory({ history }: { history: DashboardData["history"] }) {
 	const { timeZone, timeFormat } = useSettingsStore();

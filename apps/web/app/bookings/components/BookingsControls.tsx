@@ -3,8 +3,8 @@ import Icon from "@/components/Icon/Icon";
 import { RangeSwitch } from "@/components/Input/Input";
 import { REPLAY_SPEEDS } from "./Bookings";
 import "@/components/Map/ReplayControl/ReplayControl.css";
-import { useSettingsStore } from "@/storage/zustand";
 import { convertTime } from "@/lib/helpers";
+import { useSettingsStore } from "@/storage/zustand";
 
 export function BookingsControl({
 	progress,

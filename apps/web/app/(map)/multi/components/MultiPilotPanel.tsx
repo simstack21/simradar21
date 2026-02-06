@@ -8,13 +8,13 @@ import flightStatusSprite from "@/assets/images/sprites/flightStatusSprite.png";
 import Icon, { getAirlineIcon } from "@/components/Icon/Icon";
 import { getDelayColorFromDates, getSpriteOffset } from "@/components/Panel/utils";
 import Spinner from "@/components/Spinner/Spinner";
+import { fetchApi } from "@/lib/api";
+import { convertTime } from "@/lib/helpers";
 import { decodeTrackPoints } from "@/lib/map/tracks";
+import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
 import { getCachedAirline, getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
 import type { PilotPanelStatic } from "@/types/panels";
-import { fetchApi } from "@/lib/api";
-import { convertTime } from "@/lib/helpers";
-import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
 import { mapService } from "../../lib";
 
 export default function MultiPilotPanel({ id }: { id: string }) {

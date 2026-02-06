@@ -12,10 +12,10 @@ import { toast } from "react-toastify";
 import MessageBox from "@/components/MessageBox/MessageBox";
 import { getDelayColorFromDates } from "@/components/Panel/utils";
 import Spinner from "@/components/Spinner/Spinner";
-import { getCachedAirport } from "@/storage/cache";
-import { useSettingsStore } from "@/storage/zustand";
 import { fetchApi } from "@/lib/api";
 import { convertTime } from "@/lib/helpers";
+import { getCachedAirport } from "@/storage/cache";
+import { useSettingsStore } from "@/storage/zustand";
 import Aircraft from "./Aircraft";
 
 const LIMIT = 20;

@@ -1,41 +1,73 @@
-"use client";
-
 import type { StaticAirline, StaticAirport } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
 import { useQuery } from "@tanstack/react-query";
+import {
+	CircleXIcon,
+	HistoryIcon,
+	LoaderCircleIcon,
+	PlaneIcon,
+	RouteIcon,
+	SearchIcon,
+	TicketsPlane,
+	TowerControl,
+	UserIcon,
+	XIcon,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useDebounce } from "use-debounce";
-import FlagSprite from "@/assets/images/sprites/flagSprite42.png";
+import { Button } from "@/components/ui/button";
+import { Command, CommandDialog, CommandGroup, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "@/components/ui/command";
 import { getCachedAirline } from "@/storage/cache";
 import { dxFindAirlines, dxFindAirports } from "@/storage/dexie";
-import Icon, { getAirlineIcon } from "../Icon/Icon";
-import Spinner from "../Spinner/Spinner";
-import "./Search.css";
-import { addSearchHistory, clearSearchHistory, fetchPilots, getMatchFields, getPilotMatchFields, getSearchHistory, highlightMatch } from "./helpers";
-import type { QueryResult } from "./types";
+import { AvatarAirline, AvatarCountry } from "../shared/Avatar";
+import { BadgeFeatureHelp, BadgePilotStatus } from "../shared/Badge";
+import { Input } from "../ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger } from "../ui/select";
+import { addSearchHistory, fetchPilots, getPilotMatchFields, getSearchHistory, highlightMatch, removeSearchHistory } from "./helpers";
+import type { FilterItem, HistoryItem, QueryResult } from "./types";
 
-export default function Search() {
+const filterList: FilterItem[] = [
+	{ value: "All", icon: SearchIcon, placeholder: "Type at least 3 characters..." },
+	{ value: "Flights", icon: PlaneIcon, placeholder: "e.g. AAL123 or DLH443..." },
+	{ value: "Airports", icon: TowerControl, placeholder: "e.g. EDDF or Frankfurt..." },
+	{ value: "Airlines", icon: TicketsPlane, placeholder: "e.g. DLH or Lufthansa..." },
+	{ value: "Routes", icon: RouteIcon, placeholder: "e.g. KJFK-EDDF..." },
+	{ value: "Users", icon: UserIcon, placeholder: "e.g. CID or name..." },
+];
+
+export function CommandSearch() {
+	const id = useId();
+
+	const [open, setOpen] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
-	const [focused, setFocused] = useState(false);
-	const [history, setHistory] = useState<string[]>([]);
+	const [history, setHistory] = useState<HistoryItem[]>([]);
+	const [selectValue, setSelectValue] = useState<FilterItem["value"] | null>("All");
+
 	const debounced = useDebounce(searchValue, 300);
 
-	const ref = useRef<HTMLDivElement>(null);
-
 	const { data, isLoading } = useQuery<QueryResult>({
-		queryKey: ["search", debounced],
+		queryKey: ["search", debounced, selectValue],
 		queryFn: async () => {
-			if (debounced[0].startsWith("airline:")) {
-				const query = debounced[0].split(":")[1] || "";
-				const pilots = await fetchPilots(query, "airline");
-				return { airlines: [], airports: [], pilots: pilots };
+			if (selectValue === "Flights") {
+				const pilots = await fetchPilots(debounced[0]);
+				return { pilots };
 			}
-			if (debounced[0].startsWith("route:")) {
-				const route = debounced[0].split(":")[1] || "";
-				const query = route.replace(" ", "");
-				const pilots = await fetchPilots(query, "route");
-				return { airlines: [], airports: [], pilots: pilots };
+			if (selectValue === "Airlines") {
+				const airlines = await dxFindAirlines(debounced[0], 10);
+				return { airlines };
+			}
+			if (selectValue === "Airports") {
+				const airports = await dxFindAirports(debounced[0], 10);
+				return { airports };
+			}
+			if (selectValue === "Routes") {
+				const pilots = await fetchPilots(debounced[0], "routes");
+				return { pilots };
+			}
+			if (selectValue === "Users") {
+				const pilots = await fetchPilots(debounced[0], "users");
+				return { pilots };
 			}
 			const [airlines, airports, pilots] = await Promise.all([
 				dxFindAirlines(debounced[0], 10),
@@ -51,225 +83,169 @@ export default function Search() {
 	});
 
 	useEffect(() => {
-		if (focused) {
-			setHistory(getSearchHistory());
-		}
-	}, [focused]);
-
-	useEffect(() => {
-		function handleClickOutside(event: MouseEvent) {
-			if (ref.current && !ref.current.contains(event.target as Node)) {
-				setFocused(false);
-				setSearchValue("");
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.code === "Space" && document.activeElement?.tagName !== "INPUT") {
+				e.preventDefault();
+				setOpen(true);
 			}
-		}
-
-		document.addEventListener("mousedown", handleClickOutside);
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
 		};
+
+		setHistory(getSearchHistory());
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, []);
 
+	const onSelectItem = (type: FilterItem["value"], value: string, close?: boolean) => {
+		setSelectValue(type);
+		setSearchValue(value);
+		addSearchHistory({ type, value });
+		setHistory(getSearchHistory());
+
+		if (close) {
+			setOpen(false);
+		}
+	};
+
 	return (
-		<div id="header-search-wrapper" ref={ref}>
-			<input
-				id="header-search"
-				type="text"
-				placeholder="Find flights, airports, airlines and more"
-				value={searchValue}
-				onChange={(e) => setSearchValue(e.target.value)}
-				onFocus={() => setFocused(true)}
-				onKeyDown={(e) => {
-					if (e.key === "Enter") {
-						addSearchHistory(searchValue);
-						setHistory(getSearchHistory());
-					}
-				}}
-			/>
-			{searchValue.length > 0 && (
-				<button type="button" id="header-search-clear" onClick={() => setSearchValue("")}>
-					<Icon name="cancel" size={16} />
-				</button>
-			)}
-			{focused && (
-				<div id="header-search-results" className="scrollable">
-					{isLoading && <Spinner relative />}
-					{searchValue.length < 3 && history.length > 0 && (
-						<>
-							<div className="header-search-separator">
-								<p>Search History</p>
-								<button
-									type="button"
-									id="header-search-history-clear"
-									onClick={() => {
-										clearSearchHistory();
-										setHistory([]);
-									}}
-								>
-									Clear
-								</button>
+		<div className="flex flex-col gap-4">
+			<Button variant="outline" onClick={() => setOpen(true)}>
+				<SearchIcon data-icon="inline-start" />
+				<span className="hidden md:block">Search</span>
+			</Button>
+			<CommandDialog open={open} onOpenChange={setOpen}>
+				<Command>
+					<div className="relative flex p-1">
+						<Select
+							defaultValue="All"
+							value={selectValue}
+							onValueChange={(value) => {
+								setSelectValue(value);
+								setSearchValue("");
+							}}
+						>
+							<SelectTrigger id={id} className="rounded-r-none shadow-none focus-visible:z-10">
+								{(() => {
+									const Icon = filterList.find((f) => f.value === selectValue)?.icon ?? SearchIcon;
+									return <Icon className="text-green" />;
+								})()}
+							</SelectTrigger>
+							<SelectContent>
+								<SelectGroup>
+									<SelectLabel>Filters</SelectLabel>
+									{filterList.map((filter) => (
+										<SelectItem key={filter.value} value={filter.value}>
+											<filter.icon className="my-auto" />
+											{filter.value}
+										</SelectItem>
+									))}
+								</SelectGroup>
+							</SelectContent>
+						</Select>
+						<Input
+							id={id}
+							type="text"
+							placeholder={filterList.find((f) => f.value === selectValue)?.placeholder}
+							value={searchValue}
+							onChange={(e) => setSearchValue(e.target.value)}
+							className="-ms-px rounded-l-none shadow-none peer"
+						/>
+						{isLoading && (
+							<div className="text-muted-foreground pointer-events-none absolute inset-y-0 right-5 flex items-center justify-center pr-3 peer-disabled:opacity-50">
+								<LoaderCircleIcon className="size-4 animate-spin" />
+								<span className="sr-only">Loading...</span>
 							</div>
-							{history.map((value) => (
-								<HistoryResult key={value} value={value} setValue={setSearchValue} />
-							))}
-						</>
-					)}
-					{searchValue.length < 3 && <Placeholder />}
-					{data?.airlines.length === 0 && data?.airports.length === 0 && data?.pilots.live.length === 0 && data?.pilots.offline.length === 0 && (
-						<p>No results found.</p>
-					)}
-
-					{data?.airlines && data?.airlines.length > 0 && (
-						<div className="header-search-separator">
-							<p>Airlines</p>
+						)}
+						<div
+							className="text-muted-foreground absolute inset-y-0 right-0 flex items-center justify-center pr-3 z-20"
+							onClick={() => setSearchValue("")}
+						>
+							<CircleXIcon className="size-4" />
+							<span className="sr-only">Clear</span>
 						</div>
-					)}
-					{data?.airlines.map((airline) => (
-						<AirlineResult key={airline.id} airline={airline} setValue={setSearchValue} searchValue={searchValue} />
-					))}
-
-					{data?.airports && data?.airports.length > 0 && (
-						<div className="header-search-separator">
-							<p>Airports</p>
-						</div>
-					)}
-					{data?.airports.map((airport) => (
-						<AirportResult key={airport.id} airport={airport} setValue={setSearchValue} setFocused={setFocused} searchValue={searchValue} />
-					))}
-
-					{data?.pilots.live && data?.pilots.live.length > 0 && (
-						<div className="header-search-separator">
-							<p>Live Flights</p>
-						</div>
-					)}
-					{data?.pilots.live.map((pilot) => (
-						<PilotResult key={pilot.id} pilot={pilot} setValue={setSearchValue} setFocused={setFocused} searchValue={searchValue} />
-					))}
-
-					{data?.pilots.offline && data?.pilots.offline.length > 0 && (
-						<div className="header-search-separator">
-							<p>Recent Or Scheduled Flights</p>
-						</div>
-					)}
-					{data?.pilots.offline.map((pilot) => (
-						<PilotResult key={pilot.id} pilot={pilot} recent setValue={setSearchValue} setFocused={setFocused} searchValue={searchValue} />
-					))}
-				</div>
-			)}
+					</div>
+					<CommandList>
+						<BadgeFeatureHelp featureKey="search" text="Press Space to open the search window." className="p-1" />
+						{searchValue.length < 3 && history.length > 0 && (
+							<>
+								<CommandSeparator />
+								<CommandGroup heading="History">
+									{history.map((item) => (
+										<CommandItem key={item.value} onSelect={() => onSelectItem(item.type, item.value)}>
+											<HistoryIcon />
+											<span>{item.value}</span>
+											<CommandShortcut
+												className="group"
+												onClick={(e) => {
+													e.stopPropagation();
+													removeSearchHistory(item.value);
+													setHistory(getSearchHistory());
+												}}
+											>
+												<XIcon className="group-hover:text-red" />
+											</CommandShortcut>
+										</CommandItem>
+									))}
+								</CommandGroup>
+							</>
+						)}
+						{data?.pilots?.live && data?.pilots.live.length > 0 && (
+							<>
+								<CommandSeparator />
+								<CommandGroup heading="Live Flights">
+									{data?.pilots.live.map((pilot) => (
+										<PilotItem key={`${pilot.cid}_live`} pilot={pilot} searchValue={searchValue} onSelectItem={onSelectItem} />
+									))}
+								</CommandGroup>
+							</>
+						)}
+						{data?.pilots?.offline && data?.pilots.offline.length > 0 && (
+							<>
+								<CommandSeparator />
+								<CommandGroup heading="Recent or Scheduled Flights">
+									{data?.pilots.offline.map((pilot) => (
+										<PilotItem key={`${pilot.cid}_offline`} pilot={pilot} recent searchValue={searchValue} onSelectItem={onSelectItem} />
+									))}
+								</CommandGroup>
+							</>
+						)}
+						{data?.airlines && data?.airlines.length > 0 && (
+							<>
+								<CommandSeparator />
+								<CommandGroup heading="Airlines">
+									{data?.airlines.map((airline) => (
+										<AirlineItem key={airline.id} airline={airline} onSelectItem={onSelectItem} />
+									))}
+								</CommandGroup>
+							</>
+						)}
+						{data?.airports && data?.airports.length > 0 && (
+							<>
+								<CommandSeparator />
+								<CommandGroup heading="Airports">
+									{data?.airports.map((airport) => (
+										<AirportItem key={airport.id} airport={airport} onSelectItem={onSelectItem} />
+									))}
+								</CommandGroup>
+							</>
+						)}
+					</CommandList>
+				</Command>
+			</CommandDialog>
 		</div>
 	);
 }
 
-function Placeholder() {
-	return (
-		<>
-			<div className="header-search-separator">
-				<p>Search Tips</p>
-			</div>
-			<div id="header-search-placeholder">
-				<p>Type at least 3 characters to search.</p>
-				<p>
-					<strong>Advanced search:</strong>
-					<br />
-					Use <code>airline:&lt;code&gt;</code> to search for flights by airline code. E.g., <code>airline:AAL</code> for American Airlines flights.
-					<br />
-					Use <code>route:&lt;ICAO&gt;-&lt;ICAO&gt;</code> to search for flights by route. E.g., <code>route:KLAX-KJFK</code> for flights from Los
-					Angeles to New York.
-				</p>
-			</div>
-		</>
-	);
-}
-
-function HistoryResult({ value, setValue }: { value: string; setValue: (value: string) => void }) {
-	return (
-		<button className="search-history-item" type="button" onClick={() => setValue(value)}>
-			<Icon name="history" size={18} />
-			{value}
-		</button>
-	);
-}
-
-function AirlineResult({ airline, setValue, searchValue }: { airline: StaticAirline; setValue: (value: string) => void; searchValue: string }) {
-	const matchFields = getMatchFields(airline, searchValue);
-
-	return (
-		<button className="search-item" type="button" onClick={() => setValue(`airline:${airline.id}`)}>
-			<div className="search-icon" style={{ backgroundColor: airline.color?.[0] ?? "" }}>
-				{getAirlineIcon(airline)}
-			</div>
-			<div className="search-info">
-				<div className="search-title">{matchFields.name ? highlightMatch(airline.name, searchValue) : airline.name}</div>
-				<div className="search-tags">
-					<span
-						style={{ background: "var(--color-red)", padding: "0px 2px", color: "white" }}
-					>{`${airline.id}${airline.iata ? ` \u2223 ${airline.iata}` : ""}`}</span>
-					<Icon name="hotline" size={12} />
-					<span>{airline.callsign}</span>
-				</div>
-			</div>
-		</button>
-	);
-}
-
-function AirportResult({
-	airport,
-	setValue,
-	setFocused,
-	searchValue,
-}: {
-	airport: StaticAirport;
-	setValue: (value: string) => void;
-	setFocused: (focused: boolean) => void;
-	searchValue: string;
-}) {
-	const router = useRouter();
-	const pathname = usePathname();
-
-	const matchFields = getMatchFields(airport, searchValue);
-
-	return (
-		<button
-			className="search-item"
-			type="button"
-			onClick={() => {
-				setValue("");
-				setFocused(false);
-				addSearchHistory(airport.id);
-				if (pathname.startsWith("/data")) {
-					window.location.href = `/airport/${airport.id}`;
-					return;
-				}
-				router.push(`/airport/${airport.id}`);
-			}}
-		>
-			<div className="search-icon">
-				<div className={`fflag ff-lg fflag-${airport.country}`} style={{ backgroundImage: `url(${FlagSprite.src})` }}></div>
-			</div>
-			<div className="search-info">
-				<div className="search-title">{matchFields.name ? highlightMatch(airport.name, searchValue) : airport.name}</div>
-				<div className="search-tags">
-					<span
-						style={{ background: "var(--color-red)", padding: "0px 2px", color: "white" }}
-					>{`${airport.id}${airport.iata ? ` / ${airport.iata}` : ""}`}</span>
-				</div>
-			</div>
-		</button>
-	);
-}
-
-function PilotResult({
+function PilotItem({
 	pilot,
 	recent = false,
-	setValue,
-	setFocused,
 	searchValue,
+	onSelectItem,
 }: {
 	pilot: PilotLong;
 	recent?: boolean;
-	setValue: (value: string) => void;
-	setFocused: (focused: boolean) => void;
 	searchValue: string;
+	onSelectItem: (type: FilterItem["value"], value: string, close?: boolean) => void;
 }) {
 	const [airline, setAirline] = useState<StaticAirline | null>(null);
 	const router = useRouter();
@@ -285,17 +261,12 @@ function PilotResult({
 	}, [pilot]);
 
 	const matchFields = getPilotMatchFields(pilot, searchValue);
-	const callsignNumber = pilot.callsign.slice(3);
-	const flightNumber = airline?.iata ? `${airline.iata}${callsignNumber}` : pilot?.callsign;
 
 	return (
-		<button
-			className="search-item"
-			type="button"
-			onClick={() => {
-				setValue("");
-				setFocused(false);
-				addSearchHistory(pilot.callsign);
+		<CommandItem
+			key={`${pilot.cid}_offline`}
+			onSelect={() => {
+				onSelectItem("Flights", pilot.callsign, true);
 				if (pathname.startsWith("/data") && recent) {
 					router.push(`/data/flights/${pilot.callsign}`);
 					return;
@@ -311,38 +282,99 @@ function PilotResult({
 				router.push(`/pilot/${pilot.id}`);
 			}}
 		>
-			<div className="search-icon" style={{ backgroundColor: airline?.color?.[0] ?? "" }}>
-				{getAirlineIcon(airline)}
-			</div>
-			<div className="search-info pilot">
-				<div className="search-title">{matchFields.callsign ? highlightMatch(pilot.callsign, searchValue) : pilot.callsign}</div>
-				<div style={{ textAlign: "right", fontSize: "var(--font-size-small)" }}>
-					{!recent && (
-						<>
-							{matchFields.departure
-								? highlightMatch(pilot.flight_plan?.departure.icao ?? "N/A", searchValue)
-								: (pilot.flight_plan?.departure.icao ?? "N/A")}
-							&nbsp;&ndash;&nbsp;
-							{matchFields.arrival
-								? highlightMatch(pilot.flight_plan?.arrival.icao ?? "N/A", searchValue)
-								: (pilot.flight_plan?.arrival.icao ?? "N/A")}
-						</>
-					)}
+			<AvatarAirline airline={airline} />
+			<div className="flex flex-col">
+				<div className="flex gap-2">
+					<span>{pilot.callsign}</span>
+					<BadgePilotStatus status={pilot.live} />
 				</div>
-				<div className="search-tags">
-					<span style={{ background: "var(--color-red)" }} className="bg">
-						{flightNumber}
+				{matchFields.name && (
+					<span className="text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis max-w-60">
+						Name: {highlightMatch(matchFields.name, searchValue)}
 					</span>
-					<span className={`live-tag ${pilot.live}`}>{pilot.live}</span>
-				</div>
-				<div style={{ textAlign: "right", fontSize: "var(--font-size-small)" }}>{!recent && pilot.aircraft}</div>
+				)}
+				{matchFields.cid && (
+					<span className="text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis max-w-60">
+						CID: {highlightMatch(matchFields.cid, searchValue)}
+					</span>
+				)}
 			</div>
-			{(matchFields.cid || matchFields.name) && (
-				<div className="search-extra">
-					{matchFields.cid && <div>{matchFields.cid ? highlightMatch(pilot.cid.toString(), searchValue) : pilot.cid}</div>}
-					{matchFields.name && <div>{matchFields.name ? highlightMatch(pilot.name, searchValue) : pilot.name}</div>}
-				</div>
+			{!recent && (
+				<CommandShortcut>
+					<div className="flex flex-col items-end">
+						<span>{pilot.aircraft}</span>
+						<span className="text-xs text-muted-foreground">
+							{pilot.flight_plan?.departure.icao} &ndash; {pilot.flight_plan?.arrival.icao}
+						</span>
+					</div>
+				</CommandShortcut>
 			)}
-		</button>
+		</CommandItem>
+	);
+}
+
+function AirportItem({
+	airport,
+	onSelectItem,
+}: {
+	airport: StaticAirport;
+	onSelectItem: (type: FilterItem["value"], value: string, close?: boolean) => void;
+}) {
+	const router = useRouter();
+	const pathname = usePathname();
+
+	return (
+		<CommandItem
+			key={airport.id}
+			onSelect={() => {
+				onSelectItem("Airports", airport.id, true);
+				if (pathname.startsWith("/data")) {
+					window.location.href = `/airport/${airport.id}`;
+					return;
+				}
+				router.push(`/airport/${airport.id}`);
+			}}
+		>
+			<AvatarCountry country={airport.country} />
+			<div className="flex flex-col">
+				<span>{airport.name}</span>
+				<span className="text-muted-foreground">{airport.city}</span>
+			</div>
+			<CommandShortcut>
+				<div className="flex flex-col items-end">
+					<span>{airport.id}</span>
+					<span className="text-xs text-muted-foreground">{airport.iata}</span>
+				</div>
+			</CommandShortcut>
+		</CommandItem>
+	);
+}
+
+function AirlineItem({
+	airline,
+	onSelectItem,
+}: {
+	airline: StaticAirline;
+	onSelectItem: (type: FilterItem["value"], value: string, close?: boolean) => void;
+}) {
+	return (
+		<CommandItem
+			key={airline.id}
+			onSelect={() => {
+				onSelectItem("Flights", airline.id);
+			}}
+		>
+			<AvatarAirline airline={airline} />
+			<div className="flex flex-col">
+				<span>{airline.name}</span>
+				<span className="text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis max-w-60">{airline.callsign}</span>
+			</div>
+			<CommandShortcut>
+				<div className="flex flex-col items-end">
+					<span>{airline.id}</span>
+					<span className="text-xs text-muted-foreground">{airline.iata}</span>
+				</div>
+			</CommandShortcut>
+		</CommandItem>
 	);
 }

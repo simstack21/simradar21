@@ -1,32 +1,19 @@
 "use client";
 
-import Search from "../Search/Search";
-import "./Header.css";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
-import simradar24Logo from "@/assets/images/logos/Simradar21_Logo.svg";
+import simradar21Full from "@/assets/images/logos/simradar21_full_logo.svg";
+import simradar21Icon from "@/assets/images/logos/simradar21_icon.svg";
 import useSettings from "@/hooks/useSettings";
-import { storeUserSettings, useSettingsStore } from "@/storage/zustand";
-import Icon from "../Icon/Icon";
-import Navigation from "./Navigation";
+import { CommandSearch } from "../Search/Search";
+import { DropdownNavigation, DropdownUser } from "../shared/Dropdown";
+import { SwitchTheme, SwitchTimeZone } from "../shared/Switch";
 
 export default function Header() {
 	const [open, setOpen] = useState(false);
 	const headerRef = useRef<HTMLElement>(null);
 
-	const { data: session } = useSession();
-
-	const settings = useSettingsStore();
 	useSettings();
-
-	const onThemeChange = async () => {
-		settings.setTheme(settings.theme === "dark" ? "light" : "dark");
-
-		if (session) {
-			storeUserSettings();
-		}
-	};
 
 	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
@@ -45,30 +32,21 @@ export default function Header() {
 	}, [open]);
 
 	return (
-		<header ref={headerRef}>
-			<figure id="header-logo">
+		<header
+			ref={headerRef}
+			className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-4 rounded-full outline border overflow-hidden h-10 backdrop-blur-md bg-linear-to-r from-white/1 from-20% via-white/3 via-50% to-white/1"
+		>
+			<figure className="bg-blue h-full flex items-center px-4 shrink-0">
 				<a href="/">
-					<Image src={simradar24Logo} alt="simradar24 logo" height={40} width={200} priority />
+					<Image src={simradar21Icon} alt="simradar21 logo" height={18} className="block md:hidden" priority />
+					<Image src={simradar21Full} alt="simradar21 full logo" height={18} className="hidden md:block" priority />
 				</a>
 			</figure>
-			<Search />
-			<button
-				type="button"
-				id="header-theme"
-				onClick={() => onThemeChange()}
-				aria-label="Toggle Theme"
-				className={settings.theme === "dark" ? "light" : "dark"}
-			>
-				{<Icon name={settings.theme === "dark" ? "light-theme" : "dark-theme"} size={24} />}
-			</button>
-			<a href="/auth" id="header-user">
-				<Icon name="user" size={18} offset={-1} />
-				<span style={{ backgroundColor: session ? "var(--color-green)" : "var(--color-red)" }}></span>
-			</a>
-			<button type="button" id="header-nav" aria-label="Navigation" onClick={() => setOpen(!open)}>
-				<Icon name={open ? "cancel" : "off-canvas"} size={24} />
-			</button>
-			<Navigation open={open} />
+			<CommandSearch />
+			<SwitchTheme />
+			<SwitchTimeZone />
+			<DropdownUser />
+			<DropdownNavigation />
 		</header>
 	);
 }

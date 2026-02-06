@@ -129,14 +129,14 @@ export async function searchPilotsByAll(query: string) {
 	return await searchPilots(where);
 }
 
-export async function searchPilotsByAirline(query: string) {
+export async function searchPilotsByUsers(query: string) {
 	const where: Prisma.PilotWhereInput = {
-		callsign: { startsWith: query.toUpperCase() },
+		OR: [{ cid: { contains: query } }, { name: { contains: query, mode: "insensitive" } }],
 	};
 	return await searchPilots(where);
 }
 
-export async function searchPilotsByRoute(dep: string, arr: string) {
+export async function searchPilotsByRoutes(dep: string, arr: string) {
 	const where: Prisma.PilotWhereInput = {
 		AND: [{ dep_icao: dep.toUpperCase() }, { arr_icao: arr.toUpperCase() }],
 	};

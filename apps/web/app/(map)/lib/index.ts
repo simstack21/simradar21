@@ -1,9 +1,9 @@
 import type { InitialData } from "@sr24/types/interface";
+import { fetchApi } from "@/lib/api";
 import { MapService } from "@/lib/map/MapService";
+import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
 import { dxGetAllAirports } from "@/storage/dexie";
 import { useFiltersStore } from "@/storage/zustand";
-import { fetchApi } from "@/lib/api";
-import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
 
 export const mapService = new MapService();
 
