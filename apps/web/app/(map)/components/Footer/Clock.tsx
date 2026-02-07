@@ -1,5 +1,6 @@
 "use client";
 
+import { ClockIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 function getTime(time: Date | null): string {
@@ -28,9 +29,9 @@ export default function Clock() {
 	}, []);
 
 	return (
-		<div id="footer-clock">
-			{getTime(time)}
-			<span>UTC</span>
+		<div className="flex gap-1">
+			<ClockIcon className="size-4" aria-hidden="true" />
+			<span>{getTime(time)} z</span>
 		</div>
 	);
 }

@@ -1,6 +1,5 @@
 import Header from "@/components/Header/Header";
 import "./Policy.css";
-import Footer from "@/components/Footer/Footer";
 
 export default function Page() {
 	return (
@@ -355,7 +354,6 @@ export default function Page() {
 					</p>
 				</div>
 			</main>
-			<Footer />
 		</>
 	);
 }

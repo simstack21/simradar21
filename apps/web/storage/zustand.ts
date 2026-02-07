@@ -164,8 +164,3 @@ export const useMapVisibilityStore = create<{ isHidden: boolean; setHidden: (val
 		},
 	),
 );
-
-export const useMapRotationStore = create<{ rotation: number; setRotation: (value: number) => void }>((set) => ({
-	rotation: 0,
-	setRotation: (value: number) => set({ rotation: value }),
-}));

@@ -23,7 +23,9 @@ import { dxFindAirlines, dxFindAirports } from "@/storage/dexie";
 import { AvatarAirline, AvatarCountry } from "../shared/Avatar";
 import { BadgeFeatureHelp, BadgePilotStatus } from "../shared/Badge";
 import { Input } from "../ui/input";
+import { Kbd } from "../ui/kbd";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger } from "../ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { addSearchHistory, fetchPilots, getPilotMatchFields, getSearchHistory, highlightMatch, removeSearchHistory } from "./helpers";
 import type { FilterItem, HistoryItem, QueryResult } from "./types";
 
@@ -109,10 +111,21 @@ export function CommandSearch() {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<Button variant="outline" onClick={() => setOpen(true)}>
-				<SearchIcon data-icon="inline-start" />
-				<span className="hidden md:block">Search</span>
-			</Button>
+			<Tooltip>
+				<TooltipTrigger
+					delay={100}
+					render={
+						<Button variant="ghost" onClick={() => setOpen(true)}>
+							<SearchIcon data-icon="inline-start" />
+						</Button>
+					}
+				></TooltipTrigger>
+				<TooltipContent className="pr-1.5">
+					<div className="flex items-center gap-2">
+						Open Search <Kbd>Space</Kbd>
+					</div>
+				</TooltipContent>
+			</Tooltip>
 			<CommandDialog open={open} onOpenChange={setOpen}>
 				<Command>
 					<div className="relative flex p-1">

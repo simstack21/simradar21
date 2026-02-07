@@ -1,8 +1,8 @@
 "use client";
 
+import { UsersIcon, WifiIcon, WifiOffIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
-import Icon from "../Icon/Icon";
 
 function getTimestamp(date: Date | string): string {
 	return new Date(date).toISOString().split("T")[1].split(".")[0];
@@ -41,13 +41,13 @@ export default function Metrics() {
 
 	return (
 		<>
-			<Icon name="signal" size={16} />
-			<div id="footer-clients">
-				<span>{metrics || "..."}</span>visitors online
+			<div className="flex gap-1.5">
+				<UsersIcon className="size-4" aria-hidden="true" />
+				<span>{metrics || "..."}</span>
 			</div>
-			<div id="footer-timestamp">
-				<span style={{ background: stale ? "var(--color-red)" : "", animationDuration: stale ? "1s" : "" }}></span>
-				{timestamp}
+			<div className="flex gap-1.5">
+				{stale ? <WifiOffIcon className="size-4 text-red" aria-hidden="true" /> : <WifiIcon className="size-4 text-green" aria-hidden="true" />}
+				{timestamp} z
 			</div>
 		</>
 	);

@@ -10,7 +10,7 @@ export const AvatarUser = ({ withBadge }: { withBadge?: boolean }) => {
 		<Avatar size="sm">
 			<AvatarImage src="https://github.com/shadcn.png" alt="@you" />
 			<AvatarFallback>U</AvatarFallback>
-			{withBadge && <AvatarBadge className={`${session ? "bg-green-500 dark:bg-green-600" : "bg-red-500 dark:bg-red-600"}`} />}
+			{withBadge && <AvatarBadge className={`${session ? "bg-green" : "bg-red"}`} />}
 		</Avatar>
 	);
 };
