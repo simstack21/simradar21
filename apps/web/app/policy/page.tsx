@@ -6,7 +6,7 @@ export default function Page() {
 	return (
 		<>
 			<Header />
-			<main className="flex flex-col p-8 mt-16 gap-8 sm:p-16 sm:mt-8">
+			<main className="flex flex-col gap-8 p-8 sm:p-16 pt-20 sm:pt-20">
 				<BreadCrumbWithDropdown />
 				<div className="flex flex-col gap-4">
 					<div className="font-bold text-4xl">Impressum</div>
@@ -25,7 +25,7 @@ export default function Page() {
 				<div className="flex flex-col gap-4">
 					<div className="font-bold text-4xl">Datenschutz&shy;erkl&auml;rung</div>
 					<div className="font-bold text-2xl">
-						<span className="text-green">1.</span> Datenschutz auf einen Blick
+						<span className="text-primary">1.</span> Datenschutz auf einen Blick
 					</div>
 					<div className="font-semibold text-xl">Allgemeine Hinweise</div>{" "}
 					<p>
@@ -65,7 +65,7 @@ export default function Page() {
 					</p>{" "}
 					<p>Hierzu sowie zu weiteren Fragen zum Thema Datenschutz k&ouml;nnen Sie sich jederzeit an uns wenden.</p>
 					<div className="font-semibold text-xl">
-						<span className="text-green">2.</span> Hosting
+						<span className="text-primary">2.</span> Hosting
 					</div>
 					<p>Wir hosten die Inhalte unserer Website bei folgendem Anbieter:</p>
 					<div className="font-semibold text-xl">Strato</div>{" "}
@@ -94,7 +94,7 @@ export default function Page() {
 						Websitebesucher nur nach unseren Weisungen und unter Einhaltung der DSGVO verarbeitet.
 					</p>
 					<div className="font-bold text-2xl">
-						<span className="text-green">3.</span> Allgemeine Hinweise und Pflicht&shy;informationen
+						<span className="text-primary">3.</span> Allgemeine Hinweise und Pflicht&shy;informationen
 					</div>
 					<div className="font-semibold text-xl">Datenschutz</div>{" "}
 					<p>
@@ -239,7 +239,7 @@ export default function Page() {
 						mitgelesen werden.
 					</p>
 					<div className="font-semibold text-2xl">
-						<span className="text-green">4.</span> Datenerfassung auf dieser Website
+						<span className="text-primary">4.</span> Datenerfassung auf dieser Website
 					</div>
 					<div className="font-semibold text-xl">Server-Log-Dateien</div>{" "}
 					<p>
@@ -257,7 +257,7 @@ export default function Page() {
 						der technisch fehlerfreien Darstellung und der Optimierung seiner Website &ndash; hierzu m&uuml;ssen die Server-Log-Files erfasst werden.
 					</p>
 					<div className="font-semibold text-2xl">
-						<span className="text-green">5.</span> Plugins und Tools
+						<span className="text-primary">5.</span> Plugins und Tools
 					</div>
 					<div className="font-semibold text-xl">Google Fonts</div>{" "}
 					<p>

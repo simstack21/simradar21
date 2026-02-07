@@ -46,7 +46,7 @@ export default function Metrics() {
 				<span>{metrics || "..."}</span>
 			</div>
 			<div className="flex gap-1.5">
-				{stale ? <WifiOffIcon className="size-4 text-red" aria-hidden="true" /> : <WifiIcon className="size-4 text-green" aria-hidden="true" />}
+				{stale ? <WifiOffIcon className="size-4 text-red" aria-hidden="true" /> : <WifiIcon className="size-4 text-primary" aria-hidden="true" />}
 				{timestamp} z
 			</div>
 		</>

@@ -66,7 +66,7 @@ export function highlightMatch(text: string, query: string): React.ReactNode {
 
 	return parts.map((part, i) =>
 		regex.test(part) ? (
-			<span key={i} className="font-bold text-green">
+			<span key={i} className="font-bold text-primary">
 				{part}
 			</span>
 		) : (

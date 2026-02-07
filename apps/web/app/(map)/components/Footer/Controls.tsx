@@ -191,7 +191,7 @@ const ButtonGroupControls = () => {
 					delay={100}
 					render={
 						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => router.push("/filters")}>
-							<FunnelIcon style={{ fill: filterActive ? "var(--green)" : "", stroke: filterActive ? "var(--green)" : "" }} />
+							<FunnelIcon style={{ fill: filterActive ? "var(--primary)" : "", stroke: filterActive ? "var(--primary)" : "" }} />
 							<span className="sr-only">Open Filters</span>
 						</Button>
 					}
