@@ -155,7 +155,7 @@ function initAirportRecord(icao: string): AirportLong {
 function calculateDepartureDelay(pilot: PilotLong): number {
 	if (!pilot.times?.off_block) return 0;
 	const times = pilot.times;
-	const delay_min = (times.off_block.getTime() - times.sched_off_block.getTime()) / 1000 / 60;
+	const delay_min = (times.off_block - times.sched_off_block) / 1000 / 60;
 
 	return Math.min(Math.max(delay_min, 0), 120);
 }
@@ -163,7 +163,7 @@ function calculateDepartureDelay(pilot: PilotLong): number {
 function calculateArrivalDelay(pilot: PilotLong): number {
 	if (!pilot.times?.on_block) return 0;
 	const times = pilot.times;
-	const delay_min = (times.on_block.getTime() - times.sched_on_block.getTime()) / 1000 / 60;
+	const delay_min = (times.on_block - times.sched_on_block) / 1000 / 60;
 
 	return Math.min(Math.max(delay_min, 0), 120);
 }

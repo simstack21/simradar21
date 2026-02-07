@@ -21,13 +21,11 @@ export function getSpriteOffset(status: string | undefined) {
 	}
 }
 
-export function getDelayColorFromDates(scheduled: string | Date | undefined, actual: string | Date | undefined): string | null {
+export function getDelayColorFromDates(scheduled: number | undefined, actual: number | undefined): string | null {
 	if (!scheduled || !actual) {
 		return null;
 	}
-	const scheduledDate = new Date(scheduled);
-	const actualDate = new Date(actual);
-	const delayMinutes = (actualDate.getTime() - scheduledDate.getTime()) / 60000;
+	const delayMinutes = (actual - scheduled) / 60000;
 	if (delayMinutes >= 30) {
 		return "red";
 	} else if (delayMinutes >= 15) {

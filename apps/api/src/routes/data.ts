@@ -22,16 +22,16 @@ const dataRoutes: FastifyPluginAsync = async (app) => {
 					type: "object",
 					properties: {
 						limit: { type: "string", pattern: "^[0-9]+$" },
-						cursor: { type: "string" },
+						page: { type: "string", pattern: "^[0-9]+$" },
 					},
 				},
 			},
 		},
 		async (request) => {
 			const { callsign } = request.params as { callsign: string };
-			const { limit, cursor } = request.query as { limit?: string; cursor?: string };
+			const { limit, page } = request.query as { limit?: string; page?: string };
 
-			return await getFlightsByCallsign(callsign, limit, cursor);
+			return await getFlightsByCallsign(callsign, limit, page);
 		},
 	);
 
@@ -48,16 +48,16 @@ const dataRoutes: FastifyPluginAsync = async (app) => {
 					type: "object",
 					properties: {
 						limit: { type: "string", pattern: "^[0-9]+$" },
-						cursor: { type: "string" },
+						page: { type: "string", pattern: "^[0-9]+$" },
 					},
 				},
 			},
 		},
 		async (request) => {
 			const { registration } = request.params as { registration: string };
-			const { limit, cursor } = request.query as { limit?: string; cursor?: string };
+			const { limit, page } = request.query as { limit?: string; page?: string };
 
-			return await getFlightsByRegistration(registration, limit, cursor);
+			return await getFlightsByRegistration(registration, limit, page);
 		},
 	);
 

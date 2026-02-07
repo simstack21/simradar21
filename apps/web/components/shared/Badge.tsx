@@ -46,7 +46,7 @@ export const BadgeFeatureHelp = ({ featureKey, text, className }: { featureKey: 
 
 	return (
 		<div className={`flex items-center gap-2 ${className}`}>
-			<Badge variant="secondary">
+			<Badge variant="secondary" className="flex items-center">
 				<StarIcon className="mr-0.5" aria-hidden="true" />
 				Tip
 				<button
@@ -60,6 +60,14 @@ export const BadgeFeatureHelp = ({ featureKey, text, className }: { featureKey: 
 			</Badge>
 			<p className="text-xs text-muted-foreground">{text}</p>
 		</div>
+	);
+};
+
+export const BadgeComingSoon = () => {
+	return (
+		<Badge variant="default" className="bg-magenta text-foreground">
+			Coming Soon
+		</Badge>
 	);
 };
 

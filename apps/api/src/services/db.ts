@@ -143,56 +143,78 @@ export async function searchPilotsByRoutes(dep: string, arr: string) {
 	return await searchPilots(where);
 }
 
-export async function getFlightsByCallsign(callsign: string, limit?: string, cursor?: string) {
-	return await prisma.pilot.findMany({
-		where: {
-			callsign: { startsWith: callsign.toUpperCase() },
-		},
-		orderBy: {
-			sched_off_block: "desc",
-		},
-		take: Number(limit || 20),
-		...(cursor && {
-			skip: 1,
-			cursor: {
-				id: cursor,
+export async function getFlightsByCallsign(callsign: string, limit?: string, page?: string) {
+	const take = Number(limit ?? 20);
+	const pageNumber = Number(page ?? 0);
+	const skip = pageNumber * take;
+
+	const [flights, totalCount] = await Promise.all([
+		prisma.pilot.findMany({
+			where: {
+				callsign: { startsWith: callsign.toUpperCase() },
+			},
+			orderBy: {
+				sched_off_block: "desc",
+			},
+			take,
+			skip,
+			select: {
+				id: true,
+				callsign: true,
+				aircraft: true,
+				flight_plan: true,
+				times: true,
+				live: true,
 			},
 		}),
-		select: {
-			id: true,
-			callsign: true,
-			aircraft: true,
-			flight_plan: true,
-			times: true,
-			live: true,
-		},
-	});
+		prisma.pilot.count({
+			where: {
+				callsign: { startsWith: callsign.toUpperCase() },
+			},
+		}),
+	]);
+
+	return {
+		flights,
+		totalCount,
+	};
 }
 
-export async function getFlightsByRegistration(registration: string, limit?: string, cursor?: string) {
-	return await prisma.pilot.findMany({
-		where: {
-			ac_reg: registration,
-		},
-		orderBy: {
-			sched_off_block: "desc",
-		},
-		take: Number(limit || 20),
-		...(cursor && {
-			skip: 1,
-			cursor: {
-				id: cursor,
+export async function getFlightsByRegistration(registration: string, limit?: string, page?: string) {
+	const take = Number(limit ?? 20);
+	const pageNumber = Number(page ?? 0);
+	const skip = pageNumber * take;
+
+	const [flights, totalCount] = await Promise.all([
+		prisma.pilot.findMany({
+			where: {
+				ac_reg: registration,
+			},
+			orderBy: {
+				sched_off_block: "desc",
+			},
+			take,
+			skip,
+			select: {
+				id: true,
+				callsign: true,
+				aircraft: true,
+				flight_plan: true,
+				times: true,
+				live: true,
 			},
 		}),
-		select: {
-			id: true,
-			callsign: true,
-			aircraft: true,
-			flight_plan: true,
-			times: true,
-			live: true,
-		},
-	});
+		prisma.pilot.count({
+			where: {
+				ac_reg: registration,
+			},
+		}),
+	]);
+
+	return {
+		flights,
+		totalCount,
+	};
 }
 
 export async function getPilotReplay(id: string) {

@@ -115,7 +115,7 @@
 }
 
 [data-theme="dark"] {
-	--background: oklch(0 0 0);
+	--background: oklch(0% 0 0);
 	--foreground: oklch(1 0 0);
 	--card: oklch(0.14 0 0);
 	--card-foreground: oklch(1 0 0);
@@ -123,7 +123,7 @@
 	--popover-foreground: oklch(1 0 0);
 	--primary: oklch(0.7139 0.1559 157.4072);
 	--primary-foreground: oklch(0 0 0);
-	--secondary: oklch(0.4708 0.2375 266.6003);
+	--secondary: rgb(33, 64, 221);
 	--secondary-foreground: oklch(1 0 0);
 	--muted: oklch(0.23 0 0);
 	--muted-foreground: oklch(0.72 0 0);
@@ -170,6 +170,10 @@
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
+	}
+
+	html {
+		@apply bg-[url("/wallpapers/bg-base.svg")] bg-cover bg-fixed bg-top bg-center;
 	}
 
 	html,

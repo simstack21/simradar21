@@ -89,12 +89,12 @@ export interface PilotFlightPlan {
 }
 
 export interface PilotTimes {
-	sched_off_block: Date;
-	off_block: Date;
-	lift_off: Date;
-	touch_down: Date;
-	sched_on_block: Date;
-	on_block: Date;
+	sched_off_block: number;
+	off_block: number;
+	lift_off: number;
+	touch_down: number;
+	sched_on_block: number;
+	on_block: number;
 	state: "Boarding" | "Taxi Out" | "Climb" | "Cruise" | "Descent" | "Taxi In" | "On Block";
 	stop_counter: number;
 }
