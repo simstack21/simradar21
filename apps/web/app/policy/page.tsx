@@ -1,13 +1,15 @@
+import Link from "next/link";
 import Header from "@/components/Header/Header";
-import "./Policy.css";
+import { BreadCrumbWithDropdown } from "@/components/shared/Breadcrumb";
 
 export default function Page() {
 	return (
 		<>
 			<Header />
-			<main id="policy">
-				<div className="policy-item" id="policy-legal">
-					<h1>Impressum</h1>
+			<main className="flex flex-col p-8 mt-16 gap-8 sm:p-16 sm:mt-8">
+				<BreadCrumbWithDropdown />
+				<div className="flex flex-col gap-4">
+					<div className="font-bold text-4xl">Impressum</div>
 					<p>
 						Sebastian Krüll
 						<br />
@@ -17,27 +19,27 @@ export default function Page() {
 						<br />
 						Deutschland
 						<br />
-						<a href="mailto:mail@simradar21.com">mail@simradar21.com</a>
+						<Link href="mailto:mail@simradar21.com">mail@simradar21.com</Link>
 					</p>
 				</div>
-
-				<div className="policy-item">
-					<h1>Datenschutz&shy;erkl&auml;rung</h1>
-					<h2>
-						<span>1.</span>Datenschutz auf einen Blick
-					</h2>
-					<h3>Allgemeine Hinweise</h3>{" "}
+				<div className="flex flex-col gap-4">
+					<div className="font-bold text-4xl">Datenschutz&shy;erkl&auml;rung</div>
+					<div className="font-bold text-2xl">
+						<span className="text-green">1.</span> Datenschutz auf einen Blick
+					</div>
+					<div className="font-semibold text-xl">Allgemeine Hinweise</div>{" "}
 					<p>
 						Die folgenden Hinweise geben einen einfachen &Uuml;berblick dar&uuml;ber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese
 						Website besuchen. Personenbezogene Daten sind alle Daten, mit denen Sie pers&ouml;nlich identifiziert werden k&ouml;nnen.
 						Ausf&uuml;hrliche Informationen zum Thema Datenschutz entnehmen Sie unserer unter diesem Text aufgef&uuml;hrten Datenschutzerkl&auml;rung.
 					</p>
-					<h3>Datenerfassung auf dieser Website</h3> <h4>Wer ist verantwortlich f&uuml;r die Datenerfassung auf dieser Website?</h4>{" "}
+					<div className="font-semibold text-xl">Datenerfassung auf dieser Website</div>
+					<div className="font-semibold">Wer ist verantwortlich f&uuml;r die Datenerfassung auf dieser Website?</div>{" "}
 					<p>
 						Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber. Dessen Kontaktdaten k&ouml;nnen Sie dem Abschnitt
 						&bdquo;Hinweis zur Verantwortlichen Stelle&ldquo; in dieser Datenschutzerkl&auml;rung entnehmen.
 					</p>{" "}
-					<h4>Wie erfassen wir Ihre Daten?</h4>{" "}
+					<div className="font-semibold">Wie erfassen wir Ihre Daten?</div>{" "}
 					<p>
 						Ihre Daten werden zum einen dadurch erhoben, dass Sie uns diese mitteilen. Hierbei kann es sich z.&nbsp;B. um Daten handeln, die Sie in
 						ein Kontaktformular eingeben.
@@ -47,13 +49,13 @@ export default function Page() {
 						technische Daten (z.&nbsp;B. Internetbrowser, Betriebssystem oder Uhrzeit des Seitenaufrufs). Die Erfassung dieser Daten erfolgt
 						automatisch, sobald Sie diese Website betreten.
 					</p>{" "}
-					<h4>Wof&uuml;r nutzen wir Ihre Daten?</h4>{" "}
+					<div className="font-semibold">Wof&uuml;r nutzen wir Ihre Daten?</div>{" "}
 					<p>
 						Ein Teil der Daten wird erhoben, um eine fehlerfreie Bereitstellung der Website zu gew&auml;hrleisten. Andere Daten k&ouml;nnen zur
 						Analyse Ihres Nutzerverhaltens verwendet werden. Sofern &uuml;ber die Website Vertr&auml;ge geschlossen oder angebahnt werden k&ouml;nnen,
 						werden die &uuml;bermittelten Daten auch f&uuml;r Vertragsangebote, Bestellungen oder sonstige Auftragsanfragen verarbeitet.
 					</p>{" "}
-					<h4>Welche Rechte haben Sie bez&uuml;glich Ihrer Daten?</h4>{" "}
+					<div className="font-semibold">Welche Rechte haben Sie bez&uuml;glich Ihrer Daten?</div>{" "}
 					<p>
 						Sie haben jederzeit das Recht, unentgeltlich Auskunft &uuml;ber Herkunft, Empf&auml;nger und Zweck Ihrer gespeicherten personenbezogenen
 						Daten zu erhalten. Sie haben au&szlig;erdem ein Recht, die Berichtigung oder L&ouml;schung dieser Daten zu verlangen. Wenn Sie eine
@@ -62,20 +64,20 @@ export default function Page() {
 						zu verlangen. Des Weiteren steht Ihnen ein Beschwerderecht bei der zust&auml;ndigen Aufsichtsbeh&ouml;rde zu.
 					</p>{" "}
 					<p>Hierzu sowie zu weiteren Fragen zum Thema Datenschutz k&ouml;nnen Sie sich jederzeit an uns wenden.</p>
-					<h2>
-						<span>2.</span>Hosting
-					</h2>
+					<div className="font-semibold text-xl">
+						<span className="text-green">2.</span> Hosting
+					</div>
 					<p>Wir hosten die Inhalte unserer Website bei folgendem Anbieter:</p>
-					<h3>Strato</h3>{" "}
+					<div className="font-semibold text-xl">Strato</div>{" "}
 					<p>
 						Anbieter ist die Strato AG, Otto-Ostrowski-Stra&szlig;e 7, 10249 Berlin (nachfolgend &bdquo;Strato&ldquo;). Wenn Sie unsere Website
 						besuchen, erfasst Strato verschiedene Logfiles inklusive Ihrer IP-Adressen.
 					</p>{" "}
 					<p>
 						Weitere Informationen entnehmen Sie der Datenschutzerkl&auml;rung von Strato:{" "}
-						<a href="https://www.strato.de/datenschutz/" target="_blank" rel="noopener noreferrer">
-							https://www.strato.de/datenschutz/
-						</a>
+						<Link href="https://www.strato.de/datenschutz/" target="_blank" rel="noopener noreferrer">
+							Strato Datenschutz
+						</Link>
 						.
 					</p>{" "}
 					<p>
@@ -85,16 +87,16 @@ export default function Page() {
 						Speicherung von Cookies oder den Zugriff auf Informationen im Endger&auml;t des Nutzers (z.&nbsp;B. Device-Fingerprinting) im Sinne des
 						TDDDG umfasst. Die Einwilligung ist jederzeit widerrufbar.
 					</p>
-					<h4>Auftragsverarbeitung</h4>{" "}
+					<div className="font-semibold">Auftragsverarbeitung</div>{" "}
 					<p>
 						Wir haben einen Vertrag &uuml;ber Auftragsverarbeitung (AVV) zur Nutzung des oben genannten Dienstes geschlossen. Hierbei handelt es sich
 						um einen datenschutzrechtlich vorgeschriebenen Vertrag, der gew&auml;hrleistet, dass dieser die personenbezogenen Daten unserer
 						Websitebesucher nur nach unseren Weisungen und unter Einhaltung der DSGVO verarbeitet.
 					</p>
-					<h2>
-						<span>3.</span>Allgemeine Hinweise und Pflicht&shy;informationen
-					</h2>
-					<h3>Datenschutz</h3>{" "}
+					<div className="font-bold text-2xl">
+						<span className="text-green">3.</span> Allgemeine Hinweise und Pflicht&shy;informationen
+					</div>
+					<div className="font-semibold text-xl">Datenschutz</div>{" "}
 					<p>
 						Die Betreiber dieser Seiten nehmen den Schutz Ihrer pers&ouml;nlichen Daten sehr ernst. Wir behandeln Ihre personenbezogenen Daten
 						vertraulich und entsprechend den gesetzlichen Datenschutzvorschriften sowie dieser Datenschutzerkl&auml;rung.
@@ -108,16 +110,17 @@ export default function Page() {
 						Wir weisen darauf hin, dass die Daten&uuml;bertragung im Internet (z.&nbsp;B. bei der Kommunikation per E-Mail) Sicherheitsl&uuml;cken
 						aufweisen kann. Ein l&uuml;ckenloser Schutz der Daten vor dem Zugriff durch Dritte ist nicht m&ouml;glich.
 					</p>
-					<h3>Hinweis zur verantwortlichen Stelle</h3> <p>Die verantwortliche Stelle f&uuml;r die Datenverarbeitung auf dieser Website ist:</p>{" "}
+					<div className="font-semibold text-xl">Hinweis zur verantwortlichen Stelle</div>{" "}
+					<p>Die verantwortliche Stelle f&uuml;r die Datenverarbeitung auf dieser Website ist:</p>{" "}
 					<p>Sebastian Kr&uuml;ll, Rosenbergstr. 14, 74072 Heilbronn, Deutschland / Germany</p>
 					<p>
-						E-Mail: <a href="mailto:mail@simradar21.com">mail@simradar21.com</a>
+						E-Mail: <Link href="mailto:mail@simradar21.com">mail@simradar21.com</Link>
 					</p>
 					<p>
 						Verantwortliche Stelle ist die nat&uuml;rliche oder juristische Person, die allein oder gemeinsam mit anderen &uuml;ber die Zwecke und
 						Mittel der Verarbeitung von personenbezogenen Daten (z.&nbsp;B. Namen, E-Mail-Adressen o. &Auml;.) entscheidet.
 					</p>
-					<h3>Speicherdauer</h3>{" "}
+					<div className="font-semibold text-xl">Speicherdauer</div>{" "}
 					<p>
 						Soweit innerhalb dieser Datenschutzerkl&auml;rung keine speziellere Speicherdauer genannt wurde, verbleiben Ihre personenbezogenen Daten
 						bei uns, bis der Zweck f&uuml;r die Datenverarbeitung entf&auml;llt. Wenn Sie ein berechtigtes L&ouml;schersuchen geltend machen oder eine
@@ -125,7 +128,7 @@ export default function Page() {
 						Gr&uuml;nde f&uuml;r die Speicherung Ihrer personenbezogenen Daten haben (z.&nbsp;B. steuer- oder handelsrechtliche Aufbewahrungsfristen);
 						im letztgenannten Fall erfolgt die L&ouml;schung nach Fortfall dieser Gr&uuml;nde.
 					</p>
-					<h3>Allgemeine Hinweise zu den Rechtsgrundlagen der Datenverarbeitung auf dieser Website</h3>{" "}
+					<div className="font-semibold text-xl">Allgemeine Hinweise zu den Rechtsgrundlagen der Datenverarbeitung auf dieser Website</div>{" "}
 					<p>
 						Sofern Sie in die Datenverarbeitung eingewilligt haben, verarbeiten wir Ihre personenbezogenen Daten auf Grundlage von Art. 6 Abs. 1 lit.
 						a DSGVO bzw. Art. 9 Abs. 2 lit. a DSGVO, sofern besondere Datenkategorien nach Art. 9 Abs. 1 DSGVO verarbeitet werden. Im Falle einer
@@ -139,7 +142,7 @@ export default function Page() {
 						Interesses nach Art. 6 Abs. 1 lit. f DSGVO erfolgen. &Uuml;ber die jeweils im Einzelfall einschl&auml;gigen Rechtsgrundlagen wird in den
 						folgenden Abs&auml;tzen dieser Datenschutzerkl&auml;rung informiert.
 					</p>
-					<h3>Empf&auml;nger von personenbezogenen Daten</h3>{" "}
+					<div className="font-semibold text-xl">Empf&auml;nger von personenbezogenen Daten</div>{" "}
 					<p>
 						Im Rahmen unserer Gesch&auml;ftst&auml;tigkeit arbeiten wir mit verschiedenen externen Stellen zusammen. Dabei ist teilweise auch eine
 						&Uuml;bermittlung von personenbezogenen Daten an diese externen Stellen erforderlich. Wir geben personenbezogene Daten nur dann an externe
@@ -149,13 +152,15 @@ export default function Page() {
 						personenbezogene Daten unserer Kunden nur auf Grundlage eines g&uuml;ltigen Vertrags &uuml;ber Auftragsverarbeitung weiter. Im Falle einer
 						gemeinsamen Verarbeitung wird ein Vertrag &uuml;ber gemeinsame Verarbeitung geschlossen.
 					</p>
-					<h3>Widerruf Ihrer Einwilligung zur Datenverarbeitung</h3>{" "}
+					<div className="font-semibold text-xl">Widerruf Ihrer Einwilligung zur Datenverarbeitung</div>{" "}
 					<p>
 						Viele Datenverarbeitungsvorg&auml;nge sind nur mit Ihrer ausdr&uuml;cklichen Einwilligung m&ouml;glich. Sie k&ouml;nnen eine bereits
 						erteilte Einwilligung jederzeit widerrufen. Die Rechtm&auml;&szlig;igkeit der bis zum Widerruf erfolgten Datenverarbeitung bleibt vom
 						Widerruf unber&uuml;hrt.
 					</p>
-					<h3>Widerspruchsrecht gegen die Datenerhebung in besonderen F&auml;llen sowie gegen Direktwerbung (Art. 21 DSGVO)</h3>{" "}
+					<div className="font-semibold text-xl">
+						Widerspruchsrecht gegen die Datenerhebung in besonderen F&auml;llen sowie gegen Direktwerbung (Art. 21 DSGVO)
+					</div>{" "}
 					<p>
 						WENN DIE DATENVERARBEITUNG AUF GRUNDLAGE VON ART. 6 ABS. 1 LIT. E ODER F DSGVO ERFOLGT, HABEN SIE JEDERZEIT DAS RECHT, AUS GR&Uuml;NDEN,
 						DIE SICH AUS IHRER BESONDEREN SITUATION ERGEBEN, GEGEN DIE VERARBEITUNG IHRER PERSONENBEZOGENEN DATEN WIDERSPRUCH EINZULEGEN; DIES GILT
@@ -171,25 +176,25 @@ export default function Page() {
 						SOWEIT ES MIT SOLCHER DIREKTWERBUNG IN VERBINDUNG STEHT. WENN SIE WIDERSPRECHEN, WERDEN IHRE PERSONENBEZOGENEN DATEN ANSCHLIESSEND NICHT
 						MEHR ZUM ZWECKE DER DIREKTWERBUNG VERWENDET (WIDERSPRUCH NACH ART. 21 ABS. 2 DSGVO).
 					</p>
-					<h3>Beschwerde&shy;recht bei der zust&auml;ndigen Aufsichts&shy;beh&ouml;rde</h3>{" "}
+					<div className="font-semibold text-xl">Beschwerde&shy;recht bei der zust&auml;ndigen Aufsichts&shy;beh&ouml;rde</div>{" "}
 					<p>
 						Im Falle von Verst&ouml;&szlig;en gegen die DSGVO steht den Betroffenen ein Beschwerderecht bei einer Aufsichtsbeh&ouml;rde, insbesondere
 						in dem Mitgliedstaat ihres gew&ouml;hnlichen Aufenthalts, ihres Arbeitsplatzes oder des Orts des mutma&szlig;lichen Versto&szlig;es zu.
 						Das Beschwerderecht besteht unbeschadet anderweitiger verwaltungsrechtlicher oder gerichtlicher Rechtsbehelfe.
 					</p>
-					<h3>Recht auf Daten&shy;&uuml;bertrag&shy;barkeit</h3>{" "}
+					<div className="font-semibold text-xl">Recht auf Daten&shy;&uuml;bertrag&shy;barkeit</div>{" "}
 					<p>
 						Sie haben das Recht, Daten, die wir auf Grundlage Ihrer Einwilligung oder in Erf&uuml;llung eines Vertrags automatisiert verarbeiten, an
 						sich oder an einen Dritten in einem g&auml;ngigen, maschinenlesbaren Format aush&auml;ndigen zu lassen. Sofern Sie die direkte
 						&Uuml;bertragung der Daten an einen anderen Verantwortlichen verlangen, erfolgt dies nur, soweit es technisch machbar ist.
 					</p>
-					<h3>Auskunft, Berichtigung und L&ouml;schung</h3>{" "}
+					<div className="font-semibold text-xl">Auskunft, Berichtigung und L&ouml;schung</div>{" "}
 					<p>
 						Sie haben im Rahmen der geltenden gesetzlichen Bestimmungen jederzeit das Recht auf unentgeltliche Auskunft &uuml;ber Ihre gespeicherten
 						personenbezogenen Daten, deren Herkunft und Empf&auml;nger und den Zweck der Datenverarbeitung und ggf. ein Recht auf Berichtigung oder
 						L&ouml;schung dieser Daten. Hierzu sowie zu weiteren Fragen zum Thema personenbezogene Daten k&ouml;nnen Sie sich jederzeit an uns wenden.
 					</p>
-					<h3>Recht auf Einschr&auml;nkung der Verarbeitung</h3>{" "}
+					<div className="font-semibold text-xl">Recht auf Einschr&auml;nkung der Verarbeitung</div>{" "}
 					<p>
 						Sie haben das Recht, die Einschr&auml;nkung der Verarbeitung Ihrer personenbezogenen Daten zu verlangen. Hierzu k&ouml;nnen Sie sich
 						jederzeit an uns wenden. Das Recht auf Einschr&auml;nkung der Verarbeitung besteht in folgenden F&auml;llen:
@@ -222,7 +227,7 @@ export default function Page() {
 						Schutz der Rechte einer anderen nat&uuml;rlichen oder juristischen Person oder aus Gr&uuml;nden eines wichtigen &ouml;ffentlichen
 						Interesses der Europ&auml;ischen Union oder eines Mitgliedstaats verarbeitet werden.
 					</p>
-					<h3>SSL- bzw. TLS-Verschl&uuml;sselung</h3>{" "}
+					<div className="font-semibold text-xl">SSL- bzw. TLS-Verschl&uuml;sselung</div>{" "}
 					<p>
 						Diese Seite nutzt aus Sicherheitsgr&uuml;nden und zum Schutz der &Uuml;bertragung vertraulicher Inhalte, wie zum Beispiel Bestellungen
 						oder Anfragen, die Sie an uns als Seitenbetreiber senden, eine SSL- bzw. TLS-Verschl&uuml;sselung. Eine verschl&uuml;sselte Verbindung
@@ -233,10 +238,10 @@ export default function Page() {
 						Wenn die SSL- bzw. TLS-Verschl&uuml;sselung aktiviert ist, k&ouml;nnen die Daten, die Sie an uns &uuml;bermitteln, nicht von Dritten
 						mitgelesen werden.
 					</p>
-					<h2>
-						<span>4.</span>Datenerfassung auf dieser Website
-					</h2>
-					<h3>Server-Log-Dateien</h3>{" "}
+					<div className="font-semibold text-2xl">
+						<span className="text-green">4.</span> Datenerfassung auf dieser Website
+					</div>
+					<div className="font-semibold text-xl">Server-Log-Dateien</div>{" "}
 					<p>
 						Der Provider der Seiten erhebt und speichert automatisch Informationen in so genannten Server-Log-Dateien, die Ihr Browser automatisch an
 						uns &uuml;bermittelt. Dies sind:
@@ -251,10 +256,10 @@ export default function Page() {
 						Die Erfassung dieser Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO. Der Websitebetreiber hat ein berechtigtes Interesse an
 						der technisch fehlerfreien Darstellung und der Optimierung seiner Website &ndash; hierzu m&uuml;ssen die Server-Log-Files erfasst werden.
 					</p>
-					<h2>
-						<span>5.</span>Plugins und Tools
-					</h2>
-					<h3>Google Fonts</h3>{" "}
+					<div className="font-semibold text-2xl">
+						<span className="text-green">5.</span> Plugins und Tools
+					</div>
+					<div className="font-semibold text-xl">Google Fonts</div>{" "}
 					<p>
 						Diese Seite nutzt zur einheitlichen Darstellung von Schriftarten so genannte Google Fonts, die von Google bereitgestellt werden. Beim
 						Aufruf einer Seite l&auml;dt Ihr Browser die ben&ouml;tigten Fonts in ihren Browsercache, um Texte und Schriftarten korrekt anzuzeigen.
@@ -270,13 +275,13 @@ export default function Page() {
 					<p>Wenn Ihr Browser Google Fonts nicht unterst&uuml;tzt, wird eine Standardschrift von Ihrem Computer genutzt.</p>{" "}
 					<p>
 						Weitere Informationen zu Google Fonts finden Sie unter{" "}
-						<a href="https://developers.google.com/fonts/faq" target="_blank" rel="noopener noreferrer">
-							https://developers.google.com/fonts/faq
-						</a>{" "}
+						<Link href="https://developers.google.com/fonts/faq" target="_blank" rel="noopener noreferrer">
+							Google Fonts FAQ
+						</Link>{" "}
 						und in der Datenschutzerkl&auml;rung von Google:{" "}
-						<a href="https://policies.google.com/privacy?hl=de" target="_blank" rel="noopener noreferrer">
-							https://policies.google.com/privacy?hl=de
-						</a>
+						<Link href="https://policies.google.com/privacy?hl=de" target="_blank" rel="noopener noreferrer">
+							Google Datenschutzerklärung
+						</Link>
 						.
 					</p>
 					<p>
@@ -284,12 +289,12 @@ export default function Page() {
 						&Uuml;bereinkommen zwischen der Europ&auml;ischen Union und den USA, der die Einhaltung europ&auml;ischer Datenschutzstandards bei
 						Datenverarbeitungen in den USA gew&auml;hrleisten soll. Jedes nach dem DPF zertifizierte Unternehmen verpflichtet sich, diese
 						Datenschutzstandards einzuhalten. Weitere Informationen hierzu erhalten Sie vom Anbieter unter folgendem Link:{" "}
-						<a href="https://www.dataprivacyframework.gov/participant/5780" target="_blank" rel="noopener noreferrer">
-							https://www.dataprivacyframework.gov/participant/5780
-						</a>
+						<Link href="https://www.dataprivacyframework.gov/participant/5780" target="_blank" rel="noopener noreferrer">
+							Data Privacy Framework
+						</Link>
 						.
 					</p>
-					<h3>OpenStreetMap</h3> <p>Wir nutzen den Kartendienst von OpenStreetMap (OSM).</p>{" "}
+					<div className="font-semibold text-xl">OpenStreetMap</div> <p>Wir nutzen den Kartendienst von OpenStreetMap (OSM).</p>{" "}
 					<p>
 						Wir binden das Kartenmaterial von OpenStreetMap auf dem Server der OpenStreetMap Foundation, St John&rsquo;s Innovation Centre, Cowley
 						Road, Cambridge, CB4 0WS, Gro&szlig;britannien, ein. Gro&szlig;britannien gilt als datenschutzrechtlich sicherer Drittstaat. Das bedeutet,
@@ -305,7 +310,7 @@ export default function Page() {
 						Abs. 1 lit. a DSGVO und &sect; 25 Abs. 1 TDDDG, soweit die Einwilligung die Speicherung von Cookies oder den Zugriff auf Informationen im
 						Endger&auml;t des Nutzers (z.&nbsp;B. Device-Fingerprinting) im Sinne des TDDDG umfasst. Die Einwilligung ist jederzeit widerrufbar.
 					</p>
-					<h3>VATSIM</h3>
+					<div className="font-semibold text-xl">VATSIM</div>
 					<p>
 						Wir nutzen VATSIM International für die Authentifizierung und Benutzerverwaltung. Dies ermöglicht Ihnen, sich mit Ihrem VATSIM-Konto
 						anzumelden.
@@ -317,17 +322,17 @@ export default function Page() {
 					</p>
 					<p>
 						Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. a DSGVO aufgrund Ihrer Einwilligung zur Anmeldung über VATSIM. Sie können
-						diese Einwilligung jederzeit durch eine schriftliche Mitteilung an
-						<a href="mailto:mail@simradar21.com">mail@simradar21.com</a> widerrufen.
+						diese Einwilligung jederzeit durch eine schriftliche Mitteilung an <Link href="mailto:mail@simradar21.com">mail@simradar21.com</Link>{" "}
+						widerrufen.
 					</p>
 					<p>
 						VATSIM verfügt über geeignete Datenschutzmaßnahmen und bietet ein angemessenes Datenschutzniveau. Weitere Informationen finden Sie in der{" "}
-						<a href="https://vatsim.net/docs/policy/overview" target="_blank" rel="noopener noreferrer">
+						<Link href="https://vatsim.net/docs/policy/overview" target="_blank" rel="noopener noreferrer">
 							Datenschutzerklärung von VATSIM
-						</a>
+						</Link>
 						.
 					</p>
-					<h3>Cloudflare</h3>
+					<div className="font-semibold text-xl">Cloudflare</div>
 					<p>
 						Wir nutzen Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA, als Content Delivery Network (CDN) und f&uuml;r
 						Objektspeicherung (Cloudflare R2).
@@ -347,9 +352,9 @@ export default function Page() {
 					<p>
 						Cloudflare verf&uuml;gt &uuml;ber eine Zertifizierung nach dem &bdquo;EU-US Data Privacy Framework&ldquo; (DPF) und bietet somit ein
 						angemessenes Datenschutzniveau. Weitere Informationen finden Sie in der{" "}
-						<a href="https://www.cloudflare.com/de-de/privacypolicy/" target="_blank" rel="noopener noreferrer">
+						<Link href="https://www.cloudflare.com/de-de/privacypolicy/" target="_blank" rel="noopener noreferrer">
 							Datenschutzerkl&auml;rung von Cloudflare
-						</a>
+						</Link>
 						.
 					</p>
 				</div>

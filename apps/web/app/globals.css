@@ -171,6 +171,10 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
+
+	a {
+		@apply text-primary no-underline transition-colors hover:text-foreground;
+	}
 }
 
 @layer utilities {

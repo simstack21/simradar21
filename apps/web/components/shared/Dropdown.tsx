@@ -1,5 +1,5 @@
 import {
-	CalendarClock,
+	CalendarClockIcon,
 	CheckIcon,
 	DatabaseIcon,
 	EllipsisVerticalIcon,
@@ -115,7 +115,7 @@ const navListItems: ListItem[] = [
 		href: "/data",
 	},
 	{
-		icon: CalendarClock,
+		icon: CalendarClockIcon,
 		property: "Bookings",
 		description: "Bookings Map",
 		href: "/bookings",

@@ -1,4 +1,5 @@
 import type { VatsimEvent } from "@sr24/types/vatsim";
+import Link from "next/link";
 import { useState } from "react";
 import { mapService } from "@/app/(map)/lib";
 import Icon from "@/components/Icon/Icon";
@@ -90,9 +91,9 @@ function Events({
 							>
 								<Icon name={selected === event.id ? "cancel" : "tour"} size={24} />
 							</button>
-							<a href={event.link} className="dashboard-event-button" target="_blank" rel="noreferrer">
+							<Link href={event.link} className="dashboard-event-button" target="_blank" rel="noreferrer">
 								<Icon name="share-android" size={24} />
-							</a>
+							</Link>
 						</div>
 					</div>
 				))
