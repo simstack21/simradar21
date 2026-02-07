@@ -125,3 +125,18 @@ export function convertTemperature(celsius: number | undefined, unit: "celsius" 
 			return `${Math.round(celsius)}${withUnit ? " °C" : ""}`;
 	}
 }
+
+export function getShortDate(time: number, timeZone: "utc" | "local"): string {
+	const date = new Date(time);
+
+	const weekday = date.toLocaleDateString("en-US", {
+		weekday: "short",
+		timeZone: timeZone === "utc" ? "UTC" : undefined,
+	});
+
+	const day = timeZone === "utc" ? date.getUTCDate() : date.getDate();
+
+	const suffix = day % 10 === 1 && day !== 11 ? "st" : day % 10 === 2 && day !== 12 ? "nd" : day % 10 === 3 && day !== 13 ? "rd" : "th";
+
+	return `${weekday} ${day}${suffix}`;
+}

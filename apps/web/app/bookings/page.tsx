@@ -6,10 +6,8 @@ export default async function Page() {
 	return (
 		<>
 			<Header />
-			<main id="bookings-page">
-				<Initializer />
-				<Bookings />
-			</main>
+			<Initializer />
+			<Bookings />
 		</>
 	);
 }

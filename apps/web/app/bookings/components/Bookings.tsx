@@ -1,25 +1,31 @@
 "use client";
 
 import type { Booking } from "@sr24/types/interface";
+import { SnailIcon, VideoIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
-import Spinner from "@/components/Spinner/Spinner";
+import Clock from "@/components/shared/Clock";
 import { fetchApi } from "@/lib/api";
+import { convertTime, getShortDate } from "@/lib/helpers";
+import { useSettingsStore } from "@/storage/zustand";
 import { init, setFeaturesByTime } from "../lib";
-import { BookingsControl } from "./BookingsControls";
 import BookingsMap from "./BookingsMap";
+import Controls from "./Controls";
 
 export const REPLAY_SPEEDS = [1, 2, 4, 8, 16];
+const STEP_MINUTES = 30;
 
 export default function Bookings() {
-	const { data, isLoading } = useSWR<Booking[]>("/data/bookings", fetchApi, {
+	const { data } = useSWR<Booking[]>("/data/bookings", fetchApi, {
 		refreshInterval: 10 * 60 * 1000,
 		revalidateOnFocus: false,
 	});
 
+	const { timeZone } = useSettingsStore();
+
 	const [progress, setProgress] = useState(0);
 	const [playing, setPlaying] = useState(false);
-	const [speedIndex, setSpeedIndex] = useState(3);
+	const [speedIndex, setSpeedIndex] = useState(2);
 
 	const timeline = useMemo(() => buildTimeline(data || []), [data]);
 
@@ -42,7 +48,7 @@ export default function Bookings() {
 		if (!playing) return;
 		if (!timeline.length) return;
 
-		const intervalMs = (STEP_MINUTES * 60 * 1000) / REPLAY_SPEEDS[speedIndex];
+		const intervalMs = (1 / REPLAY_SPEEDS[speedIndex]) * 2000;
 		const maxIndex = timeline.length - 1;
 
 		const interval = setInterval(() => {
@@ -58,29 +64,34 @@ export default function Bookings() {
 		return () => clearInterval(interval);
 	}, [playing, speedIndex, timeline.length]);
 
-	if (!data || isLoading) {
-		return <Spinner />;
-	}
-
 	return (
-		<div id="map-wrapper">
+		<>
 			<BookingsMap />
-			<BookingsControl
-				progress={progress}
-				setProgress={setProgress}
-				setNow={() => setProgress(getCurrentTimelineStep(timeline))}
-				setSpeedIndex={setSpeedIndex}
-				speedIndex={speedIndex}
-				setPlaying={setPlaying}
-				playing={playing}
-				currentTime={timeline[progress]}
-				max={timeline.length - 1}
-			/>
-		</div>
+			<footer className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2 py-1 px-2 rounded-xl outline border overflow-hidden backdrop-blur-md bg-linear-to-r from-white/1 from-20% via-white/3 via-50% to-white/1">
+				<Controls
+					progress={progress}
+					setProgress={setProgress}
+					setNow={() => setProgress(getCurrentTimelineStep(timeline))}
+					setSpeedIndex={setSpeedIndex}
+					setPlaying={setPlaying}
+					playing={playing}
+					max={timeline.length - 1}
+				/>
+				<div className="flex items-center justify-center gap-4 text-xs">
+					<Clock />
+					<div className="flex gap-1">
+						<VideoIcon className="size-4" aria-hidden="true" />
+						<span>{`${getShortDate(timeline[progress], timeZone)} ${convertTime(timeline[progress], "24h", timeZone)}`}</span>
+					</div>
+					<div className="flex gap-1">
+						<SnailIcon className="size-4" aria-hidden="true" />
+						<span>{REPLAY_SPEEDS[speedIndex]} x</span>
+					</div>
+				</div>
+			</footer>
+		</>
 	);
 }
-
-const STEP_MINUTES = 30;
 
 function buildTimeline(bookings: Booking[]) {
 	if (!bookings.length) return [];

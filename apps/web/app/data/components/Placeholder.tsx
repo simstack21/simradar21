@@ -12,7 +12,7 @@ export function Placeholder({ text }: { text: string }) {
 			<Link href="https://discord.gg/eVvKBfUr" target="_blank" rel="noopener noreferrer">
 				<Button
 					size="lg"
-					className="bg-transparent bg-linear-to-r from-primary via-primary/10 to-primary bg-size-[200%_auto] text-white hover:bg-transparent hover:bg-position-[99%_center] focus-visible:ring-primary/40 dark:from-primary dark:via-primary/70 dark:to-primary dark:focus-visible:ring-primary/60"
+					className="bg-transparent bg-linear-to-r from-primary via-primary/10 to-primary bg-size-[200%_auto] text-white hover:bg-transparent hover:bg-position-[99%_center] focus-visible:ring-primary dark:from-primary dark:via-primary/75 dark:to-primary dark:focus-visible:ring-primary/50b"
 				>
 					Join our Discord{" "}
 					<Image

@@ -1,3 +1,5 @@
+"use client";
+
 import { useFilterStatsStore, useFiltersStore } from "@/storage/zustand";
 import "./ActiveFilters.css";
 import Icon from "@/components/Icon/Icon";

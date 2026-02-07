@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import "./Map.css";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import Initializer from "@/components/Initializer/Initializer";
-import BasePanel from "@/components/Panel/BasePanel";
+import { useEffect } from "react";
 import { useFilterStatsStore, useSettingsStore } from "@/storage/zustand";
 import { init, mapService } from "../lib";
-import ActiveFilters from "./ActiveFilters";
 
-export default function OMap({ children }: { children?: React.ReactNode }) {
+export default function OMap() {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
@@ -75,12 +71,5 @@ export default function OMap({ children }: { children?: React.ReactNode }) {
 		animatedPlaneMarkers,
 	]);
 
-	return (
-		<>
-			<Initializer />
-			<BasePanel>{children}</BasePanel>
-			<ActiveFilters />
-			<div id="map" />
-		</>
-	);
+	return <div id="map" className="absolute inset-0" />;
 }

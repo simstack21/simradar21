@@ -1,4 +1,4 @@
-import Clock from "./Clock";
+import Clock from "@/components/shared/Clock";
 import Controls from "./Controls";
 import Metrics from "./Metrics";
 
