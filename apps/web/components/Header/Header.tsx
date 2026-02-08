@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import simradar21Full from "@/assets/images/logos/simradar21_full_logo.svg";
 import simradar21Icon from "@/assets/images/logos/simradar21_icon.svg";
+import useInitializer from "@/hooks/useInitializer";
 import useSettings from "@/hooks/useSettings";
 import { CommandSearch } from "../Search/Search";
 import { DropdownNavigation, DropdownUser } from "../shared/Dropdown";
@@ -15,6 +16,7 @@ export default function Header() {
 	const headerRef = useRef<HTMLElement>(null);
 
 	useSettings();
+	useInitializer();
 
 	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
