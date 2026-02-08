@@ -39,7 +39,7 @@ async function fetchData(
 	};
 }
 
-export default function Flights({ callsign, registration }: { callsign?: string; registration?: string }) {
+export default function FlightsTable({ callsign, registration }: { callsign?: string; registration?: string }) {
 	const [pagination, setPagination] = useState<PaginationState>({
 		pageIndex: 0,
 		pageSize: 10,

@@ -1,5 +1,5 @@
 import Aircraft from "../../components/Flights/Aircraft";
-import Flights from "../../components/Flights/Flights";
+import FlightsTable from "../../components/Flights/FlightsTable";
 
 export default async function AircraftsLayout(
 	props: Readonly<{
@@ -13,7 +13,7 @@ export default async function AircraftsLayout(
 	return (
 		<div className="flex flex-col container mx-auto py-10 gap-4">
 			<Aircraft registration={registration} />
-			<Flights registration={registration} />
+			<FlightsTable registration={registration} />
 			{children}
 		</div>
 	);

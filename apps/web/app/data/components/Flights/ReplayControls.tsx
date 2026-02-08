@@ -1,29 +1,40 @@
 "use client";
 
-import { MaximizeIcon, MinimizeIcon, MinusIcon, PauseIcon, PlayIcon, PlusIcon, RefreshCcwDotIcon, SnailIcon, SquareIcon } from "lucide-react";
+import {
+	DownloadIcon,
+	MaximizeIcon,
+	MinimizeIcon,
+	MinusIcon,
+	PauseIcon,
+	PlayIcon,
+	PlusIcon,
+	RefreshCcwDotIcon,
+	SnailIcon,
+	SquareIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { mapService } from "../lib";
-import { REPLAY_SPEEDS } from "./Bookings";
+import { mapService } from "../../lib";
+import { REPLAY_SPEEDS } from "./Replay";
 
-export default function Controls({
+export default function ReplayControls({
 	progress,
 	setProgress,
-	setNow,
 	setSpeedIndex,
 	setPlaying,
 	playing,
+	onDownload,
 	max,
 }: {
 	progress: number;
 	setProgress: React.Dispatch<React.SetStateAction<number>>;
-	setNow: () => void;
 	setSpeedIndex: React.Dispatch<React.SetStateAction<number>>;
 	setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 	playing: boolean;
+	onDownload: () => void;
 	max: number;
 }) {
 	return (
@@ -31,7 +42,13 @@ export default function Controls({
 			<Slider value={progress} onValueChange={(value) => setProgress(value as number)} min={0} max={max} className="p-1" />
 			<div className="flex gap-2">
 				<ButtonGroupMapControls />
-				<ButtonGroupReplayControls playing={playing} setPlaying={setPlaying} setNow={setNow} setSpeedIndex={setSpeedIndex} />
+				<ButtonGroupReplayControls
+					playing={playing}
+					setPlaying={setPlaying}
+					setProgress={setProgress}
+					setSpeedIndex={setSpeedIndex}
+					onDownload={onDownload}
+				/>
 			</div>
 		</div>
 	);
@@ -40,13 +57,15 @@ export default function Controls({
 const ButtonGroupReplayControls = ({
 	playing,
 	setPlaying,
-	setNow,
+	setProgress,
 	setSpeedIndex,
+	onDownload,
 }: {
 	playing: boolean;
 	setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
-	setNow: () => void;
+	setProgress: React.Dispatch<React.SetStateAction<number>>;
 	setSpeedIndex: React.Dispatch<React.SetStateAction<number>>;
+	onDownload: () => void;
 }) => {
 	return (
 		<div className="inline-flex w-fit -space-x-px rounded-md shadow-xs rtl:space-x-reverse">
@@ -54,14 +73,14 @@ const ButtonGroupReplayControls = ({
 				<TooltipTrigger
 					delay={100}
 					render={
-						<Button className="rounded-none rounded-l-md shadow-none focus-visible:z-10" variant="outline" onClick={() => setNow()}>
+						<Button className="rounded-none rounded-l-md shadow-none focus-visible:z-10" variant="outline" onClick={() => setProgress(0)}>
 							<SquareIcon />
-							<span className="sr-only">Reset to Now</span>
+							<span className="sr-only">Reset</span>
 						</Button>
 					}
 				></TooltipTrigger>
 				<TooltipContent>
-					<div className="flex items-center gap-2">Reset to Now</div>
+					<div className="flex items-center gap-2">Reset</div>
 				</TooltipContent>
 			</Tooltip>
 			<Tooltip>
@@ -82,21 +101,8 @@ const ButtonGroupReplayControls = ({
 				<TooltipTrigger
 					delay={100}
 					render={
-						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => mapService.setView({ zoomStep: -1 })}>
-							<span>+1h</span>
-						</Button>
-					}
-				></TooltipTrigger>
-				<TooltipContent>
-					<div className="flex items-center gap-2">Skip 1 hr</div>
-				</TooltipContent>
-			</Tooltip>
-			<Tooltip>
-				<TooltipTrigger
-					delay={100}
-					render={
 						<Button
-							className="rounded-none rounded-r-md shadow-none focus-visible:z-10"
+							className="rounded-none shadow-none focus-visible:z-10"
 							variant="outline"
 							onClick={() => setSpeedIndex((prev) => (prev === REPLAY_SPEEDS.length - 1 ? 0 : prev + 1))}
 						>
@@ -107,6 +113,20 @@ const ButtonGroupReplayControls = ({
 				></TooltipTrigger>
 				<TooltipContent>
 					<div className="flex items-center gap-2">Replay Speed</div>
+				</TooltipContent>
+			</Tooltip>
+			<Tooltip>
+				<TooltipTrigger
+					delay={100}
+					render={
+						<Button className="rounded-none rounded-r-md shadow-none focus-visible:z-10" variant="outline" onClick={onDownload}>
+							<DownloadIcon />
+							<span className="sr-only">Download</span>
+						</Button>
+					}
+				></TooltipTrigger>
+				<TooltipContent>
+					<div className="flex items-center gap-2">Download</div>
 				</TooltipContent>
 			</Tooltip>
 		</div>

@@ -27,5 +27,5 @@ export default function ReplayMap() {
 		mapService.setSettings({ dayNightLayer, dayNightLayerBrightness, planeMarkerSize, airportMarkerSize });
 	}, [dayNightLayer, dayNightLayerBrightness, planeMarkerSize, airportMarkerSize]);
 
-	return <div id="map" />;
+	return <div id="map" className="absolute inset-0" />;
 }

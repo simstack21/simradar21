@@ -9,8 +9,8 @@ import { fetchApi } from "@/lib/api";
 import { convertTime, getShortDate } from "@/lib/helpers";
 import { useSettingsStore } from "@/storage/zustand";
 import { init, setFeaturesByTime } from "../lib";
+import BookingControls from "./BookingControls";
 import BookingsMap from "./BookingsMap";
-import Controls from "./Controls";
 
 export const REPLAY_SPEEDS = [1, 2, 4, 8, 16];
 const STEP_MINUTES = 30;
@@ -68,7 +68,7 @@ export default function Bookings() {
 		<>
 			<BookingsMap />
 			<footer className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2 py-1 px-2 rounded-xl outline border overflow-hidden backdrop-blur-md bg-linear-to-r from-white/1 from-20% via-white/3 via-50% to-white/1">
-				<Controls
+				<BookingControls
 					progress={progress}
 					setProgress={setProgress}
 					setNow={() => setProgress(getCurrentTimelineStep(timeline))}
