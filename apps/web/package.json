@@ -41,6 +41,7 @@
 		"react-select": "^5.10.2",
 		"react-toastify": "^11.0.5",
 		"recharts": "^3.5.1",
+		"sonner": "^2.0.7",
 		"swr": "^2.3.7",
 		"tailwind-merge": "^3.4.0",
 		"use-debounce": "^10.0.6",

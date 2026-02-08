@@ -6,6 +6,7 @@ import { CheckIcon, MoreHorizontalIcon, ShareIcon, VideoIcon } from "lucide-reac
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { AvatarAirline } from "@/components/shared/Avatar";
 import { BadgePilotStatus } from "@/components/shared/Badge";
 import { DataTableColumnHeader } from "@/components/shared/Table";
@@ -183,6 +184,7 @@ function ShareButton({ flight }: { flight: Flight }) {
 
 	const onShareClick = () => {
 		navigator.clipboard.writeText(`${window.location.origin}/data/flights/${flight.callsign}/${flight.id}`);
+		toast.success("Replay Link Copied to Clipboard!");
 		setShared(true);
 		setTimeout(() => setShared(false), 2000);
 	};

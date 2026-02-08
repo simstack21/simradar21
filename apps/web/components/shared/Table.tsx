@@ -58,7 +58,7 @@ export function DataTable<TData, TValue>({ columns, data, rowCount, pagination, 
 					placeholder="Type to filter... (Coming soon)"
 					value={(table.getColumn("callsign")?.getFilterValue() as string) ?? ""}
 					onChange={(event) => table.getColumn("callsign")?.setFilterValue(event.target.value)}
-					className="max-w-xs"
+					className="w-full sm:max-w-xs"
 					disabled
 				/>
 			</div>
@@ -144,9 +144,9 @@ interface TablePaginationProps<TData> {
 function DataTablePagination<TData>({ table }: TablePaginationProps<TData>) {
 	return (
 		<div className="flex items-center justify-between px-2">
-			<div className="flex items-center space-x-6 lg:space-x-8 ml-auto">
-				<div className="flex items-center space-x-2">
-					<p className="text-sm font-medium">Rows per page</p>
+			<div className="flex items-center justify-center sm:justify-end w-full space-x-6 lg:space-x-8">
+				<div className="flex items-center space-x-2 mr-0 sm:mr-2">
+					<p className="text-sm font-medium hidden sm:inline">Rows per page</p>
 					<Select
 						value={`${table.getState().pagination.pageSize}`}
 						onValueChange={(value) => {
@@ -165,7 +165,7 @@ function DataTablePagination<TData>({ table }: TablePaginationProps<TData>) {
 						</SelectContent>
 					</Select>
 				</div>
-				<div className="flex w-25 items-center justify-center text-sm font-medium">
+				<div className="flex w-25 items-center justify-center text-sm font-medium mr-0 sm:mr-2">
 					Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount().toLocaleString()}
 				</div>
 				<div className="flex items-center space-x-2">
