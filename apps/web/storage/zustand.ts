@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { FilterState, FilterStats, SettingState, SettingValues } from "@/types/zustand";
+import type { DashboardState, FilterState, FilterStats, SettingState, SettingValues } from "@/types/zustand";
 
 const defaultSettings: SettingValues = {
 	theme: "dark" as const,
@@ -161,6 +161,25 @@ export const useMapVisibilityStore = create<{ isHidden: boolean; setHidden: (val
 		}),
 		{
 			name: "simradar21-map-visibility",
+		},
+	),
+);
+
+export const useDashboardStore = create<DashboardState>()(
+	persist(
+		(set) => ({
+			panel: ["history"],
+			historyMode: "24 hours",
+			eventsToday: true,
+			eventsTomorrow: true,
+
+			setPanel: (panel) => set({ panel }),
+			setHistoryMode: (value) => set({ historyMode: value }),
+			setEventsToday: (value) => set({ eventsToday: value }),
+			setEventsTomorrow: (value) => set({ eventsTomorrow: value }),
+		}),
+		{
+			name: "simradar21-dashboard-state",
 		},
 	),
 );

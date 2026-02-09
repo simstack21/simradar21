@@ -199,8 +199,8 @@ export interface DashboardStats {
 	supervisors: number;
 	busiestAirports: { icao: string; departures: number; arrivals: number }[];
 	quietestAirports: { icao: string; departures: number; arrivals: number }[];
-	busiestRoutes: { route: string; count: number }[];
-	quietestRoutes: { route: string; count: number }[];
+	busiestRoutes: { departure: string; arrival: string; count: number }[];
+	quietestRoutes: { departure: string; arrival: string; count: number }[];
 	busiestAircrafts: { aircraft: string; count: number }[];
 	rarestAircrafts: { aircraft: string; count: number }[];
 	busiestControllers: { callsign: string; count: number }[];

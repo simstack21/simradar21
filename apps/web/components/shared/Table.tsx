@@ -64,7 +64,7 @@ export function DataTable<TData, TValue>({ columns, data, rowCount, pagination, 
 			</div>
 			<div className="overflow-hidden rounded-md border">
 				<UITable>
-					<TableHeader>
+					<TableHeader className="bg-muted">
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {

@@ -82,3 +82,19 @@ export interface FilterStats {
 	pilotCount: [number, number];
 	setPilotCount: (count: [number, number]) => void;
 }
+
+type DashboardPanel = "history" | "stats" | "events";
+
+export interface DashboardValues {
+	panel: DashboardPanel[];
+	historyMode: "24 hours" | "7 days";
+	eventsToday: boolean;
+	eventsTomorrow: boolean;
+}
+
+export interface DashboardState extends DashboardValues {
+	setPanel: (panel: DashboardPanel[]) => void;
+	setHistoryMode: (value: "24 hours" | "7 days") => void;
+	setEventsToday: (value: boolean) => void;
+	setEventsTomorrow: (value: boolean) => void;
+}

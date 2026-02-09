@@ -73,12 +73,17 @@ function getDashboardStats(vatsimData: VatsimData, controllersLong: ControllerLo
 	const _routes = Array.from(
 		vatsimData.pilots.reduce((acc, pilot) => {
 			if (pilot.flight_plan) {
-				const routeKey = `${pilot.flight_plan.departure}-${pilot.flight_plan.arrival}`;
+				const departure = pilot.flight_plan.departure;
+				const arrival = pilot.flight_plan.arrival;
+				const routeKey = `${departure}-${arrival}`;
 				acc.set(routeKey, (acc.get(routeKey) || 0) + 1);
 			}
 			return acc;
 		}, new Map<string, number>()),
-	).map(([route, count]) => ({ route, count }));
+	).map(([route, count]) => {
+		const [departure, arrival] = route.split("-");
+		return { departure, arrival, count };
+	});
 
 	const busiestRoutes = _routes.sort((a, b) => b.count - a.count).slice(0, 5);
 

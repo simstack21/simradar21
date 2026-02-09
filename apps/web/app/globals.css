@@ -55,6 +55,23 @@
 	--shadow-lg: var(--shadow-lg);
 	--shadow-xl: var(--shadow-xl);
 	--shadow-2xl: var(--shadow-2xl);
+
+	@keyframes accordion-down {
+		from {
+			height: 0;
+		}
+		to {
+			height: var(--radix-accordion-content-height, var(--accordion-panel-height, auto));
+		}
+	}
+	@keyframes accordion-up {
+		from {
+			height: var(--radix-accordion-content-height, var(--accordion-panel-height, auto));
+		}
+		to {
+			height: 0;
+		}
+	}
 }
 
 :root {
@@ -123,7 +140,7 @@
 	--popover-foreground: oklch(1 0 0);
 	--primary: oklch(0.7139 0.1559 157.4072);
 	--primary-foreground: oklch(0 0 0);
-	--secondary: rgb(33, 64, 221);
+	--secondary: oklch(47.077% 0.23758 266.616);
 	--secondary-foreground: oklch(1 0 0);
 	--muted: oklch(0.23 0 0);
 	--muted-foreground: oklch(0.72 0 0);
