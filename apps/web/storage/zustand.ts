@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { DashboardState, FilterState, FilterStats, SettingState, SettingValues } from "@/types/zustand";
+import type { DashboardPanelState, FilterState, FilterStats, PilotPanelState, SettingState, SettingValues } from "@/types/zustand";
 
 const defaultSettings: SettingValues = {
 	theme: "dark" as const,
@@ -165,10 +165,10 @@ export const useMapVisibilityStore = create<{ isHidden: boolean; setHidden: (val
 	),
 );
 
-export const useDashboardStore = create<DashboardState>()(
+export const useDashboardPanelStore = create<DashboardPanelState>()(
 	persist(
 		(set) => ({
-			panel: ["history"],
+			panel: ["history", "stats"],
 			historyMode: "24 hours",
 			eventsToday: true,
 			eventsTomorrow: true,
@@ -179,7 +179,19 @@ export const useDashboardStore = create<DashboardState>()(
 			setEventsTomorrow: (value) => set({ eventsTomorrow: value }),
 		}),
 		{
-			name: "simradar21-dashboard-state",
+			name: "simradar21-dashboard-panel-state",
+		},
+	),
+);
+
+export const usePilotPanelStore = create<PilotPanelState>()(
+	persist(
+		(set) => ({
+			panel: [],
+			setPanel: (panel) => set({ panel }),
+		}),
+		{
+			name: "simradar21-pilot-panel-state",
 		},
 	),
 );

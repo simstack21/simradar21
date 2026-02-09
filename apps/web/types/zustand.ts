@@ -85,16 +85,26 @@ export interface FilterStats {
 
 type DashboardPanel = "history" | "stats" | "events";
 
-export interface DashboardValues {
+export interface DashboardPanelValues {
 	panel: DashboardPanel[];
 	historyMode: "24 hours" | "7 days";
 	eventsToday: boolean;
 	eventsTomorrow: boolean;
 }
 
-export interface DashboardState extends DashboardValues {
+export interface DashboardPanelState extends DashboardPanelValues {
 	setPanel: (panel: DashboardPanel[]) => void;
 	setHistoryMode: (value: "24 hours" | "7 days") => void;
 	setEventsToday: (value: boolean) => void;
 	setEventsTomorrow: (value: boolean) => void;
+}
+
+type PilotPanel = "flightplan" | "aircraft" | "chart" | "telemetry" | "user" | "misc";
+
+export interface PilotPanelValues {
+	panel: PilotPanel[];
+}
+
+export interface PilotPanelState extends PilotPanelValues {
+	setPanel: (panel: PilotPanel[]) => void;
 }

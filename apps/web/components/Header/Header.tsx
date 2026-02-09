@@ -37,7 +37,7 @@ export default function Header() {
 	return (
 		<header
 			ref={headerRef}
-			className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-4 rounded-full outline border overflow-hidden h-10 backdrop-blur-md bg-linear-to-r from-white/1 from-20% via-white/3 via-50% to-white/1"
+			className="fixed top-4 left-1/2 transform -translate-x-1/2 z-10 flex items-center gap-4 rounded-full overflow-hidden h-10 glass-panel"
 		>
 			<figure className="bg-blue h-full flex items-center px-4 shrink-0">
 				<Link href="/">

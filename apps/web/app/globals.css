@@ -8,6 +8,7 @@
 	--color-green: var(--green);
 	--color-red: var(--red);
 	--color-magenta: var(--magenta);
+	--color-yellow: var(--yellow);
 
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
@@ -79,6 +80,7 @@
 	--green: oklch(0.7139 0.1559 157.4072);
 	--red: oklch(0.63 0.19 23.03);
 	--magenta: oklch(68.899% 0.23454 324.308);
+	--yellow: oklch(0.81 0.17 75.35);
 
 	--background: oklch(0.99 0 0);
 	--foreground: oklch(0 0 0);
@@ -129,6 +131,8 @@
 	--shadow-2xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.45);
 	--tracking-normal: 0em;
 	--spacing: 0.25rem;
+	--font-sans: Ubuntu, sans-serif;
+	--font-mono: Geist Mono, monospace;
 }
 
 [data-theme="dark"] {
@@ -164,9 +168,6 @@
 	--sidebar-accent-foreground: oklch(1 0 0);
 	--sidebar-border: oklch(0.32 0 0);
 	--sidebar-ring: oklch(0.72 0 0);
-	--font-sans: Geist, sans-serif;
-	--font-serif: Georgia, serif;
-	--font-mono: Geist Mono, monospace;
 	--radius: 0.5rem;
 	--shadow-x: 0px;
 	--shadow-y: 1px;
@@ -195,7 +196,7 @@
 
 	html,
 	body {
-		@apply h-full flex flex-col;
+		@apply h-full flex flex-col font-sans;
 	}
 
 	a {
@@ -207,5 +208,11 @@
 	.no-scrollbar {
 		-ms-overflow-style: none;
 		scrollbar-width: none;
+	}
+}
+
+@layer components {
+	.glass-panel {
+		@apply outline border backdrop-blur-md bg-linear-to-r from-white/1 from-20% via-white/3 via-50% to-white/1;
 	}
 }

@@ -1,17 +1,18 @@
 import type { DashboardData } from "@sr24/types/interface";
 import { ActivityIcon } from "lucide-react";
-import { useCallback, useId, useMemo } from "react";
-import { Area, AreaChart, type DefaultLegendContentProps, Legend, ResponsiveContainer, Tooltip, type TooltipContentProps, XAxis } from "recharts";
+import { useId, useMemo } from "react";
+import { Area, AreaChart, Legend, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { renderLegend, renderTooltip } from "@/components/shared/Chart";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { convertTime } from "@/lib/helpers";
-import { useDashboardStore, useSettingsStore } from "@/storage/zustand";
+import { useDashboardPanelStore, useSettingsStore } from "@/storage/zustand";
 
 export function DashboardHistory({ history }: { history: DashboardData["history"] }) {
 	const id = useId();
 
-	const { historyMode, setHistoryMode } = useDashboardStore();
+	const { historyMode, setHistoryMode } = useDashboardPanelStore();
 	const { timeZone, timeFormat } = useSettingsStore();
 
 	const filteredHistory = useMemo(() => {
@@ -29,33 +30,6 @@ export function DashboardHistory({ history }: { history: DashboardData["history"
 				controllers: point[2],
 			})),
 		[filteredHistory],
-	);
-
-	const renderTooltip = useCallback(
-		({ active, payload, label }: TooltipContentProps<string | number, string>) => {
-			const isVisible = active && payload && payload.length;
-			if (!isVisible || !label) return null;
-
-			const date = new Date(label);
-
-			return (
-				<div className="flex flex-col bg-background rounded-xl border p-2">
-					<div className="font-bold">
-						{date.toLocaleDateString(undefined, { month: "short", day: "numeric" })} {convertTime(date, timeFormat, timeZone)}
-					</div>
-					{payload.map((entry) => (
-						<div key={entry.name} className="flex items-center gap-1.5">
-							<span style={{ backgroundColor: entry.color }} className="h-2.5 w-2.5 rounded-xs shrink-0" />
-							<div className="flex justify-between w-full gap-4">
-								<span className="text-muted-foreground">{entry.name}</span>
-								<span className="font-bold ml-auto">{entry.value}</span>
-							</div>
-						</div>
-					))}
-				</div>
-			);
-		},
-		[timeFormat, timeZone],
 	);
 
 	return (
@@ -129,18 +103,3 @@ export function DashboardHistory({ history }: { history: DashboardData["history"
 		</AccordionItem>
 	);
 }
-
-const renderLegend = ({ payload }: DefaultLegendContentProps) => {
-	if (!payload) return null;
-
-	return (
-		<div className="flex gap-4 justify-center">
-			{payload.map((entry) => (
-				<div key={entry.value} className="flex items-center gap-2">
-					<span style={{ backgroundColor: entry.color }} className="h-2 w-2 rounded-xs" />
-					<span className="text-foreground">{entry.value}</span>
-				</div>
-			))}
-		</div>
-	);
-};

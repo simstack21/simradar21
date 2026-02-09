@@ -8,7 +8,7 @@ import flightStatusSprite from "@/assets/images/sprites/flightStatusSprite.png";
 import Icon from "@/components/Icon/Icon";
 import { PilotAircraft } from "@/components/Panel/Pilot/PilotAircraft";
 import { PilotAirport } from "@/components/Panel/Pilot/PilotAirport";
-import { PilotCharts } from "@/components/Panel/Pilot/PilotCharts";
+import { PilotCharts } from "@/components/Panel/Pilot/PilotChart";
 import { PilotFlightplan } from "@/components/Panel/Pilot/PilotFlightplan";
 import { PilotMisc } from "@/components/Panel/Pilot/PilotMisc";
 import { PilotTelemetry } from "@/components/Panel/Pilot/PilotTelemetry";

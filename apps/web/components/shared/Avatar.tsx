@@ -15,13 +15,13 @@ export const AvatarUser = ({ withBadge }: { withBadge?: boolean }) => {
 	);
 };
 
-export const AvatarAirline = ({ airline }: { airline: StaticAirline | null }) => {
+export const AvatarAirline = ({ airline, size = "default" }: { airline: StaticAirline | null; size?: "default" | "sm" | "lg" }) => {
 	const color = airline?.color;
 
 	if (!color || color.length < 2) {
 		return (
-			<Avatar className="flex items-center justify-center bg-white">
-				<span className="text-green font-bold text-base">{airline?.iata ?? "?"}</span>
+			<Avatar className="flex items-center justify-center bg-white" size={size}>
+				<span className={`text-green font-bold ${size === "lg" ? "text-xl" : "text-base"}`}>{airline?.iata ?? "?"}</span>
 			</Avatar>
 		);
 	}
@@ -29,21 +29,21 @@ export const AvatarAirline = ({ airline }: { airline: StaticAirline | null }) =>
 	const letters = airline.iata.split("");
 
 	return (
-		<Avatar className="flex items-center justify-center" style={{ backgroundColor: color[0] }}>
-			<span className="font-bold text-base" style={{ color: color[1] }}>
+		<Avatar className="flex items-center justify-center" style={{ backgroundColor: color[0] }} size={size}>
+			<span className={`font-bold ${size === "lg" ? "text-xl" : "text-base"}`} style={{ color: color[1] }}>
 				{letters[0]}
 			</span>
-			<span className="font-bold text-base" style={{ color: color.length > 2 ? color[2] : color[1] }}>
+			<span className={`font-bold ${size === "lg" ? "text-xl" : "text-base"}`} style={{ color: color.length > 2 ? color[2] : color[1] }}>
 				{letters[1]}
 			</span>
 		</Avatar>
 	);
 };
 
-export const AvatarCountry = ({ country }: { country: string }) => {
+export const AvatarCountry = ({ country, size = "default", className }: { country: string; size?: "default" | "sm" | "lg"; className?: string }) => {
 	return (
-		<Avatar className="flex items-center justify-center overflow-hidden">
-			<span className={`fflag ff-lg fflag-${country}`} style={{ backgroundImage: `url(${FlagSprite.src})` }}></span>
+		<Avatar className={`flex items-center justify-center overflow-hidden ${className}`} size={size}>
+			<span className={`fflag ff-lg fflag-${country} shrink-0`} style={{ backgroundImage: `url(${FlagSprite.src})` }}></span>
 		</Avatar>
 	);
 };

@@ -528,12 +528,12 @@ function parseStrToDate(time: string): number {
 	const minutes = Number(time.slice(2, 4));
 	const now = new Date();
 
-	let target = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hours, minutes, 0, 0);
+	const target = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hours, minutes, 0, 0);
 
 	// If target time has already passed today, assume next day
-	if (target < now.getTime()) {
-		target += 24 * 60 * 60 * 1000;
-	}
+	// if (target < now.getTime()) {
+	// 	target += 24 * 60 * 60 * 1000;
+	// }
 
 	return target;
 }

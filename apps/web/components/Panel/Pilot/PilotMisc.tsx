@@ -1,34 +1,41 @@
 import type { PilotLong, TrackPoint } from "@sr24/types/interface";
+import { RadioIcon } from "lucide-react";
 import type { Coordinate } from "ol/coordinate";
 import { toLonLat } from "ol/proj";
-import Icon from "@/components/Icon/Icon";
+import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export function PilotMisc({ pilot, trackPoint }: { pilot: PilotLong; trackPoint?: TrackPoint }) {
 	const coordinates: Coordinate = trackPoint ? toLonLat(trackPoint.coordinates) : [pilot.latitude, pilot.longitude];
 
 	return (
-		<div className="panel-sub-container sep">
-			<div className="panel-section-title">
-				<Icon name="compass" size={24} />
-			</div>
-			<div className="panel-section-content" id="panel-pilot-user">
-				<div className="panel-data-item">
-					<p>Server</p>
-					<p>{pilot.server}</p>
+		<AccordionItem
+			value="misc"
+			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none has-focus-visible:z-10 has-focus-visible:ring-[3px]"
+		>
+			<AccordionTrigger className="items-center">
+				<div className="flex items-center gap-4">
+					<RadioIcon className="size-4 shrink-0" />
+					<span>Miscellaneous</span>
 				</div>
-				<div className="panel-data-item">
-					<p>Transponder</p>
-					<p>{pilot.transponder}</p>
+			</AccordionTrigger>
+			<AccordionContent className="pb-2 grid grid-cols-2 gap-1">
+				<div className="flex flex-col">
+					<span className="text-muted-foreground">Server</span>
+					<span>{pilot.server}</span>
 				</div>
-				<div className="panel-data-item">
-					<p>Latitude</p>
-					<p>{coordinates[1].toFixed(6)}</p>
+				<div className="flex flex-col">
+					<span className="text-muted-foreground">Transponder</span>
+					<span>{pilot.transponder}</span>
 				</div>
-				<div className="panel-data-item">
-					<p>Longitude</p>
-					<p>{coordinates[0].toFixed(6)}</p>
+				<div className="flex flex-col">
+					<span className="text-muted-foreground">Latitude</span>
+					<span>{coordinates[1].toFixed(6)}</span>
 				</div>
-			</div>
-		</div>
+				<div className="flex flex-col">
+					<span className="text-muted-foreground">Longitude</span>
+					<span>{coordinates[0].toFixed(6)}</span>
+				</div>
+			</AccordionContent>
+		</AccordionItem>
 	);
 }

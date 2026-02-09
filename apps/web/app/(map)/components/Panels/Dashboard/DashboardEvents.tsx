@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { convertTime } from "@/lib/helpers";
-import { useDashboardStore, useSettingsStore } from "@/storage/zustand";
+import { useDashboardPanelStore, useSettingsStore } from "@/storage/zustand";
 
 export function DashboardEvents({ events }: { events: VatsimEvent[] }) {
-	const { eventsToday, eventsTomorrow, setEventsToday, setEventsTomorrow } = useDashboardStore();
+	const { eventsToday, eventsTomorrow, setEventsToday, setEventsTomorrow } = useDashboardPanelStore();
 	const [selected, setSelected] = useState<number | null>(null);
 
 	return (

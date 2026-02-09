@@ -73,7 +73,7 @@ export default function Aircraft({ registration }: { registration: string }) {
 							)}
 							{aircraft.selCal && (
 								<div className="flex flex-col gap-1">
-									<span className="font-medium">SelCal</span>
+									<span className="font-medium">SELCAL</span>
 									<span className="text-muted-foreground text-xs">{aircraft.selCal}</span>
 								</div>
 							)}

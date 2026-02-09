@@ -1,37 +1,27 @@
 "use client";
 
+import useMediaQuery from "@mui/material/useMediaQuery";
 import type { DeltaTrackPoint, PilotLong, TrackPoint } from "@sr24/types/interface";
-import { useEffect, useRef, useState } from "react";
-import { getCachedAirline, getCachedAirport } from "@/storage/cache";
-import "@/components/Panel/Pilot/PilotPanel.css";
+import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { mapService } from "@/app/(map)/lib";
-import flightStatusSprite from "@/assets/images/sprites/flightStatusSprite.png";
-import Icon from "@/components/Icon/Icon";
+import LoadingPanel from "@/components/Panel/Loading";
+import NotFoundPanel from "@/components/Panel/NotFound";
 import { PilotAircraft } from "@/components/Panel/Pilot/PilotAircraft";
-import { PilotAirport } from "@/components/Panel/Pilot/PilotAirport";
-import { PilotCharts } from "@/components/Panel/Pilot/PilotCharts";
+import { PilotChart } from "@/components/Panel/Pilot/PilotChart";
 import { PilotFlightplan } from "@/components/Panel/Pilot/PilotFlightplan";
+import { PilotFooter } from "@/components/Panel/Pilot/PilotFooter";
+import { PilotHeader } from "@/components/Panel/Pilot/PilotHeader";
 import { PilotMisc } from "@/components/Panel/Pilot/PilotMisc";
-import { PilotProgress } from "@/components/Panel/Pilot/PilotProgress";
+import PilotRoute from "@/components/Panel/Pilot/PilotRoute";
 import { PilotTelemetry } from "@/components/Panel/Pilot/PilotTelemetry";
-import { PilotTimes } from "@/components/Panel/Pilot/PilotTimes";
-import { PilotTitle } from "@/components/Panel/Pilot/PilotTitle";
 import { PilotUser } from "@/components/Panel/Pilot/PilotUser";
-import { getSpriteOffset, setHeight } from "@/components/Panel/utils";
-import Spinner from "@/components/Spinner/Spinner";
+import { Accordion } from "@/components/ui/accordion";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { fetchApi } from "@/lib/api";
 import { decodeTrackPoints } from "@/lib/map/tracks";
 import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
-import type { PilotPanelStatic } from "@/types/panels";
-import NotFoundPanel from "../shared/NotFound";
-
-type AccordionSection = "info" | "charts" | "pilot" | null;
-type MapInteraction = "route" | "follow" | null;
-
-function onStatsClick(cid: string) {
-	window.open(`https://stats.vatsim.net/stats/${cid}`, "_blank");
-}
+import { usePilotPanelStore } from "@/storage/zustand";
 
 let lastMessageSeq: number | null = null;
 
@@ -43,57 +33,10 @@ export default function PilotPanel({ id }: { id: string }) {
 	} = useSWR<PilotLong>(`/map/pilot/${id}`, fetchApi, {
 		refreshInterval: 60_000,
 	});
-
-	const lastIdRef = useRef<string | null>(null);
-
+	const { panel, setPanel } = usePilotPanelStore();
+	const [minimized, setMinimized] = useState(false);
 	const [trackPoints, setTrackPoints] = useState<TrackPoint[]>([]);
-	const [staticData, setStaticData] = useState<PilotPanelStatic>({
-		airline: null,
-		departure: null,
-		arrival: null,
-	});
-
-	const [mapInteraction, setMapInteraction] = useState<MapInteraction>(null);
-	const toggleMapInteraction = (interaction: MapInteraction) => {
-		const newInteraction = mapInteraction === interaction ? null : interaction;
-		setMapInteraction(newInteraction);
-
-		if (newInteraction === "route") {
-			mapService.unfollowPilot();
-			mapService.focusFeatures({
-				airports: [staticData.departure?.id || "", staticData.arrival?.id || ""],
-				pilots: [id],
-				hideLayers: ["controller"],
-			});
-			mapService.fitFeatures({ airports: [staticData.departure?.id || "", staticData.arrival?.id || ""] });
-		}
-		if (newInteraction === "follow") {
-			mapService.unfocusFeatures();
-			mapService.fitFeatures();
-			mapService.followPilot();
-		}
-		if (!newInteraction) {
-			mapService.unfollowPilot();
-			mapService.unfocusFeatures();
-			mapService.fitFeatures();
-		}
-	};
-
-	const [shared, setShared] = useState(false);
-	const onShareClick = () => {
-		navigator.clipboard.writeText(`${window.location.origin}/pilot/${id}`);
-		setShared(true);
-		setTimeout(() => setShared(false), 2000);
-	};
-
-	const infoRef = useRef<HTMLDivElement>(null);
-	const chartsRef = useRef<HTMLDivElement>(null);
-	const userRef = useRef<HTMLDivElement>(null);
-
-	const [openSection, setOpenSection] = useState<AccordionSection>(null);
-	const toggleSection = (section: AccordionSection) => {
-		setOpenSection(openSection === section ? null : section);
-	};
+	const isMobile = useMediaQuery("(max-width: 1024px)");
 
 	useEffect(() => {
 		fetchApi<(TrackPoint | DeltaTrackPoint)[]>(`/map/pilot/${id}/track`).then((masked) => {
@@ -103,28 +46,6 @@ export default function PilotPanel({ id }: { id: string }) {
 		});
 		lastMessageSeq = null;
 	}, [id]);
-
-	useEffect(() => {
-		setHeight(infoRef, openSection === "info");
-		setHeight(chartsRef, openSection === "charts");
-		setHeight(userRef, openSection === "pilot");
-	}, [openSection]);
-
-	useEffect(() => {
-		if (!pilotData || lastIdRef.current === pilotData.id) return;
-		lastIdRef.current = pilotData.id;
-
-		const airlineCode = pilotData.callsign.slice(0, 3).toUpperCase();
-		(async () => {
-			Promise.all([
-				getCachedAirline(airlineCode || ""),
-				getCachedAirport(pilotData.flight_plan?.departure.icao || ""),
-				getCachedAirport(pilotData.flight_plan?.arrival.icao || ""),
-			]).then(([airline, departure, arrival]) => {
-				setStaticData({ airline, departure, arrival });
-			});
-		})();
-	}, [pilotData]);
 
 	useEffect(() => {
 		const handleMessage = (msg: WsData | WsPresence) => {
@@ -166,95 +87,41 @@ export default function PilotPanel({ id }: { id: string }) {
 		};
 
 		wsClient.addListener(handleMessage);
-
 		return () => {
 			wsClient.removeListener(handleMessage);
 		};
 	}, [id, setPilotData]);
 
-	if (isLoading) return <Spinner />;
+	if (isLoading) return <LoadingPanel />;
 	if (!pilotData)
 		return (
 			<NotFoundPanel
-				title="Pilot not found!"
-				text="This pilot does not exist or is currently unavailable, most likely because of an incorrect ID or disconnect."
+				title="Pilot not found"
+				description="This pilot does not exist or is currently unavailable, most likely because of an incorrect ID or disconnect."
+				onClick={() => mapService.resetMap()}
 			/>
 		);
 
-	const callsignNumber = pilotData.callsign.slice(3);
-	const flightNumber = staticData.airline?.iata ? staticData.airline.iata + callsignNumber : pilotData.callsign;
-
 	return (
-		<div className="panel">
-			<div className="panel-header">
-				<div className="panel-id">{pilotData.callsign}</div>
-				<button className="panel-close" type="button" onClick={() => mapService.resetMap()}>
-					<Icon name="cancel" size={24} />
-				</button>
-			</div>
-			<PilotTitle pilot={pilotData} data={staticData} />
-			<div className="panel-container" id="panel-pilot-status">
-				<div id="panel-pilot-route">
-					<PilotAirport airport={staticData.departure} />
-					<div id="panel-pilot-route-line"></div>
-					<div
-						id="panel-pilot-route-icon"
-						style={{
-							backgroundImage: `url(${flightStatusSprite.src})`,
-							backgroundPositionY: `${getSpriteOffset(pilotData.times?.state)}px`,
-						}}
-					></div>
-					<PilotAirport airport={staticData.arrival} />
-				</div>
-				<PilotTimes pilot={pilotData} departure={staticData.departure} arrival={staticData.arrival} />
-				<PilotProgress pilot={pilotData} departure={staticData.departure} arrival={staticData.arrival} />
-			</div>
-			<div className="panel-container main scrollable">
-				<button className={`panel-container-header${openSection === "info" ? " open" : ""}`} type="button" onClick={() => toggleSection("info")}>
-					<p>More {flightNumber} Information</p>
-					<Icon name="arrow-down" />
-				</button>
-				<PilotFlightplan pilot={pilotData} data={staticData} openSection={openSection} ref={infoRef} />
-				<PilotAircraft pilot={pilotData} />
-				<button className={`panel-container-header${openSection === "charts" ? " open" : ""}`} type="button" onClick={() => toggleSection("charts")}>
-					<p>Speed & Altitude Graph</p>
-					<Icon name="arrow-down" />
-				</button>
-				<PilotCharts trackPoints={trackPoints} openSection={openSection} ref={chartsRef} />
-				<PilotTelemetry pilot={pilotData} />
-				<button className={`panel-container-header${openSection === "pilot" ? " open" : ""}`} type="button" onClick={() => toggleSection("pilot")}>
-					<p>Pilot Information</p>
-					<Icon name="arrow-down" />
-				</button>
-				<PilotUser pilot={pilotData} openSection={openSection} ref={userRef} />
-				<PilotMisc pilot={pilotData} />
-			</div>
-			<div className="panel-navigation">
-				<button
-					className={`panel-navigation-button${mapInteraction === "route" ? " active" : ""}`}
-					type="button"
-					onClick={() => toggleMapInteraction("route")}
-				>
-					<Icon name="tour" size={20} />
-					<p>Route</p>
-				</button>
-				<button
-					className={`panel-navigation-button${mapInteraction === "follow" ? " active" : ""}`}
-					type="button"
-					onClick={() => toggleMapInteraction("follow")}
-				>
-					<Icon name="gps" size={20} />
-					<p>Follow</p>
-				</button>
-				<button className={`panel-navigation-button`} type="button" onClick={() => onShareClick()}>
-					<Icon name="share-android" size={20} />
-					<p>{shared ? "Copied!" : "Share"}</p>
-				</button>
-				<button className={`panel-navigation-button`} type="button" onClick={() => onStatsClick(pilotData.cid)}>
-					<Icon name="more" size={20} />
-					<p>More</p>
-				</button>
-			</div>
+		<div className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
+			<PilotHeader pilot={pilotData} mapService={mapService} minimized={minimized} setMinimized={setMinimized} />
+			{!minimized && (
+				<>
+					<PilotRoute pilot={pilotData} />
+					<ScrollArea className="max-h-full overflow-hidden flex flex-col">
+						<Accordion multiple={!isMobile} className="rounded-none border-none" value={panel} onValueChange={setPanel}>
+							<PilotFlightplan pilot={pilotData} />
+							<PilotAircraft pilot={pilotData} />
+							<PilotChart trackPoints={trackPoints} />
+							<PilotTelemetry pilot={pilotData} />
+							<PilotUser pilot={pilotData} />
+							<PilotMisc pilot={pilotData} />
+						</Accordion>
+						<ScrollBar />
+					</ScrollArea>
+				</>
+			)}
+			<PilotFooter pilot={pilotData} mapService={mapService} />
 		</div>
 	);
 }

@@ -1,72 +1,76 @@
+import type { StaticAirport } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
-import Icon from "@/components/Icon/Icon";
+import { ArrowRightIcon, FileTextIcon } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { convertDistance, haversineDistance } from "@/lib/helpers";
+import { getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
-import type { PilotPanelStatic } from "@/types/panels";
 
-export function PilotFlightplan({
-	pilot,
-	data,
-	openSection,
-	ref,
-}: {
-	pilot: PilotLong;
-	data: PilotPanelStatic;
-	openSection: string | null;
-	ref: React.Ref<HTMLDivElement>;
-}) {
+export function PilotFlightplan({ pilot }: { pilot: PilotLong }) {
 	const { distanceUnit } = useSettingsStore();
+	const [airports, setAirports] = useState<{ departure: StaticAirport | null; arrival: StaticAirport | null }>({ departure: null, arrival: null });
 
-	const distKm =
-		data.departure && data.arrival
-			? haversineDistance([data.departure.latitude, data.departure.longitude], [data.arrival.latitude, data.arrival.longitude])
-			: null;
+	useEffect(() => {
+		if (!pilot.flight_plan) return;
+		Promise.all([getCachedAirport(pilot.flight_plan.departure.icao), getCachedAirport(pilot.flight_plan.arrival.icao)]).then(
+			([departure, arrival]) => {
+				setAirports({ departure, arrival });
+			},
+		);
+	}, [pilot]);
 
-	// Enroute time from seconds to hh:mm forma
-	const enrouteTime = pilot.flight_plan?.enroute_time
-		? (() => {
-				const totalMinutes = Math.floor(pilot.flight_plan.enroute_time / 60);
-				const hours = Math.floor(totalMinutes / 60);
-				const minutes = totalMinutes % 60;
-				return `${hours}h ${minutes}m`;
-			})()
-		: "N/A";
+	const [distKm, enrouteTime] = getEnrouteValues(pilot, airports.departure, airports.arrival);
 
 	return (
-		<div ref={ref} className={`panel-sub-container accordion${openSection === "info" ? " open" : ""}`}>
-			<div className="panel-section-title">
-				<Icon name="documents" size={24} />
-			</div>
-			<div className="panel-section-content">
-				<div className="panel-sub-container">
-					<div className="panel-data-item">
-						<p>Great circle distance</p>
-						<p>{distKm !== null ? `${convertDistance(distKm, distanceUnit)}` : "N/A"}</p>
-					</div>
-					<div className="panel-data-item">
-						<p>Enroute time</p>
-						<p>{enrouteTime}</p>
-					</div>
+		<AccordionItem
+			value="flightplan"
+			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none has-focus-visible:z-10 has-focus-visible:ring-[3px]"
+		>
+			<AccordionTrigger className="items-center">
+				<div className="flex items-center gap-4">
+					<FileTextIcon className="size-4 shrink-0" />
+					<span>Flightplan</span>
 				</div>
-				<div className="panel-sub-container" id="panel-pilot-flightplan">
-					<div className="panel-data-item">
-						<p>Flight plan</p>
-						<p>{pilot.flight_plan?.route || "No flight plan filed"}</p>
-					</div>
-					<div className="panel-data-item">
-						<p>Remarks</p>
-						<p>{pilot.flight_plan?.remarks || "N/A"}</p>
-					</div>
-					<div className="panel-data-item">
-						<p>Flight rules</p>
-						<p>{pilot.flight_plan?.flight_rules || "N/A"}</p>
-					</div>
+			</AccordionTrigger>
+			<AccordionContent className="pb-2 grid grid-cols-2 gap-1">
+				<div className="flex flex-col">
+					<span className="text-muted-foreground">Great circle distance</span>
+					<span>{distKm !== null ? `${convertDistance(distKm, distanceUnit)}` : "N/A"}</span>
 				</div>
-				<a className="panel-data-link" href={`/data/aircrafts/${pilot.flight_plan?.ac_reg}`}>
-					<Icon name="share" size={20} />
-					<p>View more flights for {pilot.callsign}</p>
-				</a>
-			</div>
-		</div>
+				<div className="flex flex-col">
+					<span className="text-muted-foreground">Enroute time</span>
+					<span>{enrouteTime}</span>
+				</div>
+				<div className="flex flex-col col-span-2">
+					<span className="text-muted-foreground">Flight Plan</span>
+					<span>{pilot.flight_plan?.route || "No flight Plan Filed"}</span>
+				</div>
+				<div className="flex flex-col col-span-2">
+					<span className="text-muted-foreground">Remarks</span>
+					<span>{pilot.flight_plan?.remarks || "N/A"}</span>
+				</div>
+				<div className="flex flex-col col-span-2">
+					<span className="text-muted-foreground">Flight Rules</span>
+					<span>{pilot.flight_plan?.flight_rules || "N/A"}</span>
+				</div>
+				<Link href={`/data/flights/${pilot.callsign}`} className="flex col-span-2 items-center group gap-1">
+					View more flights for {pilot.callsign}
+					<ArrowRightIcon className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+				</Link>
+			</AccordionContent>
+		</AccordionItem>
 	);
+}
+
+function getEnrouteValues(pilot: PilotLong, departure: StaticAirport | null, arrival: StaticAirport | null): [number, string] {
+	const distKm = departure && arrival ? haversineDistance([departure.latitude, departure.longitude], [arrival.latitude, arrival.longitude]) : 0;
+	if (!pilot.flight_plan?.enroute_time) return [distKm, "N/A"];
+
+	const totalMinutes = Math.floor(pilot.flight_plan.enroute_time / 60);
+	const hours = Math.floor(totalMinutes / 60);
+	const minutes = totalMinutes % 60;
+
+	return [distKm, `${hours}h ${minutes}m`];
 }

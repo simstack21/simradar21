@@ -21,10 +21,9 @@ export function getSpriteOffset(status: string | undefined) {
 	}
 }
 
-export function getDelayColorFromDates(scheduled: number | undefined, actual: number | undefined): string | null {
-	if (!scheduled || !actual) {
-		return null;
-	}
+export function getDelayColorFromDates(scheduled: number | undefined, actual: number | undefined): "green" | "yellow" | "red" | null {
+	if (!scheduled || !actual) return null;
+
 	const delayMinutes = (actual - scheduled) / 60000;
 	if (delayMinutes >= 30) {
 		return "red";
@@ -36,7 +35,7 @@ export function getDelayColorFromDates(scheduled: number | undefined, actual: nu
 	return "green";
 }
 
-export function getDelayColorFromNumber(avgDelay: number): string {
+export function getDelayColorFromNumber(avgDelay: number): "green" | "yellow" | "red" | null {
 	if (avgDelay >= 60) {
 		return "red";
 	} else if (avgDelay >= 30) {
