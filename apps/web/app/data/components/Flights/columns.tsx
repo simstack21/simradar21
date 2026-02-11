@@ -211,7 +211,7 @@ function Airport({ icao }: { icao: string | undefined }) {
 	return (
 		<div className="flex gap-2">
 			<span>{airport.city}</span>
-			<Link href={`/airport/${airport.id}`}>{airport.id}</Link>
+			<a href={`/airport/${airport.id}`}>{airport.id}</a>
 		</div>
 	);
 }

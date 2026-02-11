@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import simradar21Full from "@/assets/images/logos/simradar21_full_logo.svg";
 import { Button } from "@/components/ui/button";
 
@@ -9,7 +8,7 @@ export function Placeholder({ text }: { text: string }) {
 			<Image src={simradar21Full} alt="simradar21 full logo" width={300} priority className="" />
 			<div className="font-bold text-2xl text-center">Work in progress... Stay tuned!</div>
 			<div className="text-center max-w-3xl">{text}</div>
-			<Link href="https://discord.gg/eVvKBfUr" target="_blank" rel="noopener noreferrer">
+			<a href="https://discord.gg/eVvKBfUr" target="_blank" rel="noopener noreferrer">
 				<Button
 					size="lg"
 					className="bg-transparent bg-linear-to-r from-primary via-primary/10 to-primary bg-size-[200%_auto] text-white hover:bg-transparent hover:bg-position-[99%_center] focus-visible:ring-primary dark:from-primary dark:via-primary/75 dark:to-primary dark:focus-visible:ring-primary/50b"
@@ -23,7 +22,7 @@ export function Placeholder({ text }: { text: string }) {
 						className="filter brightness-0 invert ml-1"
 					/>
 				</Button>
-			</Link>
+			</a>
 		</div>
 	);
 }

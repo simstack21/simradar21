@@ -1,7 +1,6 @@
 import type { FIRFeature, SimAwareTraconFeature, StaticAirport } from "@sr24/types/db";
 import type { ControllerLong } from "@sr24/types/interface";
 import { ChartNoAxesCombinedIcon, CheckIcon, CopyIcon, EyeIcon, EyeOffIcon, TowerControlIcon } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -86,12 +85,12 @@ export default function ControllerInfo({
 					{copied ? <CheckIcon data-icon="inline-start" className="text-green" /> : <CopyIcon data-icon="inline-start" />}
 					ATIS
 				</Button>
-				<Link href={`https://stats.vatsim.net/stats/${controller.cid}`} target="_blank" className="text-inherit">
+				<a href={`https://stats.vatsim.net/stats/${controller.cid}`} target="_blank" className="text-inherit">
 					<Button variant="outline">
 						<ChartNoAxesCombinedIcon data-icon="inline-start" />
 						Stats
 					</Button>
-				</Link>
+				</a>
 			</CardFooter>
 		</Card>
 	);

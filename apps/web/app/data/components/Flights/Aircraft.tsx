@@ -2,7 +2,6 @@
 
 import type { StaticAircraft } from "@sr24/types/db";
 import { ChevronRightIcon } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AvatarCountry } from "@/components/shared/Avatar";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item";
@@ -37,7 +36,7 @@ export default function Aircraft({ registration }: { registration: string }) {
 			className="ml-auto w-full md:w-fit min-w-60"
 			variant="outline"
 			render={
-				<Link
+				<a
 					href={`https://www.flightradar24.com/data/aircraft/${aircraft.registration || ""}`}
 					target="_blank"
 					rel="noopener noreferrer"
@@ -83,7 +82,7 @@ export default function Aircraft({ registration }: { registration: string }) {
 					<ItemActions>
 						<ChevronRightIcon className="size-4" />
 					</ItemActions>
-				</Link>
+				</a>
 			}
 		/>
 	);

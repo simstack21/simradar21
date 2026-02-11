@@ -1,7 +1,6 @@
 import type { StaticAirport } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
 import { ArrowRightIcon, FileTextIcon } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { convertDistance, haversineDistance } from "@/lib/helpers";
@@ -55,10 +54,10 @@ export function PilotFlightplan({ pilot }: { pilot: PilotLong }) {
 					<span className="text-muted-foreground">Flight Rules</span>
 					<span>{pilot.flight_plan?.flight_rules || "N/A"}</span>
 				</div>
-				<Link href={`/data/flights/${pilot.callsign}`} className="flex col-span-2 items-center group gap-1">
+				<a href={`/data/flights/${pilot.callsign}`} className="flex col-span-2 items-center group gap-1">
 					View more flights for {pilot.callsign}
 					<ArrowRightIcon className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-				</Link>
+				</a>
 			</AccordionContent>
 		</AccordionItem>
 	);

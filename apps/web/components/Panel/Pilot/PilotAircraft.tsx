@@ -1,7 +1,6 @@
 import type { StaticAircraft } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
 import { ArrowRightIcon, PlaneIcon } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AvatarCountry } from "@/components/shared/Avatar";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -73,10 +72,10 @@ export function PilotAircraft({ pilot }: { pilot: PilotLong }) {
 							<span className="text-muted-foreground">SELCAL</span>
 							<span>{aircraft.selCal || "N/A"}</span>
 						</div>
-						<Link href={`/data/aircrafts/${pilot.flight_plan?.ac_reg}`} className="flex col-span-2 items-center group gap-1">
+						<a href={`/data/aircrafts/${pilot.flight_plan?.ac_reg}`} className="flex col-span-2 items-center group gap-1">
 							View more flights of {pilot.flight_plan?.ac_reg}
 							<ArrowRightIcon className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-						</Link>
+						</a>
 					</>
 				)}
 			</AccordionContent>

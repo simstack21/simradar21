@@ -137,7 +137,7 @@ export function CommandSearch() {
 								setSearchValue("");
 							}}
 						>
-							<SelectTrigger id={id} className="rounded-r-none shadow-none focus-visible:z-10">
+							<SelectTrigger id={id} className="rounded-r-none shadow-none focus-visible:z-10" tabIndex={-1}>
 								{(() => {
 									const Icon = filterList.find((f) => f.value === selectValue)?.icon ?? SearchIcon;
 									return <Icon className="text-green" />;
@@ -158,6 +158,7 @@ export function CommandSearch() {
 						<Input
 							id={id}
 							type="text"
+							tabIndex={0}
 							placeholder={filterList.find((f) => f.value === selectValue)?.placeholder}
 							value={searchValue}
 							onChange={(e) => setSearchValue(e.target.value)}

@@ -1,6 +1,5 @@
 import type { PilotLong } from "@sr24/types/interface";
 import { ChartNoAxesCombinedIcon, CheckIcon, EyeIcon, EyeOffIcon, RouteIcon, RouteOffIcon, ShareIcon } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -69,12 +68,12 @@ export function PilotFooter({ pilot, mapService }: { pilot: PilotLong; mapServic
 					</Button>
 				</>
 			)}
-			<Link href={`https://stats.vatsim.net/stats/${pilot.cid}`} target="_blank" className="text-inherit ml-auto">
+			<a href={`https://stats.vatsim.net/stats/${pilot.cid}`} target="_blank" className="text-inherit ml-auto">
 				<Button variant="outline">
 					<ChartNoAxesCombinedIcon data-icon="inline-start" />
 					Stats
 				</Button>
-			</Link>
+			</a>
 			<Button variant="outline" onClick={onShareClick}>
 				{shared ? <CheckIcon className="text-green" /> : <ShareIcon />}
 			</Button>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Header from "@/components/Header/Header";
 import { BreadCrumbWithDropdown } from "@/components/shared/Breadcrumb";
 
@@ -19,7 +18,7 @@ export default function Page() {
 						<br />
 						Deutschland
 						<br />
-						<Link href="mailto:mail@simradar21.com">mail@simradar21.com</Link>
+						<a href="mailto:mail@simradar21.com">mail@simradar21.com</a>
 					</p>
 				</div>
 				<div className="flex flex-col gap-4">
@@ -75,9 +74,9 @@ export default function Page() {
 					</p>{" "}
 					<p>
 						Weitere Informationen entnehmen Sie der Datenschutzerkl&auml;rung von Strato:{" "}
-						<Link href="https://www.strato.de/datenschutz/" target="_blank" rel="noopener noreferrer">
+						<a href="https://www.strato.de/datenschutz/" target="_blank" rel="noopener noreferrer">
 							Strato Datenschutz
-						</Link>
+						</a>
 						.
 					</p>{" "}
 					<p>
@@ -114,7 +113,7 @@ export default function Page() {
 					<p>Die verantwortliche Stelle f&uuml;r die Datenverarbeitung auf dieser Website ist:</p>{" "}
 					<p>Sebastian Kr&uuml;ll, Rosenbergstr. 14, 74072 Heilbronn, Deutschland / Germany</p>
 					<p>
-						E-Mail: <Link href="mailto:mail@simradar21.com">mail@simradar21.com</Link>
+						E-Mail: <a href="mailto:mail@simradar21.com">mail@simradar21.com</a>
 					</p>
 					<p>
 						Verantwortliche Stelle ist die nat&uuml;rliche oder juristische Person, die allein oder gemeinsam mit anderen &uuml;ber die Zwecke und
@@ -275,23 +274,23 @@ export default function Page() {
 					<p>Wenn Ihr Browser Google Fonts nicht unterst&uuml;tzt, wird eine Standardschrift von Ihrem Computer genutzt.</p>{" "}
 					<p>
 						Weitere Informationen zu Google Fonts finden Sie unter{" "}
-						<Link href="https://developers.google.com/fonts/faq" target="_blank" rel="noopener noreferrer">
+						<a href="https://developers.google.com/fonts/faq" target="_blank" rel="noopener noreferrer">
 							Google Fonts FAQ
-						</Link>{" "}
+						</a>{" "}
 						und in der Datenschutzerkl&auml;rung von Google:{" "}
-						<Link href="https://policies.google.com/privacy?hl=de" target="_blank" rel="noopener noreferrer">
+						<a href="https://policies.google.com/privacy?hl=de" target="_blank" rel="noopener noreferrer">
 							Google Datenschutzerklärung
-						</Link>
+						</a>
 						.
 					</p>
 					<p>
 						Das Unternehmen verf&uuml;gt &uuml;ber eine Zertifizierung nach dem &bdquo;EU-US Data Privacy Framework&ldquo; (DPF). Der DPF ist ein
 						&Uuml;bereinkommen zwischen der Europ&auml;ischen Union und den USA, der die Einhaltung europ&auml;ischer Datenschutzstandards bei
 						Datenverarbeitungen in den USA gew&auml;hrleisten soll. Jedes nach dem DPF zertifizierte Unternehmen verpflichtet sich, diese
-						Datenschutzstandards einzuhalten. Weitere Informationen hierzu erhalten Sie vom Anbieter unter folgendem Link:{" "}
-						<Link href="https://www.dataprivacyframework.gov/participant/5780" target="_blank" rel="noopener noreferrer">
+						Datenschutzstandards einzuhalten. Weitere Informationen hierzu erhalten Sie vom Anbieter unter folgendem a:{" "}
+						<a href="https://www.dataprivacyframework.gov/participant/5780" target="_blank" rel="noopener noreferrer">
 							Data Privacy Framework
-						</Link>
+						</a>
 						.
 					</p>
 					<div className="font-semibold text-xl">OpenStreetMap</div> <p>Wir nutzen den Kartendienst von OpenStreetMap (OSM).</p>{" "}
@@ -322,14 +321,14 @@ export default function Page() {
 					</p>
 					<p>
 						Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. a DSGVO aufgrund Ihrer Einwilligung zur Anmeldung über VATSIM. Sie können
-						diese Einwilligung jederzeit durch eine schriftliche Mitteilung an <Link href="mailto:mail@simradar21.com">mail@simradar21.com</Link>{" "}
+						diese Einwilligung jederzeit durch eine schriftliche Mitteilung an <a href="mailto:mail@simradar21.com">mail@simradar21.com</a>{" "}
 						widerrufen.
 					</p>
 					<p>
 						VATSIM verfügt über geeignete Datenschutzmaßnahmen und bietet ein angemessenes Datenschutzniveau. Weitere Informationen finden Sie in der{" "}
-						<Link href="https://vatsim.net/docs/policy/overview" target="_blank" rel="noopener noreferrer">
+						<a href="https://vatsim.net/docs/policy/overview" target="_blank" rel="noopener noreferrer">
 							Datenschutzerklärung von VATSIM
-						</Link>
+						</a>
 						.
 					</p>
 					<div className="font-semibold text-xl">Cloudflare</div>
@@ -352,9 +351,9 @@ export default function Page() {
 					<p>
 						Cloudflare verf&uuml;gt &uuml;ber eine Zertifizierung nach dem &bdquo;EU-US Data Privacy Framework&ldquo; (DPF) und bietet somit ein
 						angemessenes Datenschutzniveau. Weitere Informationen finden Sie in der{" "}
-						<Link href="https://www.cloudflare.com/de-de/privacypolicy/" target="_blank" rel="noopener noreferrer">
+						<a href="https://www.cloudflare.com/de-de/privacypolicy/" target="_blank" rel="noopener noreferrer">
 							Datenschutzerkl&auml;rung von Cloudflare
-						</Link>
+						</a>
 						.
 					</p>
 				</div>

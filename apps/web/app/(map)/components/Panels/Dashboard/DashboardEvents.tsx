@@ -1,6 +1,5 @@
 import type { VatsimEvent } from "@sr24/types/vatsim";
 import { CalendarFoldIcon, ExternalLinkIcon, PlusIcon, ScanEyeIcon, XIcon } from "lucide-react";
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { mapService } from "@/app/(map)/lib";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -106,12 +105,12 @@ function Events({
 								<div className="text-muted-foreground">{getDurationString(event.start_time, event.end_time, timeFormat, timeZone)}</div>
 							</div>
 							<div className="inline-flex rounded-md">
-								<Link href={event.link} target="_blank" rel="noreferrer">
+								<a href={event.link} target="_blank" rel="noreferrer">
 									<Button size="icon" className="rounded-none rounded-l-md focus-visible:z-10">
 										<ExternalLinkIcon />
 										<span className="sr-only">External Link</span>
 									</Button>
-								</Link>
+								</a>
 								<Button
 									size="icon"
 									variant={selected === event.id ? "destructive" : "default"}
