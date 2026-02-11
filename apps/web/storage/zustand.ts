@@ -1,6 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { AirportPanelState, DashboardPanelState, FilterState, FilterStats, PilotPanelState, SettingState, SettingValues } from "@/types/zustand";
+import type {
+	AirportPanelState,
+	DashboardPanelState,
+	FilterState,
+	FilterStats,
+	PilotPanelState,
+	SectorPanelState,
+	SettingState,
+	SettingValues,
+} from "@/types/zustand";
 
 const defaultSettings: SettingValues = {
 	theme: "dark" as const,
@@ -204,6 +213,18 @@ export const useAirportPanelStore = create<AirportPanelState>()(
 		}),
 		{
 			name: "simradar21-airport-panel-state",
+		},
+	),
+);
+
+export const useSectorPanelStore = create<SectorPanelState>()(
+	persist(
+		(set) => ({
+			panel: [],
+			setPanel: (panel) => set({ panel }),
+		}),
+		{
+			name: "simradar21-sector-panel-state",
 		},
 	),
 );

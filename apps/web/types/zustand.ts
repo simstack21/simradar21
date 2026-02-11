@@ -118,3 +118,13 @@ export interface AirportPanelValues {
 export interface AirportPanelState extends AirportPanelValues {
 	setPanel: (panel: AirportPanel[]) => void;
 }
+
+type SectorPanel = "connections";
+
+export interface SectorPanelValues {
+	panel: SectorPanel[];
+}
+
+export interface SectorPanelState extends SectorPanelValues {
+	setPanel: (panel: SectorPanel[]) => void;
+}

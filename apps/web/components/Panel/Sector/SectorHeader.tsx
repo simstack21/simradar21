@@ -1,36 +1,40 @@
-import type { StaticAirline } from "@sr24/types/db";
-import type { PilotLong } from "@sr24/types/interface";
+import { RadioTowerIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { AvatarAirline } from "@/components/shared/Avatar";
 import { Button } from "@/components/ui/button";
 import type { MapService } from "@/lib/map/MapService";
-import { getCachedAirline } from "@/storage/cache";
+import { getSectorFeature } from "@/lib/panels";
+import type { SectorPanelData } from "@/types/panels";
 
-export function PilotHeader({
-	pilot,
+export function SectorHeader({
+	callsign,
 	mapService,
 	minimized,
 	setMinimized,
 }: {
-	pilot: PilotLong;
+	callsign: string;
 	mapService?: MapService;
 	minimized: boolean;
 	setMinimized: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-	const [airline, setAirline] = useState<StaticAirline | null>(null);
+	const [sector, setSector] = useState<SectorPanelData | null>(null);
 
 	useEffect(() => {
-		const airlineCode = pilot.callsign.slice(0, 3).toUpperCase();
-		getCachedAirline(airlineCode).then(setAirline);
-	}, [pilot]);
+		getSectorFeature(callsign).then(setSector);
+	}, [callsign]);
+
+	if (!sector) return null;
 
 	return (
 		<div className="flex gap-2 items-center p-2">
-			<AvatarAirline airline={airline} size="lg" />
+			<span
+				className={`h-10 w-10 text-muted rounded-full flex justify-center items-center shrink-0 ${sector.type === "fir" ? "bg-grey" : "bg-magenta"}`}
+			>
+				<RadioTowerIcon className="h-5 w-5" />
+			</span>
 			<div className="flex flex-col gap-1 overflow-hidden">
-				<span className="text-lg font-bold leading-none">{pilot.callsign}</span>
+				<span className="text-lg font-bold leading-none">{callsign}</span>
 				<span className="text-xs text-muted-foreground overflow-hidden whitespace-nowrap text-ellipsis">
-					{pilot.aircraft} | {airline?.name || "Unknown Airline"}
+					{sector.type?.toUpperCase() || "Unknown Type"} | {sector.feature?.properties.name || "Unknown Sector"}
 				</span>
 			</div>
 			<Button variant="outline" onClick={() => setMinimized((prev) => !prev)} className="ml-auto">

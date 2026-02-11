@@ -2,7 +2,6 @@ import type { StaticAirport } from "@sr24/types/db";
 import { useEffect, useState } from "react";
 import { AvatarCountry } from "@/components/shared/Avatar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import type { MapService } from "@/lib/map/MapService";
 import { getCachedAirport } from "@/storage/cache";
 
@@ -26,13 +25,11 @@ export function AirportHeader({
 	return (
 		<div className="flex gap-2 items-center p-2">
 			<AvatarCountry country={airport?.country || ""} size="lg" />
-			<div className="flex flex-col gap-1.5">
-				<span className="text-lg font-bold leading-none">{airport?.id || "N/A"}</span>
-				<div className="flex gap-1 text-xs text-muted-foreground leading-none">
-					<span>{airport?.name || "Unknown"}</span>
-					<Separator orientation="vertical" className="bg-muted-foreground" />
-					<span>{airport?.iata || "N/A"}</span>
-				</div>
+			<div className="flex flex-col gap-1 overflow-hidden">
+				<span className="text-lg font-bold leading-none">{icao}</span>
+				<span className="text-xs text-muted-foreground overflow-hidden whitespace-nowrap text-ellipsis">
+					{airport?.iata || "N/A"} | {airport?.name || "Unknown"}
+				</span>
 			</div>
 			<Button variant="outline" onClick={() => setMinimized((prev) => !prev)} className="ml-auto">
 				{minimized ? "Show" : "Hide"}

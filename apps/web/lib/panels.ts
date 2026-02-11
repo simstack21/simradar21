@@ -1,4 +1,7 @@
+import type { FIRFeature, SimAwareTraconFeature } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
+import { getCachedFir, getCachedTracon } from "@/storage/cache";
+import type { SectorPanelData } from "@/types/panels";
 
 export function getDelayColorFromDates(scheduled: number | undefined, actual: number | undefined): "green" | "yellow" | "red" | null {
 	if (!scheduled || !actual) return null;
@@ -64,4 +67,19 @@ export function getPilotTimeStatus(times: PilotLong["times"]): { departure: bool
 		arrival = true;
 	}
 	return { departure, arrival };
+}
+
+export async function getSectorFeature(callsign: string): Promise<SectorPanelData | null> {
+	let feature: SimAwareTraconFeature | FIRFeature | null = null;
+	let type: "tracon" | "fir" | null = null;
+
+	feature = await getCachedTracon(callsign);
+	type = "tracon";
+	if (!feature) {
+		feature = await getCachedFir(callsign);
+		type = "fir";
+	}
+	if (!feature) return null;
+
+	return { feature, type };
 }
