@@ -37,13 +37,13 @@ export function DashboardHistory({ history }: { history: DashboardData["history"
 			value="history"
 			className="has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none first:rounded-t-md last:rounded-b-md has-focus-visible:z-10 has-focus-visible:ring-[3px]"
 		>
-			<AccordionTrigger className="items-center">
+			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center w-full gap-4">
 					<ActivityIcon className="size-4 shrink-0" />
 					<span>Network Activity</span>
 				</div>
 			</AccordionTrigger>
-			<AccordionContent className="p-0">
+			<AccordionContent className="pb-0 pt-2">
 				<div className="absolute right-4 flex items-center gap-2 z-10">
 					<Label htmlFor={id}>
 						<span className="sr-only">Toggle switch</span>

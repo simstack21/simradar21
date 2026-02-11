@@ -1,25 +1,4 @@
-export function setHeight(ref: React.RefObject<HTMLDivElement | null>, isOpen: boolean) {
-	if (!ref.current) return;
-
-	if (isOpen) {
-		ref.current.style.minHeight = `${ref.current.scrollHeight}px`;
-	} else {
-		ref.current.style.minHeight = "0px";
-	}
-}
-
-export function getSpriteOffset(status: string | undefined) {
-	switch (status) {
-		case "Climb":
-			return -30;
-		case "Cruise":
-			return -60;
-		case "Descent":
-			return -90;
-		default:
-			return 0;
-	}
-}
+import type { PilotLong } from "@sr24/types/interface";
 
 export function getDelayColorFromDates(scheduled: number | undefined, actual: number | undefined): "green" | "yellow" | "red" | null {
 	if (!scheduled || !actual) return null;
@@ -44,4 +23,45 @@ export function getDelayColorFromNumber(avgDelay: number): "green" | "yellow" | 
 		return "green";
 	}
 	return "green";
+}
+
+export function getControllerColor(facility: number): "yellow" | "blue" | "green" | "red" | "purple" | "grey" {
+	switch (facility) {
+		case -1:
+			return "yellow";
+		case 2:
+			return "blue";
+		case 3:
+			return "green";
+		case 4:
+			return "red";
+		case 5:
+			return "purple";
+		case 6:
+			return "grey";
+		default:
+			return "yellow";
+	}
+}
+
+export const pilotAirportTimeMapping = {
+	departure: ["sched_off_block", "off_block"] as const,
+	arrival: ["sched_on_block", "on_block"] as const,
+};
+
+export function getPilotTimeStatus(times: PilotLong["times"]): { departure: boolean; arrival: boolean } {
+	if (!times) {
+		return { departure: false, arrival: false };
+	}
+	let departure = false;
+	let arrival = false;
+
+	const now = new Date();
+	if (new Date(times.off_block) < now) {
+		departure = true;
+	}
+	if (new Date(times.on_block) < now) {
+		arrival = true;
+	}
+	return { departure, arrival };
 }

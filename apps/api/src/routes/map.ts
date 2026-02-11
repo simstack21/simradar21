@@ -115,7 +115,7 @@ const mapRoutes: FastifyPluginAsync = async (app) => {
 				querystring: {
 					type: "object",
 					properties: {
-						direction: { type: "string", enum: ["arr", "dep"] },
+						direction: { type: "string", enum: ["arrival", "departure"] },
 						limit: { type: "string", pattern: "^[0-9]+$" },
 						cursor: { type: "string" },
 						backwards: { type: "string", enum: ["true", "false"] },

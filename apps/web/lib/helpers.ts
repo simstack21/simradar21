@@ -118,11 +118,11 @@ export function convertTemperature(celsius: number | undefined, unit: "celsius" 
 	}
 	switch (unit) {
 		case "celsius":
-			return `${Math.round(celsius)}${withUnit ? " °C" : ""}`;
+			return `${Math.round(celsius)}${withUnit ? "°C" : ""}`;
 		case "fahrenheit":
-			return `${Math.round((celsius * 9) / 5 + 32)}${withUnit ? " °F" : ""}`;
+			return `${Math.round((celsius * 9) / 5 + 32)}${withUnit ? "°F" : ""}`;
 		default:
-			return `${Math.round(celsius)}${withUnit ? " °C" : ""}`;
+			return `${Math.round(celsius)}${withUnit ? "°C" : ""}`;
 	}
 }
 

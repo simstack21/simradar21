@@ -67,17 +67,17 @@ export function PilotFooter({ pilot, mapService }: { pilot: PilotLong; mapServic
 						{mapInteraction === "follow" ? <EyeOffIcon data-icon="inline-start" /> : <EyeIcon data-icon="inline-start" />}
 						Follow
 					</Button>
-					<Link href={`https://stats.vatsim.net/stats/${pilot.cid}`} target="_blank" className="text-inherit ml-auto">
-						<Button variant="outline">
-							<ChartNoAxesCombinedIcon data-icon="inline-start" />
-							Stats
-						</Button>
-					</Link>
-					<Button variant="outline" onClick={onShareClick}>
-						{shared ? <CheckIcon className="text-green" /> : <ShareIcon />}
-					</Button>
 				</>
 			)}
+			<Link href={`https://stats.vatsim.net/stats/${pilot.cid}`} target="_blank" className="text-inherit ml-auto">
+				<Button variant="outline">
+					<ChartNoAxesCombinedIcon data-icon="inline-start" />
+					Stats
+				</Button>
+			</Link>
+			<Button variant="outline" onClick={onShareClick}>
+				{shared ? <CheckIcon className="text-green" /> : <ShareIcon />}
+			</Button>
 		</div>
 	);
 }

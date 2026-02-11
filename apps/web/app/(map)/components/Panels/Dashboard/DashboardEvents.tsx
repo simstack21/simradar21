@@ -19,14 +19,14 @@ export function DashboardEvents({ events }: { events: VatsimEvent[] }) {
 			value="events"
 			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none first:rounded-t-md last:rounded-b-md has-focus-visible:z-10 has-focus-visible:ring-[3px]"
 		>
-			<AccordionTrigger className="items-center">
+			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center gap-4">
 					<CalendarFoldIcon className="size-4 shrink-0" />
 					<span>Upcoming Events</span>
 				</div>
 			</AccordionTrigger>
 			<ScrollArea className="max-h-full overflow-hidden flex flex-col">
-				<AccordionContent className="p-0">
+				<AccordionContent className="pb-1">
 					<Collapsible open={eventsToday} onOpenChange={setEventsToday}>
 						<Events events={events} day="today" selected={selected} setSelected={setSelected} />
 					</Collapsible>

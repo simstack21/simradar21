@@ -4,72 +4,9 @@ import type { StaticAirport } from "@sr24/types/db";
 import type { PilotDelta, PilotFlightPlan, PilotLong, PilotShort, PilotTimes } from "@sr24/types/interface";
 import type { VatsimData, VatsimPilot, VatsimPilotFlightPlan, VatsimPrefile } from "@sr24/types/vatsim";
 import { fromLonLat, haversineDistance } from "./utils/helpers.js";
+import { MILITARY_RATINGS, PILOT_RATINGS } from "./utils/ratings.js";
 
 const TAXI_TIME_MS = 5 * 60 * 1000;
-const PILOT_RATINGS = [
-	{
-		id: 0,
-		short_name: "NEW",
-		long_name: "Basic Member",
-	},
-	{
-		id: 1,
-		short_name: "PPL",
-		long_name: "Private Pilot License",
-	},
-	{
-		id: 3,
-		short_name: "IR",
-		long_name: "Instrument Rating",
-	},
-	{
-		id: 7,
-		short_name: "CMEL",
-		long_name: "Commercial Multi-Engine License",
-	},
-	{
-		id: 15,
-		short_name: "ATPL",
-		long_name: "Airline Transport Pilot License",
-	},
-	{
-		id: 31,
-		short_name: "FI",
-		long_name: "Flight Instructor",
-	},
-	{
-		id: 63,
-		short_name: "FE",
-		long_name: "Flight Examiner",
-	},
-];
-const MILITARY_RATINGS = [
-	{
-		id: 0,
-		short_name: "M0",
-		long_name: "No Military Rating",
-	},
-	{
-		id: 1,
-		short_name: "M1",
-		long_name: "Military Pilot License",
-	},
-	{
-		id: 3,
-		short_name: "M2",
-		long_name: "Military Instrument Rating",
-	},
-	{
-		id: 7,
-		short_name: "M3",
-		long_name: "Military Multi-Engine Rating",
-	},
-	{
-		id: 15,
-		short_name: "M4",
-		long_name: "Military Mission Ready Pilot",
-	},
-];
 
 let cached: PilotLong[] = [];
 let added: Required<PilotShort>[] = [];

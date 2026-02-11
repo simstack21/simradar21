@@ -9,6 +9,7 @@
 	--color-red: var(--red);
 	--color-magenta: var(--magenta);
 	--color-yellow: var(--yellow);
+	--color-grey: var(--grey);
 
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
@@ -81,6 +82,7 @@
 	--red: oklch(0.63 0.19 23.03);
 	--magenta: oklch(68.899% 0.23454 324.308);
 	--yellow: oklch(0.81 0.17 75.35);
+	--grey: oklch(48.581% 0.06242 263.746);
 
 	--background: oklch(0.99 0 0);
 	--foreground: oklch(0 0 0);

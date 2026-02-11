@@ -6,7 +6,7 @@ import { AvatarCountry } from "@/components/shared/Avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { convertDistance, convertTime, haversineDistance } from "@/lib/helpers";
-import { getDelayColorFromDates } from "@/lib/panels";
+import { getDelayColorFromDates, getPilotTimeStatus, pilotAirportTimeMapping } from "@/lib/panels";
 import { getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
 
@@ -28,7 +28,7 @@ function AirportInfo({ pilot, type }: { pilot: PilotLong; type: "departure" | "a
 	const [airport, setAirport] = useState<StaticAirport | null>(null);
 
 	const icao = pilot.flight_plan?.[type].icao;
-	const timeStatus = getTimeStatus(pilot.times);
+	const timeStatus = getPilotTimeStatus(pilot.times);
 
 	useEffect(() => {
 		if (!icao) return;
@@ -45,37 +45,19 @@ function AirportInfo({ pilot, type }: { pilot: PilotLong; type: "departure" | "a
 			<div className="flex flex-col ml-auto mt-auto shrink-0">
 				<div className="flex gap-1">
 					<span className="text-xs text-muted-foreground">sch</span>
-					<span className="ml-auto">{convertTime(pilot.times?.[timeMapping[type][0]], timeFormat, timeZone, true, airport?.timezone)}</span>
+					<span className="ml-auto">
+						{convertTime(pilot.times?.[pilotAirportTimeMapping[type][0]], timeFormat, timeZone, true, airport?.timezone)}
+					</span>
 				</div>
 				<div className="flex gap-1">
 					<span className="text-xs text-muted-foreground">{timeStatus[type] ? "act" : "est"}</span>
-					<span className="ml-auto">{convertTime(pilot.times?.[timeMapping[type][1]], timeFormat, timeZone, true, airport?.timezone)}</span>
+					<span className="ml-auto">
+						{convertTime(pilot.times?.[pilotAirportTimeMapping[type][1]], timeFormat, timeZone, true, airport?.timezone)}
+					</span>
 				</div>
 			</div>
 		</div>
 	);
-}
-
-const timeMapping = {
-	departure: ["sched_off_block", "off_block"] as const,
-	arrival: ["sched_on_block", "on_block"] as const,
-};
-
-function getTimeStatus(times: PilotLong["times"]): { departure: boolean; arrival: boolean } {
-	if (!times) {
-		return { departure: false, arrival: false };
-	}
-	let departure = false;
-	let arrival = false;
-
-	const now = new Date();
-	if (new Date(times.off_block) < now) {
-		departure = true;
-	}
-	if (new Date(times.on_block) < now) {
-		arrival = true;
-	}
-	return { departure, arrival };
 }
 
 function ProgressInfo({ pilot }: { pilot: PilotLong }) {
@@ -102,7 +84,7 @@ function ProgressInfo({ pilot }: { pilot: PilotLong }) {
 			<div className="flex justify-between">
 				<div className="flex gap-1.5">{getProgressLabel(pilot.times?.state)}</div>
 				<Badge variant="outline">
-					<span className={`bg-${delayColor} size-1.5 rounded-full`} aria-hidden="true" />
+					<span style={{ backgroundColor: `var(--${delayColor})` }} className="size-1.5 rounded-full" aria-hidden="true" />
 					{delayStatus}
 				</Badge>
 			</div>

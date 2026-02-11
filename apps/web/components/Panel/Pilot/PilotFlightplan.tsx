@@ -28,13 +28,13 @@ export function PilotFlightplan({ pilot }: { pilot: PilotLong }) {
 			value="flightplan"
 			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none has-focus-visible:z-10 has-focus-visible:ring-[3px]"
 		>
-			<AccordionTrigger className="items-center">
+			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center gap-4">
 					<FileTextIcon className="size-4 shrink-0" />
 					<span>Flightplan</span>
 				</div>
 			</AccordionTrigger>
-			<AccordionContent className="pb-2 grid grid-cols-2 gap-1">
+			<AccordionContent className="py-1 grid grid-cols-2 gap-1">
 				<div className="flex flex-col">
 					<span className="text-muted-foreground">Great circle distance</span>
 					<span>{distKm !== null ? `${convertDistance(distKm, distanceUnit)}` : "N/A"}</span>

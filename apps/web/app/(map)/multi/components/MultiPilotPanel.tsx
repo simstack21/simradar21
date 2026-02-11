@@ -4,13 +4,12 @@ import type { DeltaTrackPoint, PilotLong, TrackPoint } from "@sr24/types/interfa
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
-import flightStatusSprite from "@/assets/images/sprites/flightStatusSprite.png";
 import Icon, { getAirlineIcon } from "@/components/Icon/Icon";
 import Spinner from "@/components/Spinner/Spinner";
 import { fetchApi } from "@/lib/api";
 import { convertTime } from "@/lib/helpers";
 import { decodeTrackPoints } from "@/lib/map/tracks";
-import { getDelayColorFromDates, getSpriteOffset } from "@/lib/panels";
+import { getDelayColorFromDates } from "@/lib/panels";
 import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
 import { getCachedAirline, getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
@@ -166,13 +165,13 @@ export default function MultiPilotPanel({ id }: { id: string }) {
 				<div className="mini-panel-pilot-route">
 					<p>{convertTime(pilotData.times?.off_block, timeFormat, timeZone, false, staticData.departure?.timezone)}</p>
 					<p>{staticData.departure?.id}</p>
-					<div
+					{/* <div
 						className="mini-panel-pilot-route-icon"
 						style={{
 							backgroundImage: `url(${flightStatusSprite.src})`,
 							backgroundPositionY: `${getSpriteOffset(pilotData.times?.state)}px`,
 						}}
-					></div>
+					></div> */}
 					<p>{staticData.arrival?.id}</p>
 					<p>
 						<span className={`delay-indicator ${getDelayColorFromDates(pilotData.times?.sched_on_block, pilotData.times?.on_block) ?? ""}`}></span>

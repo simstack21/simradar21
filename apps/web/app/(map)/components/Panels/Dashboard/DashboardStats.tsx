@@ -15,13 +15,13 @@ export function DashboardStats({ stats }: { stats: Stats }) {
 			value="statistics"
 			className="has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none first:rounded-t-md last:rounded-b-md has-focus-visible:z-10 has-focus-visible:ring-[3px]"
 		>
-			<AccordionTrigger className="items-center">
+			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center gap-4">
 					<NotepadTextIcon className="size-4 shrink-0" />
 					<span>General Statistics</span>
 				</div>
 			</AccordionTrigger>
-			<AccordionContent className="pb-2 flex flex-col gap-y-2">
+			<AccordionContent className="py-1 flex flex-col gap-y-2">
 				<div className="flex gap-x-1 flex-wrap justify-between">
 					<div className="flex gap-1">
 						<span className="text-muted-foreground">All</span>
@@ -84,8 +84,8 @@ function AirportStats({ stats }: { stats: Stats }) {
 							<TableCell className="p-1.5">{airport.icao}</TableCell>
 							<TableCell className="p-1.5">{airport.departures}</TableCell>
 							<TableCell className="p-1.5">{airport.arrivals}</TableCell>
-							<TableCell className="px-1.5 py-0.5 flex items-center justify-end" onClick={() => router.push(`/airport/${airport.icao}`)}>
-								<Button variant="outline" size="icon-sm">
+							<TableCell className="px-1.5 py-0.5 flex items-center justify-end">
+								<Button variant="outline" size="icon-sm" onClick={() => router.push(`/airport/${airport.icao}`)}>
 									<ScanEyeIcon size={16} />
 									<span className="sr-only">View Airport</span>
 								</Button>

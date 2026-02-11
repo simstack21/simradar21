@@ -72,11 +72,15 @@ export const BadgeComingSoon = () => {
 };
 
 const COLOR_MAP = {
-	live: "bg-green",
-	pre: "bg-magenta",
-	off: "bg-muted text-muted-foreground",
+	live: "border-green",
+	pre: "border-magenta",
+	off: "border-muted text-muted-foreground",
 };
 
-export const BadgePilotStatus = ({ status }: { status: "live" | "off" | "pre" }) => {
-	return <Badge className={`${COLOR_MAP[status]} py-0`}>{status.toUpperCase()}</Badge>;
+export const BadgePilotStatus = ({ status, className }: { status: "live" | "off" | "pre"; className?: string }) => {
+	return (
+		<Badge variant="outline" className={`${COLOR_MAP[status]} ${className || ""}`}>
+			{status.toUpperCase()}
+		</Badge>
+	);
 };

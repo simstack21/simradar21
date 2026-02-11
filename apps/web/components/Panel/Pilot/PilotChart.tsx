@@ -20,13 +20,13 @@ export function PilotChart({ trackPoints }: { trackPoints: TrackPoint[] }) {
 			value="chart"
 			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none has-focus-visible:z-10 has-focus-visible:ring-[3px]"
 		>
-			<AccordionTrigger className="items-center">
+			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center gap-4">
 					<ChartLineIcon className="size-4 shrink-0" />
 					<span>Speed and Altitude Chart</span>
 				</div>
 			</AccordionTrigger>
-			<AccordionContent className="pb-0">
+			<AccordionContent className="pb-0 pt-1">
 				<ResponsiveContainer width="100%" height={200} maxHeight={500}>
 					<LineChart data={data}>
 						<XAxis

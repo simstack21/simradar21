@@ -4,12 +4,12 @@ import { prisma } from "@sr24/db/pg";
 import type { Prisma } from "../../../../packages/db/src/generated/prisma/index.js";
 
 export async function getPilotsByAirport(icao: string, direction?: string, limit?: string, cursor?: string, backwards?: string) {
-	const normalizedDirection = (direction || "dep").toLowerCase() === "arr" ? "arr" : "dep";
+	const normalizedDirection = (direction || "departure").toLowerCase() === "arrival" ? "arrival" : "departure";
 	const normalizedLimit = Number(limit || 20);
 	const normalizedBackwards = backwards === "true";
 
-	const dirCol = normalizedDirection === "dep" ? "dep_icao" : "arr_icao";
-	const timeCol = normalizedDirection === "dep" ? "sched_off_block" : "sched_on_block";
+	const dirCol = normalizedDirection === "departure" ? "dep_icao" : "arr_icao";
+	const timeCol = normalizedDirection === "departure" ? "sched_off_block" : "sched_on_block";
 
 	const where: any = {
 		[dirCol]: icao.toUpperCase(),

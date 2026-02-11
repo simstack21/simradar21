@@ -23,13 +23,13 @@ export function PilotAircraft({ pilot }: { pilot: PilotLong }) {
 			value="aircraft"
 			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none has-focus-visible:z-10 has-focus-visible:ring-[3px]"
 		>
-			<AccordionTrigger className="items-center">
+			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center gap-4">
 					<PlaneIcon className="size-4 shrink-0" />
 					<span>Aircraft</span>
 				</div>
 			</AccordionTrigger>
-			<AccordionContent className="pb-2 grid grid-cols-2 gap-1">
+			<AccordionContent className="py-1 grid grid-cols-2 gap-1">
 				{aircraft && (
 					<div className="flex gap-2 items-center col-span-2">
 						<AvatarCountry country={aircraft.country} size="sm" />

@@ -1,6 +1,7 @@
 import type { ControllerDelta, ControllerLong, ControllerMerged, ControllerShort, PilotLong } from "@sr24/types/interface";
 import type { VatsimData } from "@sr24/types/vatsim";
 import { haversineDistance } from "./utils/helpers.js";
+import { CONTROLLER_RATINGS } from "./utils/ratings.js";
 import { findPrefixMatch, reduceCallsign } from "./utils/sectors.js";
 
 let cached: ControllerMerged[] = [];
@@ -20,7 +21,7 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 				connections: 0,
 				cid: controller.cid,
 				name: controller.name,
-				rating: controller.rating,
+				rating: CONTROLLER_RATINGS.find((r) => r.id === controller.rating)?.short_name || "INAC",
 				server: controller.server,
 				visual_range: controller.visual_range,
 				logon_time: new Date(controller.logon_time),
@@ -40,7 +41,7 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 			connections: 0,
 			cid: atis.cid,
 			name: atis.name,
-			rating: atis.rating,
+			rating: CONTROLLER_RATINGS.find((r) => r.id === atis.rating)?.short_name || "INAC",
 			server: atis.server,
 			visual_range: atis.visual_range,
 			logon_time: new Date(atis.logon_time),

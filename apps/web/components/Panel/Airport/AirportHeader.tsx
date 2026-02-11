@@ -1,39 +1,37 @@
-import type { StaticAirline } from "@sr24/types/db";
-import type { PilotLong } from "@sr24/types/interface";
+import type { StaticAirport } from "@sr24/types/db";
 import { useEffect, useState } from "react";
-import { AvatarAirline } from "@/components/shared/Avatar";
+import { AvatarCountry } from "@/components/shared/Avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { MapService } from "@/lib/map/MapService";
-import { getCachedAirline } from "@/storage/cache";
+import { getCachedAirport } from "@/storage/cache";
 
-export function PilotHeader({
-	pilot,
+export function AirportHeader({
+	icao,
 	mapService,
 	minimized,
 	setMinimized,
 }: {
-	pilot: PilotLong;
+	icao: string;
 	mapService?: MapService;
 	minimized: boolean;
 	setMinimized: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-	const [airline, setAirline] = useState<StaticAirline | null>(null);
+	const [airport, setAirport] = useState<StaticAirport | null>(null);
 
 	useEffect(() => {
-		const airlineCode = pilot.callsign.slice(0, 3).toUpperCase();
-		getCachedAirline(airlineCode).then(setAirline);
-	}, [pilot]);
+		getCachedAirport(icao).then(setAirport);
+	}, [icao]);
 
 	return (
 		<div className="flex gap-2 items-center p-2">
-			<AvatarAirline airline={airline} size="lg" />
+			<AvatarCountry country={airport?.country || ""} size="lg" />
 			<div className="flex flex-col gap-1.5">
-				<span className="text-lg font-bold leading-none">{pilot.callsign}</span>
+				<span className="text-lg font-bold leading-none">{airport?.id || "N/A"}</span>
 				<div className="flex gap-1 text-xs text-muted-foreground leading-none">
-					<span>{pilot.aircraft}</span>
+					<span>{airport?.name || "Unknown"}</span>
 					<Separator orientation="vertical" className="bg-muted-foreground" />
-					<span>{airline?.name || "Unknown Airline"}</span>
+					<span>{airport?.iata || "N/A"}</span>
 				</div>
 			</div>
 			<Button variant="outline" onClick={() => setMinimized((prev) => !prev)} className="ml-auto">

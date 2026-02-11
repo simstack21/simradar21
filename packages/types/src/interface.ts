@@ -126,7 +126,7 @@ export interface ControllerLong {
 	facility: number;
 	atis: string[] | null;
 	connections: number;
-	rating: number;
+	rating: string;
 	server: string;
 	visual_range: number;
 	logon_time: Date;
@@ -146,8 +146,9 @@ export interface AirportShort {
 }
 
 export interface AirportLong extends Required<AirportShort> {
-	busiest: { departure: string; arrival: string };
+	busiest: { departure: [string, string]; arrival: [string, string] };
 	unique: { departures: number; arrivals: number };
+	expected: { departure: number[]; arrival: number[] };
 }
 
 export interface AirportTraffic {

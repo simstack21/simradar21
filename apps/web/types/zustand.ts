@@ -108,3 +108,13 @@ export interface PilotPanelValues {
 export interface PilotPanelState extends PilotPanelValues {
 	setPanel: (panel: PilotPanel[]) => void;
 }
+
+type AirportPanel = "weather" | "connections" | "controller";
+
+export interface AirportPanelValues {
+	panel: AirportPanel[];
+}
+
+export interface AirportPanelState extends AirportPanelValues {
+	setPanel: (panel: AirportPanel[]) => void;
+}
