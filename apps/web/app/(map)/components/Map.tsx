@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
-import { useFilterStatsStore, useSettingsStore } from "@/storage/zustand";
+import { useFilterStatsStore, useFiltersStore, useSettingsStore } from "@/storage/zustand";
 import { init, mapService } from "../lib";
 
 export default function OMap() {
@@ -24,6 +24,7 @@ export default function OMap() {
 		firColor,
 	} = useSettingsStore();
 	const { setPilotCount } = useFilterStatsStore();
+	const filters = useFiltersStore();
 
 	useEffect(() => {
 		const map = mapService.init({ onNavigate: (href) => router.push(href), autoTrackPoints: true });
@@ -46,6 +47,10 @@ export default function OMap() {
 	useEffect(() => {
 		mapService.setTheme(theme);
 	}, [theme]);
+
+	useEffect(() => {
+		mapService.setFilters(filters);
+	}, [filters]);
 
 	useEffect(() => {
 		mapService.setSettings({

@@ -5,7 +5,7 @@ import "@/assets/images/sprites/freakflags.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-	title: "Simradar21",
+	title: "simradar21",
 	description: "Explore VATSIM network activities, live pilots, controllers or review past flights with our comprehensive tracking service.",
 };
 

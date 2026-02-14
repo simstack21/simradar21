@@ -7,7 +7,6 @@ import VectorSource from "ol/source/Vector";
 import RBush from "rbush";
 import { toast } from "react-toastify";
 import MessageBox from "@/components/MessageBox/MessageBox";
-import type { SelectOptionType } from "@/components/Select/Select";
 import type { PilotProperties } from "@/types/ol";
 import type { FilterValues } from "@/types/zustand";
 import { getPilotStyle, getShadowStyle, type PilotStyleVars } from "./styles/pilot";
@@ -33,7 +32,7 @@ export class PilotService {
 	private rendered = new Set<string>();
 	private renderPending = false;
 
-	private filters: Partial<Record<keyof FilterValues, SelectOptionType[] | number[]>> = {};
+	private filters: FilterValues | null = null;
 	private highlighted = new Set<string>();
 	private focused = new Set<string>();
 	private isFocused = false;
@@ -74,89 +73,63 @@ export class PilotService {
 		this.shadowLayer?.setStyle(getShadowStyle(this.styleVars));
 	}
 
-	public setFilters(filters?: Partial<Record<keyof FilterValues, SelectOptionType[] | number[]>>) {
-		this.filters = filters || {};
+	public setFilters(filters: FilterValues) {
+		this.filters = filters;
 	}
 
 	private filterFeature(feature: Feature<Point>): boolean {
-		if (Object.keys(this.filters).length === 0) return true;
+		if (!this.filters) return true;
 
 		const callsign = feature.get("callsign") as string | undefined;
+		if (this.filters.airline.length > 0 && !this.filters.airline.some((f) => f === callsign?.slice(0, 3))) {
+			return false;
+		}
+		if (this.filters.callsign.length > 0 && !this.filters.callsign.some((filter) => callsign?.includes(filter))) {
+			return false;
+		}
 
-		if (this.filters.Airline && this.filters.Airline.length > 0) {
-			const filters = this.filters.Airline as SelectOptionType[];
-			if (!filters.some((f) => f.value === callsign?.slice(0, 3))) {
-				return false;
-			}
+		const type = feature.get("aircraft") as string | undefined;
+		if (this.filters.type.length > 0 && !this.filters.type.some((filter) => type === filter)) {
+			return false;
 		}
-		if (this.filters["Aircraft Type"] && this.filters["Aircraft Type"].length > 0) {
-			const aircraftType = feature.get("aircraft") as string | undefined;
-			const filters = this.filters["Aircraft Type"] as SelectOptionType[];
-			if (!filters.some((filter) => aircraftType?.includes(filter.value))) {
-				return false;
-			}
-		}
-		if (this.filters["Aircraft Registration"] && this.filters["Aircraft Registration"].length > 0) {
-			const registration = feature.get("ac_reg") as string | undefined;
-			const filters = this.filters["Aircraft Registration"] as SelectOptionType[];
-			if (!filters.some((filter) => registration?.includes(filter.value))) {
-				return false;
-			}
+
+		const registration = feature.get("ac_reg") as string | undefined;
+		if (this.filters.registration.length > 0 && !this.filters.registration.some((filter) => registration?.includes(filter))) {
+			return false;
 		}
 
 		const route = feature.get("route") as string | undefined;
+		const airports = route?.split(" ") || [];
+		if (this.filters.departure.length > 0 && !this.filters.departure.some((filter) => filter === airports[0])) {
+			return false;
+		}
+		if (this.filters.arrival.length > 0 && !this.filters.arrival.some((filter) => filter === airports[1])) {
+			return false;
+		}
+		if (this.filters.anyAirport.length > 0 && !this.filters.anyAirport.some((filter) => filter === airports[0] || filter === airports[1])) {
+			return false;
+		}
 
-		if (this.filters.Departure && this.filters.Departure.length > 0) {
-			const filters = this.filters.Departure as SelectOptionType[];
-			if (!filters.some((filter) => filter.value === route?.split(" -- ")[0])) {
-				return false;
-			}
+		const altitude = feature.get("altitude_ms") as number | undefined;
+		const [minAlt, maxAlt] = this.filters.altitude;
+		if (altitude === undefined || altitude < minAlt || altitude > maxAlt) {
+			return false;
 		}
-		if (this.filters.Arrival && this.filters.Arrival.length > 0) {
-			const filters = this.filters.Arrival as SelectOptionType[];
-			if (!filters.some((filter) => filter.value === route?.split(" -- ")[1])) {
-				return false;
-			}
+
+		const groundspeed = feature.get("groundspeed") as number | undefined;
+		const [minSpd, maxSpd] = this.filters.groundspeed;
+		if (groundspeed === undefined || groundspeed < minSpd || groundspeed > maxSpd) {
+			return false;
 		}
-		if (this.filters.Any && this.filters.Any.length > 0) {
-			const filters = this.filters.Any as SelectOptionType[];
-			if (!filters.some((filter) => filter.value === route?.split(" -- ")[0] || filter.value === route?.split(" -- ")[1])) {
-				return false;
-			}
+
+		const squawk = feature.get("transponder") as string | undefined;
+		if (this.filters.squawk.length > 0 && !this.filters.squawk.some((filter) => filter === squawk)) {
+			return false;
 		}
-		if (this.filters.Callsign && this.filters.Callsign.length > 0) {
-			const filters = this.filters.Callsign as SelectOptionType[];
-			if (!filters.some((filter) => callsign?.includes(filter.value))) {
-				return false;
-			}
-		}
-		if (this.filters.Squawk && this.filters.Squawk.length > 0) {
-			const squawk = feature.get("transponder") as string | undefined;
-			const filters = this.filters.Squawk as SelectOptionType[];
-			if (!filters.some((filter) => filter.value === squawk)) {
-				return false;
-			}
-		}
-		if (this.filters["Flight Rules"] && this.filters["Flight Rules"].length > 0) {
-			const flightRules = feature.get("flight_rules") as string | undefined;
-			const filters = this.filters["Flight Rules"] as SelectOptionType[];
-			if (!filters.some((filter) => filter.value === flightRules)) {
-				return false;
-			}
-		}
-		if (this.filters["Barometric Altitude"] && this.filters["Barometric Altitude"].length > 0) {
-			const altitude = feature.get("altitude_ms") as number | undefined;
-			const [min, max] = this.filters["Barometric Altitude"] as number[];
-			if (altitude === undefined || altitude < min || altitude > max) {
-				return false;
-			}
-		}
-		if (this.filters.Groundspeed && this.filters.Groundspeed.length > 0) {
-			const groundspeed = feature.get("groundspeed") as number | undefined;
-			const [min, max] = this.filters.Groundspeed as number[];
-			if (groundspeed === undefined || groundspeed < min || groundspeed > max) {
-				return false;
-			}
+
+		const rules = feature.get("flight_rules") as string | undefined;
+		if (this.filters.rules.length > 0 && !this.filters.rules.some((filter) => filter === rules)) {
+			return false;
 		}
 
 		return true;

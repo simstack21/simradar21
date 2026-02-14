@@ -3,8 +3,10 @@ import { persist } from "zustand/middleware";
 import type {
 	AirportPanelState,
 	DashboardPanelState,
+	FilterKey,
 	FilterState,
 	FilterStats,
+	FilterValues,
 	PilotPanelState,
 	SectorPanelState,
 	SettingState,
@@ -118,38 +120,94 @@ export const useSettingsStore = create<SettingState>()(
 	),
 );
 
+const initialFilters: FilterValues = {
+	active: false,
+	airline: [],
+	callsign: [],
+	type: [],
+	registration: [],
+	departure: [],
+	arrival: [],
+	anyAirport: [],
+	altitude: [0, 50000],
+	groundspeed: [0, 1000],
+	squawk: [],
+	rules: [],
+};
+
+const MAX_PRESETS = 5;
+
 export const useFiltersStore = create<FilterState>()(
 	persist(
 		(set) => ({
-			active: false,
-			Airline: [],
-			"Aircraft Type": [],
-			"Aircraft Registration": [],
-			Departure: [],
-			Arrival: [],
-			Any: [],
-			Callsign: [],
-			Squawk: [],
-			"Barometric Altitude": { min: 0, max: 60000 },
-			Groundspeed: { min: 0, max: 2000 },
-			"Flight Rules": [],
+			...initialFilters,
+			activeFilters: [],
+			savedPresets: [],
 
-			setActive: (active: boolean) => set({ active }),
-			setFilters: (filters) => set({ ...filters }),
-			resetAllFilters: () =>
-				set({
-					Airline: [],
-					"Aircraft Type": [],
-					"Aircraft Registration": [],
-					Departure: [],
-					Arrival: [],
-					Any: [],
-					Callsign: [],
-					Squawk: [],
-					"Barometric Altitude": { min: 0, max: 60000 },
-					Groundspeed: { min: 0, max: 2000 },
-					"Flight Rules": [],
+			addFilter: (key: FilterKey) =>
+				set((state) =>
+					state.activeFilters.includes(key)
+						? state
+						: {
+								activeFilters: [...state.activeFilters, key],
+								active: true,
+							},
+				),
+			removeFilter: (key: FilterKey) =>
+				set((state) => {
+					const nextActiveFilters = state.activeFilters.filter((f) => f !== key);
+
+					return {
+						activeFilters: nextActiveFilters,
+						[key]: initialFilters[key],
+						active: nextActiveFilters.length > 0,
+					};
 				}),
+			setFilterValue: <K extends FilterKey>(key: K, value: FilterValues[K]) =>
+				set(() => ({
+					[key]: value,
+					active: true,
+				})),
+			clearFilters: () =>
+				set(() => ({
+					...initialFilters,
+					activeFilters: [],
+					active: false,
+				})),
+
+			savePreset: (name: string) =>
+				set((state) => {
+					if (state.savedPresets.length >= MAX_PRESETS) {
+						return state;
+					}
+
+					return {
+						savedPresets: [
+							...state.savedPresets,
+							{
+								id: crypto.randomUUID(),
+								name,
+								values: { ...state },
+								createdAt: Date.now(),
+							},
+						],
+					};
+				}),
+
+			applyPreset: (id: string) =>
+				set((state) => {
+					const preset = state.savedPresets.find((p) => p.id === id);
+					if (!preset) return state;
+
+					return {
+						...preset.values,
+					};
+				}),
+
+			deletePreset: (id: string) =>
+				set((state) => ({
+					savedPresets: state.savedPresets.filter((p) => p.id !== id),
+				})),
 		}),
 		{
 			name: "simradar21-user-filters",
@@ -228,3 +286,9 @@ export const useSectorPanelStore = create<SectorPanelState>()(
 		},
 	),
 );
+
+type ManualPage = "settings" | "filters" | null;
+export const useMapPageStore = create<{ manualPage: ManualPage; setManualPage: (page: ManualPage) => void }>((set) => ({
+	manualPage: null,
+	setManualPage: (page) => set({ manualPage: page }),
+}));

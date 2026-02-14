@@ -3,7 +3,6 @@ import { fetchApi } from "@/lib/api";
 import { MapService } from "@/lib/map/MapService";
 import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
 import { dxGetAllAirports } from "@/storage/dexie";
-import { useFiltersStore } from "@/storage/zustand";
 
 export const mapService = new MapService();
 
@@ -40,7 +39,6 @@ export async function init(pathname: string, searchParams: URLSearchParams): Pro
 	};
 	wsClient.addListener(handleMessage);
 
-	initFilters();
 	mapService.setView({ multi: pathname.startsWith("/multi") });
 	setClickedFromPath(pathname, searchParams);
 	initialized = true;
@@ -72,19 +70,4 @@ function setClickedFromPath(pathname: string, searchParams: URLSearchParams): vo
 		const [type, id] = pathname.split("/").slice(1, 3);
 		mapService.addClickFeature(type, id, !initialized);
 	}
-}
-
-function initFilters(): void {
-	const state = useFiltersStore.getState();
-	const activeInputs = Object.entries(state)
-		.filter(([_key, value]) => Array.isArray(value) && value.length > 0)
-		.map(([key]) => key);
-	if (activeInputs.length === 0) return;
-
-	const values: Record<string, any> = {};
-	activeInputs.forEach((key) => {
-		values[key] = state[key as keyof typeof state];
-	});
-
-	mapService.setFilters(values);
 }

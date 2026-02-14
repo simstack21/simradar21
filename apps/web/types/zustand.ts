@@ -59,23 +59,60 @@ export interface SettingState extends SettingValues {
 
 export interface FilterValues {
 	active: boolean;
-	Airline: string[];
-	"Aircraft Type": string[];
-	"Aircraft Registration": string[];
-	Departure: string[];
-	Arrival: string[];
-	Any: string[];
-	Callsign: string[];
-	Squawk: string[];
-	"Barometric Altitude": { min: number; max: number };
-	Groundspeed: { min: number; max: number };
-	"Flight Rules": string[];
+	airline: string[];
+	callsign: string[];
+	type: string[];
+	registration: string[];
+	departure: string[];
+	arrival: string[];
+	anyAirport: string[];
+	altitude: [number, number];
+	groundspeed: [number, number];
+	squawk: string[];
+	rules: string[];
 }
 
+export type FilterKey = Exclude<keyof FilterValues, "active">;
+
+export type FilterInputType = "select" | "range";
+
+export type FilterOption = {
+	value: string;
+	label: string;
+};
+
+export type FilterDefinition<K extends FilterKey = FilterKey> = {
+	key: K;
+	label: string;
+	description: string;
+	category: string;
+	input: FilterInputType;
+
+	options?: FilterOption[] | ((inputValue: string) => Promise<FilterOption[]>);
+	uppercase?: boolean;
+	extendedOptions?: boolean;
+
+	min?: number;
+	max?: number;
+};
+
+type FilterPreset = {
+	id: string;
+	name: string;
+	values: FilterValues;
+	createdAt: number;
+};
+
 export interface FilterState extends FilterValues {
-	setActive: (active: boolean) => void;
-	setFilters: (filters: Partial<FilterValues>) => void;
-	resetAllFilters: () => void;
+	activeFilters: FilterKey[];
+	addFilter: (key: FilterKey) => void;
+	removeFilter: (key: FilterKey) => void;
+	setFilterValue: <K extends FilterKey>(key: K, value: FilterValues[K]) => void;
+	clearFilters: () => void;
+	savedPresets: FilterPreset[];
+	savePreset: (name: string) => void;
+	deletePreset: (id: string) => void;
+	applyPreset: (id: string) => void;
 }
 
 export interface FilterStats {

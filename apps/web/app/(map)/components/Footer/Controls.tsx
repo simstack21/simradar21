@@ -19,7 +19,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useFiltersStore, useMapVisibilityStore } from "@/storage/zustand";
+import { useFiltersStore, useMapPageStore, useMapVisibilityStore } from "@/storage/zustand";
 import { mapService } from "../../lib";
 
 export default function Controls() {
@@ -84,9 +84,8 @@ const onCenterOnLocation = () => {
 };
 
 const ButtonGroupControls = () => {
-	const router = useRouter();
-
 	const { active: filterActive } = useFiltersStore();
+	const { manualPage, setManualPage } = useMapPageStore();
 	const [isFullscreen, setIsFullscreen] = useState(false);
 
 	const onFullscreen = async () => {
@@ -190,8 +189,18 @@ const ButtonGroupControls = () => {
 				<TooltipTrigger
 					delay={100}
 					render={
-						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => router.push("/filters")}>
-							<FunnelIcon style={{ fill: filterActive ? "var(--primary)" : "", stroke: filterActive ? "var(--primary)" : "" }} />
+						<Button
+							className="rounded-none shadow-none focus-visible:z-10"
+							style={{ backgroundColor: manualPage === "filters" ? "var(--primary)" : "" }}
+							variant="outline"
+							onClick={() => setManualPage(manualPage === "filters" ? null : "filters")}
+						>
+							<FunnelIcon
+								style={{
+									fill: filterActive && manualPage !== "filters" ? "var(--primary)" : "",
+									stroke: filterActive && manualPage !== "filters" ? "var(--primary)" : "",
+								}}
+							/>
 							<span className="sr-only">Open Filters</span>
 						</Button>
 					}
@@ -204,7 +213,12 @@ const ButtonGroupControls = () => {
 				<TooltipTrigger
 					delay={100}
 					render={
-						<Button className="rounded-none rounded-r-md shadow-none focus-visible:z-10" variant="outline" onClick={() => router.push("/settings")}>
+						<Button
+							className="rounded-none rounded-r-md shadow-none focus-visible:z-10"
+							style={{ backgroundColor: manualPage === "settings" ? "var(--primary)" : "" }}
+							variant="outline"
+							onClick={() => setManualPage(manualPage === "settings" ? null : "settings")}
+						>
 							<SettingsIcon />
 							<span className="sr-only">Open Settings</span>
 						</Button>

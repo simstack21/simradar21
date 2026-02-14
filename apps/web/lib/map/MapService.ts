@@ -10,7 +10,6 @@ import type { Point } from "ol/geom";
 import Select, { type SelectEvent } from "ol/interaction/Select";
 import type Layer from "ol/layer/Layer";
 import { fromLonLat, toLonLat, transformExtent } from "ol/proj";
-import type { SelectOptionType } from "@/components/Select/Select";
 import type { FilterValues, SettingValues } from "@/types/zustand";
 import { AirportService } from "./AirportService";
 import { ControllerService } from "./ControllerService";
@@ -165,7 +164,7 @@ export class MapService {
 		this.lastSettings = settings;
 	}
 
-	public setFilters(filters?: Partial<Record<keyof FilterValues, SelectOptionType[] | number[]>>) {
+	public setFilters(filters: FilterValues) {
 		this.pilotService.setFilters(filters);
 		this.renderFeatures();
 	}
