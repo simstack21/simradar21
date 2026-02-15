@@ -3,6 +3,7 @@
 import { FlaskConicalIcon, PaletteIcon, PlaneIcon, RadioTowerIcon, SunriseIcon, TowerControlIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { type RgbaColor, RgbaColorPicker } from "react-colorful";
+import { MotionPanel } from "@/components/Panel/PanelGrid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldContent, FieldTitle } from "@/components/ui/field";
@@ -20,7 +21,7 @@ export default function SettingPanel() {
 	const [minimized, setMinimized] = useState(false);
 
 	return (
-		<div className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
+		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
 			<SettingHeader minimized={minimized} setMinimized={setMinimized} />
 			{!minimized && (
 				<ScrollArea className="max-h-full overflow-hidden flex flex-col bg-muted/50">
@@ -34,7 +35,7 @@ export default function SettingPanel() {
 				</ScrollArea>
 			)}
 			<SettingFooter />
-		</div>
+		</MotionPanel>
 	);
 }
 

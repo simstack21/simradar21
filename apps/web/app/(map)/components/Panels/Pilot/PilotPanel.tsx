@@ -7,6 +7,7 @@ import useSWR from "swr";
 import { mapService } from "@/app/(map)/lib";
 import LoadingPanel from "@/components/Panel/Loading";
 import NotFoundPanel from "@/components/Panel/NotFound";
+import { MotionPanel } from "@/components/Panel/PanelGrid";
 import { PilotAircraft } from "@/components/Panel/Pilot/PilotAircraft";
 import { PilotChart } from "@/components/Panel/Pilot/PilotChart";
 import { PilotFlightplan } from "@/components/Panel/Pilot/PilotFlightplan";
@@ -103,7 +104,7 @@ export default function PilotPanel({ id }: { id: string }) {
 		);
 
 	return (
-		<div className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
+		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
 			<PilotHeader pilot={pilotData} mapService={mapService} minimized={minimized} setMinimized={setMinimized} />
 			{!minimized && (
 				<>
@@ -122,6 +123,6 @@ export default function PilotPanel({ id }: { id: string }) {
 				</>
 			)}
 			<PilotFooter pilot={pilotData} mapService={mapService} />
-		</div>
+		</MotionPanel>
 	);
 }

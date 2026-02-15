@@ -10,6 +10,7 @@ import { AirportHeader } from "@/components/Panel/Airport/AirportHeader";
 import AirportNavigation from "@/components/Panel/Airport/AirportNavigation";
 import LoadingPanel from "@/components/Panel/Loading";
 import NotFoundPanel from "@/components/Panel/NotFound";
+import { MotionPanel } from "@/components/Panel/PanelGrid";
 import { fetchApi } from "@/lib/api";
 import { getCachedAirport } from "@/storage/cache";
 
@@ -31,11 +32,11 @@ export default function AirportLayout({ icao, children }: { icao: string; childr
 		return <NotFoundPanel title="Airport not found" description="This airport does not exist." onClick={() => mapService.resetMap()} />;
 
 	return (
-		<div className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
+		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
 			<AirportHeader icao={icao} mapService={mapService} minimized={minimized} setMinimized={setMinimized} />
 			<AirportNavigation icao={icao} />
 			{!minimized && children}
 			<AirportFooter icao={icao} />
-		</div>
+		</MotionPanel>
 	);
 }

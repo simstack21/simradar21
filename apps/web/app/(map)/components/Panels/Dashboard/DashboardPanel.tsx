@@ -4,6 +4,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import type { DashboardData } from "@sr24/types/interface";
 import useSWR from "swr";
 import LoadingPanel from "@/components/Panel/Loading";
+import { MotionPanel } from "@/components/Panel/PanelGrid";
 import { Accordion } from "@/components/ui/accordion";
 import { fetchApi } from "@/lib/api";
 import { useDashboardPanelStore } from "@/storage/zustand";
@@ -19,10 +20,12 @@ export default function DashboardPanel() {
 	if (isLoading || !data) return <LoadingPanel dashboard />;
 
 	return (
-		<Accordion multiple={!isMobile} className="max-h-full glass-panel pointer-events-auto" value={panel} onValueChange={setPanel}>
-			<DashboardHistory history={data.history} />
-			<DashboardStats stats={data.stats} />
-			<DashboardEvents events={data.events} />
-		</Accordion>
+		<MotionPanel>
+			<Accordion multiple={!isMobile} className="max-h-full glass-panel pointer-events-auto" value={panel} onValueChange={setPanel}>
+				<DashboardHistory history={data.history} />
+				<DashboardStats stats={data.stats} />
+				<DashboardEvents events={data.events} />
+			</Accordion>
+		</MotionPanel>
 	);
 }

@@ -28,10 +28,10 @@ export default function Controls() {
 	return (
 		<div className="flex flex-col gap-2">
 			<div className="flex items-center justify-center gap-4">
-				<SwitchMultiView />
-				<SwitchVisibility checked={isHidden} onCheckedChange={(checked) => setHidden(checked)} />
+				{!isHidden && <SwitchMultiView />}
+				<SwitchVisibility checked={!isHidden} onCheckedChange={(checked) => setHidden(!checked)} />
 			</div>
-			<ButtonGroupControls />
+			{!isHidden && <ButtonGroupControls />}
 		</div>
 	);
 }

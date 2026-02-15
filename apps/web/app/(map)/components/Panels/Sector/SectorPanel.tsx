@@ -7,6 +7,7 @@ import useSWR from "swr";
 import { mapService } from "@/app/(map)/lib";
 import LoadingPanel from "@/components/Panel/Loading";
 import NotFoundPanel from "@/components/Panel/NotFound";
+import { MotionPanel } from "@/components/Panel/PanelGrid";
 import SectorController from "@/components/Panel/Sector/SectorController";
 import { SectorFooter } from "@/components/Panel/Sector/SectorFooter";
 import { SectorHeader } from "@/components/Panel/Sector/SectorHeader";
@@ -37,7 +38,7 @@ export default function SectorPanel({ callsign }: { callsign: string }) {
 	if (!sector) return <NotFoundPanel title="Sector not found" description="This sector does not exist." onClick={() => mapService.resetMap()} />;
 
 	return (
-		<div className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
+		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
 			<SectorHeader callsign={callsign} mapService={mapService} minimized={minimized} setMinimized={setMinimized} />
 			{!minimized && (
 				<ScrollArea className="max-h-full overflow-hidden flex flex-col">
@@ -48,6 +49,6 @@ export default function SectorPanel({ callsign }: { callsign: string }) {
 				</ScrollArea>
 			)}
 			<SectorFooter callsign={callsign} />
-		</div>
+		</MotionPanel>
 	);
 }

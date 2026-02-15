@@ -58,7 +58,7 @@ export function DashboardHistory({ history }: { history: DashboardData["history"
 						aria-label="Toggle switch"
 					/>
 				</div>
-				<ResponsiveContainer width="100%" height={200} maxHeight={500}>
+				<ResponsiveContainer width="100%" height={200} maxHeight={500} className="mt-2">
 					<AreaChart data={data}>
 						<XAxis
 							dataKey="timestamp"
