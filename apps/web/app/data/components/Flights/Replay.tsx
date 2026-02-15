@@ -5,7 +5,8 @@ import { SnailIcon } from "lucide-react";
 import { toLonLat } from "ol/proj";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
-import Spinner from "@/components/Spinner/Spinner";
+import LoadingPanel from "@/components/Panel/Loading";
+import NotFoundPanel from "@/components/Panel/NotFound";
 import { fetchApi } from "@/lib/api";
 import { decodeTrackPoints } from "@/lib/map/tracks";
 import { init, updatePilot } from "../../lib";
@@ -64,9 +65,15 @@ export function Replay({ id }: { id: string }) {
 		return () => clearInterval(interval);
 	}, [playing, speedIndex, trackPoints.length]);
 
-	if (!data || isLoading) {
-		return <Spinner />;
-	}
+	if (isLoading) return <LoadingPanel />;
+	if (!data)
+		return (
+			<NotFoundPanel
+				title="Pilot not found"
+				description="This pilot does not exist or is currently unavailable, most likely because of an incorrect ID or disconnect."
+				onClick={() => window.location.assign("/")}
+			/>
+		);
 
 	return (
 		<div className="fixed inset-0 bg-background">

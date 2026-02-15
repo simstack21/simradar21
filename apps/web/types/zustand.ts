@@ -2,6 +2,7 @@ import type { RgbaColor } from "react-colorful";
 
 type Theme = "light" | "dark" | "system";
 type PlaneOverlayMode = "callsign" | "telemetry-off" | "full";
+type ControllerOverlayMode = "callsign" | "controller-off" | "full";
 type TimeZone = "local" | "utc";
 type TimeFormat = "24h" | "12h";
 type TemperatureUnit = "celsius" | "fahrenheit";
@@ -15,12 +16,14 @@ export interface SettingValues {
 	dayNightLayer: boolean;
 	dayNightLayerBrightness: number;
 	airportMarkers: boolean;
+	airportOverlay: ControllerOverlayMode;
 	airportMarkerSize: number;
 	planeMarkers: boolean;
 	planeOverlay: PlaneOverlayMode;
 	planeMarkerSize: number;
 	animatedPlaneMarkers: boolean;
 	sectorAreas: boolean;
+	sectorOverlay: ControllerOverlayMode;
 	traconColor: RgbaColor;
 	firColor: RgbaColor;
 	timeZone: TimeZone;
@@ -38,12 +41,14 @@ export type MapSettings = Pick<
 	| "dayNightLayer"
 	| "dayNightLayerBrightness"
 	| "airportMarkers"
+	| "airportOverlay"
 	| "airportMarkerSize"
 	| "planeMarkers"
 	| "planeOverlay"
 	| "planeMarkerSize"
 	| "animatedPlaneMarkers"
 	| "sectorAreas"
+	| "sectorOverlay"
 	| "traconColor"
 	| "firColor"
 >;
@@ -58,12 +63,14 @@ export interface SettingState extends SettingValues {
 	setDayNightLayer: (value: boolean) => void;
 	setDayNightLayerBrightness: (value: number) => void;
 	setAirportMarkers: (value: boolean) => void;
+	setAirportOverlay: (value: ControllerOverlayMode) => void;
 	setAirportMarkerSize: (value: number) => void;
 	setPlaneMarkers: (value: boolean) => void;
 	setPlaneOverlay: (value: PlaneOverlayMode) => void;
 	setPlaneMarkerSize: (value: number) => void;
 	setAnimatedPlaneMarkers: (value: boolean) => void;
 	setSectorAreas: (value: boolean) => void;
+	setSectorOverlay: (value: ControllerOverlayMode) => void;
 	setTraconColor: (value: RgbaColor) => void;
 	setFirColor: (value: RgbaColor) => void;
 	setTimeZone: (value: TimeZone) => void;

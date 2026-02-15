@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { getOnlineTime } from "@/lib/helpers";
 import { getControllerColor } from "@/lib/panels";
 
 export default function ControllerInfo({
@@ -112,20 +113,5 @@ function getControllerName(facility: number, sector?: SimAwareTraconFeature | FI
 			return sector?.properties.name || "Unknown Approach";
 		default:
 			return "UNKNOWN";
-	}
-}
-
-function getOnlineTime(logonTime: string | Date): string {
-	const date = new Date(logonTime);
-	const diffMs = Date.now() - date.getTime();
-	const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-	const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-	if (diffHours > 0) {
-		return `${diffHours}h ${diffMinutes}m`;
-	} else if (diffMinutes > 0) {
-		return `${diffMinutes}m`;
-	} else {
-		return `0m`;
 	}
 }

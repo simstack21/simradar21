@@ -5,8 +5,7 @@ import { Point } from "ol/geom";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import RBush from "rbush";
-import { toast } from "react-toastify";
-import MessageBox from "@/components/MessageBox/MessageBox";
+import { toast } from "sonner";
 import type { PilotProperties } from "@/types/ol";
 import type { FilterValues } from "@/types/zustand";
 import { getPilotStyle, getShadowStyle, type PilotStyleVars } from "./styles/pilot";
@@ -271,7 +270,7 @@ export class PilotService {
 		if (this.highlighted.size > 0) {
 			for (const id of this.highlighted) {
 				if (!this.map.has(id)) {
-					toast.info(MessageBox, { data: { title: `Pilot Disconnected`, message: `A viewed pilot has disconnected.` } });
+					toast.error("Pilot Disconnected", { description: `A viewed pilot has disconnected.` });
 					this.highlighted.delete(id);
 					removedIds.push(`pilot_${id}`);
 				}

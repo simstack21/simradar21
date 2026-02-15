@@ -15,13 +15,21 @@ export const AvatarUser = ({ withBadge }: { withBadge?: boolean }) => {
 	);
 };
 
-export const AvatarAirline = ({ airline, size = "default" }: { airline: StaticAirline | null; size?: "default" | "sm" | "lg" }) => {
+export const AvatarAirline = ({
+	airline,
+	size = "default",
+	className,
+}: {
+	airline: StaticAirline | null;
+	size?: "default" | "sm" | "lg";
+	className?: string;
+}) => {
 	const color = airline?.color;
 
 	if (!color || color.length < 2) {
 		return (
-			<Avatar className="flex items-center justify-center bg-white" size={size}>
-				<span className={`text-green font-bold ${size === "lg" ? "text-xl" : "text-base"}`}>{airline?.iata ?? "?"}</span>
+			<Avatar className={`flex items-center justify-center bg-white ${className}`} size={size}>
+				<span className={`text-green font-bold ${size === "lg" && "text-xl"} ${size === "sm" && "text-sm"}`}>{airline?.iata ?? "?"}</span>
 			</Avatar>
 		);
 	}
@@ -29,11 +37,14 @@ export const AvatarAirline = ({ airline, size = "default" }: { airline: StaticAi
 	const letters = airline.iata.split("");
 
 	return (
-		<Avatar className="flex items-center justify-center" style={{ backgroundColor: color[0] }} size={size}>
-			<span className={`font-bold ${size === "lg" ? "text-xl" : "text-base"}`} style={{ color: color[1] }}>
+		<Avatar className={`flex items-center justify-center ${className}`} style={{ backgroundColor: color[0] }} size={size}>
+			<span className={`font-bold ${size === "lg" && "text-xl"} ${size === "sm" && "text-sm"}`} style={{ color: color[1] }}>
 				{letters[0]}
 			</span>
-			<span className={`font-bold ${size === "lg" ? "text-xl" : "text-base"}`} style={{ color: color.length > 2 ? color[2] : color[1] }}>
+			<span
+				className={`font-bold ${size === "lg" && "text-xl"} ${size === "sm" && "text-sm"}`}
+				style={{ color: color.length > 2 ? color[2] : color[1] }}
+			>
 				{letters[1]}
 			</span>
 		</Avatar>

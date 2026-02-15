@@ -24,8 +24,8 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 				rating: CONTROLLER_RATINGS.find((r) => r.id === controller.rating)?.short_name || "INAC",
 				server: controller.server,
 				visual_range: controller.visual_range,
-				logon_time: new Date(controller.logon_time),
-				timestamp: new Date(controller.last_updated),
+				logon_time: new Date(controller.logon_time).getTime(),
+				timestamp: new Date(controller.last_updated).getTime(),
 			};
 		})
 		.filter((c) => c !== null);
@@ -44,8 +44,8 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 			rating: CONTROLLER_RATINGS.find((r) => r.id === atis.rating)?.short_name || "INAC",
 			server: atis.server,
 			visual_range: atis.visual_range,
-			logon_time: new Date(atis.logon_time),
-			timestamp: new Date(atis.last_updated),
+			logon_time: new Date(atis.logon_time).getTime(),
+			timestamp: new Date(atis.last_updated).getTime(),
 		});
 	});
 
@@ -92,6 +92,7 @@ function getControllerShort(controller: ControllerShort, cachedController?: Cont
 			frequency: controller.frequency,
 			facility: controller.facility,
 			atis: controller.atis,
+			logon_time: controller.logon_time,
 			connections: controller.connections,
 		};
 	} else {
@@ -204,6 +205,7 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 			frequency: c.frequency,
 			facility: c.facility,
 			atis: c.atis,
+			logon_time: c.logon_time,
 			connections: c.connections,
 		};
 

@@ -28,7 +28,7 @@ export function getDelayColorFromNumber(avgDelay: number): "green" | "yellow" | 
 	return "green";
 }
 
-export function getControllerColor(facility: number): "yellow" | "blue" | "green" | "red" | "purple" | "grey" {
+export function getControllerColor(facility: number): "yellow" | "blue" | "green" | "red" | "magenta" | "grey" {
 	switch (facility) {
 		case -1:
 			return "yellow";
@@ -39,7 +39,7 @@ export function getControllerColor(facility: number): "yellow" | "blue" | "green
 		case 4:
 			return "red";
 		case 5:
-			return "purple";
+			return "magenta";
 		case 6:
 			return "grey";
 		default:

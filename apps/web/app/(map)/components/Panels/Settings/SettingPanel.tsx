@@ -64,7 +64,7 @@ function DayNightSettings() {
 }
 
 function AirportSettings() {
-	const { airportMarkers, setAirportMarkers, airportMarkerSize, setAirportMarkerSize } = useSettingsStore();
+	const { airportMarkers, setAirportMarkers, airportMarkerSize, setAirportMarkerSize, airportOverlay, setAirportOverlay } = useSettingsStore();
 
 	return (
 		<Field orientation="horizontal" className={cn("border rounded-md p-2 bg-muted/50", !airportMarkers && "bg-transparent")}>
@@ -80,6 +80,23 @@ function AirportSettings() {
 							<span className="text-xs text-muted-foreground ml-auto">{airportMarkerSize}</span>
 						</div>
 						<Slider value={airportMarkerSize} step={10} onValueChange={(value) => setAirportMarkerSize(value as number)} />
+					</div>
+					<div className="flex flex-col w-full gap-2">
+						<span className="text-xs">Overlay Details</span>
+						<RadioGroup value={airportOverlay} onValueChange={setAirportOverlay} className="flex justify-between">
+							<div className="flex items-center gap-2">
+								<RadioGroupItem value="callsign" id="callsign" />
+								<Label htmlFor="callsign">Callsign</Label>
+							</div>
+							<div className="flex items-center gap-2">
+								<RadioGroupItem value="controller-off" id="controller-off" />
+								<Label htmlFor="controller-off">Controller Off</Label>
+							</div>
+							<div className="flex items-center gap-2">
+								<RadioGroupItem value="full" id="full" />
+								<Label htmlFor="full">Full</Label>
+							</div>
+						</RadioGroup>
 					</div>
 				</div>
 			</FieldContent>
@@ -151,7 +168,7 @@ function PlaneSettings() {
 }
 
 function SectorSettings() {
-	const { sectorAreas, setSectorAreas, traconColor, setTraconColor, firColor, setFirColor } = useSettingsStore();
+	const { sectorAreas, setSectorAreas, traconColor, setTraconColor, firColor, setFirColor, sectorOverlay, setSectorOverlay } = useSettingsStore();
 	const [picker, setPicker] = useState<"tracon" | "fir" | null>(null);
 
 	return (
@@ -187,6 +204,23 @@ function SectorSettings() {
 							</Button>
 						</div>
 						{picker === "tracon" && <RgbaColorPicker color={traconColor} onChange={setTraconColor} className="w-full!" />}
+					</div>
+					<div className="flex flex-col w-full gap-2">
+						<span className="text-xs">Overlay Details</span>
+						<RadioGroup value={sectorOverlay} onValueChange={setSectorOverlay} className="flex justify-between">
+							<div className="flex items-center gap-2">
+								<RadioGroupItem value="callsign" id="callsign" />
+								<Label htmlFor="callsign">Callsign</Label>
+							</div>
+							<div className="flex items-center gap-2">
+								<RadioGroupItem value="controller-off" id="controller-off" />
+								<Label htmlFor="controller-off">Controller Off</Label>
+							</div>
+							<div className="flex items-center gap-2">
+								<RadioGroupItem value="full" id="full" />
+								<Label htmlFor="full">Full</Label>
+							</div>
+						</RadioGroup>
 					</div>
 				</div>
 			</FieldContent>

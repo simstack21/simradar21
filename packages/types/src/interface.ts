@@ -111,6 +111,7 @@ export interface ControllerShort {
 	facility: number;
 	atis?: string[] | null;
 	connections?: number;
+	logon_time?: number;
 	booking?: {
 		start: string;
 		end: string;
@@ -129,8 +130,8 @@ export interface ControllerLong {
 	rating: string;
 	server: string;
 	visual_range: number;
-	logon_time: Date;
-	timestamp: Date;
+	logon_time: number;
+	timestamp: number;
 }
 
 export interface ControllerMerged {
