@@ -16,6 +16,7 @@ export interface SettingValues {
 	dayNightLayerBrightness: number;
 	airportMarkers: boolean;
 	airportMarkerSize: number;
+	planeMarkers: boolean;
 	planeOverlay: PlaneOverlayMode;
 	planeMarkerSize: number;
 	animatedPlaneMarkers: boolean;
@@ -32,12 +33,33 @@ export interface SettingValues {
 	distanceUnit: DistanceUnit;
 }
 
+export type MapSettings = Pick<
+	SettingValues,
+	| "dayNightLayer"
+	| "dayNightLayerBrightness"
+	| "airportMarkers"
+	| "airportMarkerSize"
+	| "planeMarkers"
+	| "planeOverlay"
+	| "planeMarkerSize"
+	| "animatedPlaneMarkers"
+	| "sectorAreas"
+	| "traconColor"
+	| "firColor"
+>;
+
+export type UnitSettings = Pick<
+	SettingValues,
+	"theme" | "timeZone" | "timeFormat" | "temperatureUnit" | "speedUnit" | "verticalSpeedUnit" | "windSpeedUnit" | "altitudeUnit" | "distanceUnit"
+>;
+
 export interface SettingState extends SettingValues {
 	setTheme: (value: Theme) => void;
 	setDayNightLayer: (value: boolean) => void;
 	setDayNightLayerBrightness: (value: number) => void;
 	setAirportMarkers: (value: boolean) => void;
 	setAirportMarkerSize: (value: number) => void;
+	setPlaneMarkers: (value: boolean) => void;
 	setPlaneOverlay: (value: PlaneOverlayMode) => void;
 	setPlaneMarkerSize: (value: number) => void;
 	setAnimatedPlaneMarkers: (value: boolean) => void;
@@ -54,7 +76,9 @@ export interface SettingState extends SettingValues {
 	setDistanceUnit: (value: DistanceUnit) => void;
 
 	setSettings: (settings: SettingValues) => void;
-	resetSettings: () => void;
+	resetAllSettings: () => void;
+	resetMapSettings: () => void;
+	resetUnitSettings: () => void;
 }
 
 export interface FilterValues {

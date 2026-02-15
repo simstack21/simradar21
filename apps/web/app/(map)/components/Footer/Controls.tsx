@@ -4,13 +4,13 @@ import {
 	EyeIcon,
 	EyeOffIcon,
 	FunnelIcon,
+	LayersIcon,
 	LocateIcon,
 	MaximizeIcon,
 	MinimizeIcon,
 	MinusIcon,
 	PlusIcon,
 	RefreshCcwDotIcon,
-	SettingsIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
@@ -219,7 +219,7 @@ const ButtonGroupControls = () => {
 							variant="outline"
 							onClick={() => setManualPage(manualPage === "settings" ? null : "settings")}
 						>
-							<SettingsIcon />
+							<LayersIcon />
 							<span className="sr-only">Open Settings</span>
 						</Button>
 					}

@@ -23,7 +23,7 @@ export default function FilterInput() {
 	if (activeFilters.length === 0) return null;
 
 	return (
-		<div className="p-2 bg-muted/50 flex flex-col gap-2">
+		<div className="p-2 bg- flex flex-col gap-2">
 			{activeFilters.map((key) => {
 				const filter = FILTER_BY_KEY[key];
 				if (!filter) return null;
@@ -96,7 +96,7 @@ function MultiSelectFilter({ filter }: { filter: FilterDefinition }) {
 						</ComboboxList>
 					</ComboboxContent>
 				</Combobox>
-				<Button variant="outline" size="icon" onClick={() => removeFilter(filter.key)}>
+				<Button variant="destructive" size="icon" onClick={() => removeFilter(filter.key)}>
 					<MinusIcon />
 				</Button>
 			</div>

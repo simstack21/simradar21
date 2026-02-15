@@ -1,6 +1,6 @@
 "use client";
 
-import { MoonIcon, SunIcon } from "lucide-react";
+import { GlobeIcon, LocateIcon, MoonIcon, SunIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useId } from "react";
 import { Switch } from "@/components/ui/switch";
@@ -22,7 +22,7 @@ export const SwitchTheme = () => {
 	};
 
 	return (
-		<div className="inline-flex items-center gap-2">
+		<div className="inline-flex items-center gap-2 px-1">
 			<Switch id={id} checked={theme === "dark"} onCheckedChange={onThemeChange} aria-label="Toggle switch" />
 			<Label htmlFor={id}>
 				<span className="sr-only">Toggle switch</span>
@@ -47,11 +47,11 @@ export const SwitchTimeZone = () => {
 	};
 
 	return (
-		<div className="items-center gap-2 hidden md:flex">
+		<div className="items-center gap-2 hidden md:flex px-1">
 			<Switch id={id} checked={timeZone === "utc"} onCheckedChange={onTimeZoneChange} aria-label="Toggle switch" />
 			<Label htmlFor={id}>
 				<span className="sr-only">Toggle switch</span>
-				{timeZone === "utc" ? "UTC" : "Local"}
+				{timeZone === "utc" ? <GlobeIcon className="size-4" aria-hidden="true" /> : <LocateIcon className="size-4" aria-hidden="true" />}
 			</Label>
 		</div>
 	);

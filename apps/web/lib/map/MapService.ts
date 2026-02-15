@@ -150,7 +150,7 @@ export class MapService {
 
 	public setSettings(settings: Partial<SettingValues>): void {
 		this.sunService.setSettings({ show: settings.dayNightLayer, brightness: settings.dayNightLayerBrightness });
-		this.pilotService.setSettings({ size: settings.planeMarkerSize });
+		this.pilotService.setSettings({ show: settings.planeMarkers, size: settings.planeMarkerSize });
 		this.airportService.setSettings({ show: settings.airportMarkers, size: settings.airportMarkerSize });
 		this.controllerService.setSettings({
 			showSectors: settings.sectorAreas,

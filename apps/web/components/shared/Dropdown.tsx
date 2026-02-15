@@ -2,10 +2,10 @@ import {
 	CalendarClockIcon,
 	CheckIcon,
 	DatabaseIcon,
-	EllipsisVerticalIcon,
 	LogOutIcon,
 	type LucideIcon,
 	MapIcon,
+	MenuIcon,
 	NavigationIcon,
 	SectionIcon,
 	UserIcon,
@@ -56,7 +56,7 @@ export const DropdownUser = () => {
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger openOnHover>
+			<DropdownMenuTrigger openOnHover className="px-1 pr-2">
 				<AvatarUser withBadge />
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="w-56">
@@ -150,11 +150,10 @@ export const DropdownNavigation = () => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
-				className="pr-2"
 				openOnHover
 				render={
 					<Button variant="ghost">
-						<EllipsisVerticalIcon data-icon="inline-start" />
+						<MenuIcon data-icon="inline-start" />
 					</Button>
 				}
 			></DropdownMenuTrigger>

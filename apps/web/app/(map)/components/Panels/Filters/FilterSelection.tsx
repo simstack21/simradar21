@@ -12,7 +12,7 @@ export default function FilterSelection() {
 	const [category, setCategory] = useState<string | null>(null);
 
 	return (
-		<div className="p-2 bg-muted/50 flex flex-col gap-2">
+		<div className="p-2 flex flex-col gap-2">
 			<Alert>
 				<InfoIcon />
 				<AlertTitle>You have no saved presets yet</AlertTitle>
@@ -51,18 +51,18 @@ function SubCategoryItem({ filter }: { filter: FilterDefinition }) {
 	const active = activeFilters.includes(filter.key);
 
 	return (
-		<Item variant="muted">
+		<Item variant="muted" className="bg-muted">
 			<ItemContent>
 				<ItemTitle>{filter.label}</ItemTitle>
 				<ItemDescription>{filter.description}</ItemDescription>
 			</ItemContent>
 			<ItemActions>
 				{active ? (
-					<Button variant="outline" size="icon" onClick={() => removeFilter(filter.key)}>
+					<Button variant="destructive" size="icon" onClick={() => removeFilter(filter.key)}>
 						<MinusIcon />
 					</Button>
 				) : (
-					<Button variant="outline" size="icon" onClick={() => addFilter(filter.key)}>
+					<Button variant="default" size="icon" onClick={() => addFilter(filter.key)}>
 						<PlusIcon />
 					</Button>
 				)}

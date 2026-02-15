@@ -110,7 +110,7 @@ export function CommandSearch() {
 	};
 
 	return (
-		<div className="flex flex-col gap-4">
+		<>
 			<Tooltip>
 				<TooltipTrigger
 					delay={100}
@@ -246,7 +246,7 @@ export function CommandSearch() {
 					</CommandList>
 				</Command>
 			</CommandDialog>
-		</div>
+		</>
 	);
 }
 

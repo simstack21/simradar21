@@ -7,32 +7,43 @@ import type {
 	FilterState,
 	FilterStats,
 	FilterValues,
+	MapSettings,
 	PilotPanelState,
 	SectorPanelState,
 	SettingState,
 	SettingValues,
+	UnitSettings,
 } from "@/types/zustand";
 
+const defaultMapSettings: MapSettings = {
+	dayNightLayer: true,
+	dayNightLayerBrightness: 50,
+	airportMarkers: true,
+	airportMarkerSize: 50,
+	planeMarkers: true,
+	planeOverlay: "full",
+	planeMarkerSize: 50,
+	animatedPlaneMarkers: false,
+	sectorAreas: true,
+	traconColor: { r: 222, g: 89, b: 234, a: 0.1 },
+	firColor: { r: 77, g: 95, b: 131, a: 0.15 },
+};
+
+const defaultUnitSettings: UnitSettings = {
+	theme: "system",
+	timeZone: "utc",
+	timeFormat: "24h",
+	temperatureUnit: "celsius",
+	speedUnit: "knots",
+	verticalSpeedUnit: "fpm",
+	windSpeedUnit: "knots",
+	altitudeUnit: "feet",
+	distanceUnit: "nm",
+};
+
 const defaultSettings: SettingValues = {
-	theme: "dark" as const,
-	dayNightLayer: true as const,
-	dayNightLayerBrightness: 50 as const,
-	airportMarkers: true as const,
-	airportMarkerSize: 50 as const,
-	planeOverlay: "full" as const,
-	planeMarkerSize: 50 as const,
-	animatedPlaneMarkers: false as const,
-	sectorAreas: true as const,
-	traconColor: { r: 222, g: 89, b: 234, a: 0.1 } as const,
-	firColor: { r: 77, g: 95, b: 131, a: 0.15 } as const,
-	timeZone: "utc" as const,
-	timeFormat: "24h" as const,
-	temperatureUnit: "celsius" as const,
-	speedUnit: "knots" as const,
-	verticalSpeedUnit: "fpm" as const,
-	windSpeedUnit: "knots" as const,
-	altitudeUnit: "feet" as const,
-	distanceUnit: "nm" as const,
+	...defaultMapSettings,
+	...defaultUnitSettings,
 };
 
 function getSettingValues(): SettingValues {
@@ -43,6 +54,7 @@ function getSettingValues(): SettingValues {
 		dayNightLayerBrightness: s.dayNightLayerBrightness,
 		airportMarkers: s.airportMarkers,
 		airportMarkerSize: s.airportMarkerSize,
+		planeMarkers: s.planeMarkers,
 		planeOverlay: s.planeOverlay,
 		planeMarkerSize: s.planeMarkerSize,
 		animatedPlaneMarkers: s.animatedPlaneMarkers,
@@ -96,6 +108,7 @@ export const useSettingsStore = create<SettingState>()(
 			setDayNightLayerBrightness: (value) => set({ dayNightLayerBrightness: value }),
 			setAirportMarkers: (value) => set({ airportMarkers: value }),
 			setAirportMarkerSize: (value) => set({ airportMarkerSize: value }),
+			setPlaneMarkers: (value) => set({ planeMarkers: value }),
 			setPlaneOverlay: (value) => set({ planeOverlay: value }),
 			setPlaneMarkerSize: (value) => set({ planeMarkerSize: value }),
 			setAnimatedPlaneMarkers: (value) => set({ animatedPlaneMarkers: value }),
@@ -112,7 +125,9 @@ export const useSettingsStore = create<SettingState>()(
 			setDistanceUnit: (value) => set({ distanceUnit: value }),
 
 			setSettings: (settings) => set({ ...settings }),
-			resetSettings: () => set({ ...defaultSettings }),
+			resetAllSettings: () => set({ ...defaultSettings }),
+			resetMapSettings: () => set({ ...defaultMapSettings }),
+			resetUnitSettings: () => set({ ...defaultUnitSettings }),
 		}),
 		{
 			name: "simradar21-user-settings",
