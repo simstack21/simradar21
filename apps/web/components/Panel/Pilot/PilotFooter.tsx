@@ -18,7 +18,7 @@ export function PilotFooter({ pilot, mapService }: { pilot: PilotLong; mapServic
 	};
 
 	const onShareClick = () => {
-		navigator.clipboard.writeText(`${window.location.origin}/pilot/${pilot.id}`);
+		navigator.clipboard.writeText(window.location.href);
 		toast.success("Link Copied to Clipboard!");
 		setShared(true);
 		setTimeout(() => setShared(false), 2000);

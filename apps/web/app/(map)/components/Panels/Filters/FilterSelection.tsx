@@ -51,7 +51,7 @@ function SubCategoryItem({ filter }: { filter: FilterDefinition }) {
 	const active = activeFilters.includes(filter.key);
 
 	return (
-		<Item variant="muted" className="bg-muted">
+		<Item variant="muted" className="bg-muted/50">
 			<ItemContent>
 				<ItemTitle>{filter.label}</ItemTitle>
 				<ItemDescription>{filter.description}</ItemDescription>

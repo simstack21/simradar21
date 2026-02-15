@@ -11,6 +11,7 @@ import { decodeTrackPoints } from "@/lib/map/tracks";
 import { init, updatePilot } from "../../lib";
 import ReplayControls from "./ReplayControls";
 import ReplayMap from "./ReplayMap";
+import ReplayPanel from "./ReplayPanel";
 
 interface ApiData {
 	pilot: PilotLong;
@@ -70,7 +71,7 @@ export function Replay({ id }: { id: string }) {
 	return (
 		<div className="fixed inset-0 bg-background">
 			<ReplayMap />
-			{/* <ReplayPanel pilot={data.pilot} trackPoints={trackPoints} index={progress} /> */}
+			<ReplayPanel pilot={data.pilot} trackPoints={trackPoints} index={progress} />
 			<footer className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2 py-1 px-2 rounded-xl overflow-hidden glass-panel">
 				<ReplayControls
 					progress={progress}
