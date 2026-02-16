@@ -1,5 +1,4 @@
-import type { FIRFeature, SimAwareTraconFeature, StaticAircraft, StaticAirline, StaticAirport } from "@sr24/types/db";
-import { fetchApi } from "@/lib/api";
+import type { FIRFeature, SimAwareTraconFeature, StaticAirline, StaticAirport } from "@sr24/types/db";
 import { dxGetAirline, dxGetAirport, dxGetFirs, dxGetTracons } from "./dexie";
 
 const cachedAirports: Map<string, StaticAirport> = new Map();
@@ -28,20 +27,6 @@ export async function getCachedAirline(id: string): Promise<StaticAirline | null
 	}
 
 	return airline || null;
-}
-
-const cachedAircrafts: Map<string, StaticAircraft> = new Map();
-
-export async function getCachedAircraft(registration: string): Promise<StaticAircraft | null> {
-	const cached = cachedAircrafts.get(registration);
-	if (cached) return cached;
-
-	const aircraft = await fetchApi<StaticAircraft>(`/data/aircraft/${registration}`);
-	if (aircraft) {
-		cachedAircrafts.set(registration, aircraft);
-	}
-
-	return aircraft || null;
 }
 
 const cachedTracons: Map<string, SimAwareTraconFeature> = new Map();

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import simradar21Full from "@/assets/images/logos/simradar21_full_logo.svg";
 import simradar21Icon from "@/assets/images/logos/simradar21_icon.svg";
+import useGlobalError from "@/hooks/useGlobalError";
 import useInitializer from "@/hooks/useInitializer";
 import useSettings from "@/hooks/useSettings";
 import { CommandSearch } from "../Search/Search";
@@ -17,6 +18,7 @@ export default function Header() {
 
 	useSettings();
 	useInitializer();
+	useGlobalError();
 
 	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {

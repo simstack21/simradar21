@@ -1,21 +1,20 @@
 import type { StaticAircraft } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
 import { ArrowRightIcon, PlaneIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import useSWR from "swr";
 import { AvatarCountry } from "@/components/shared/Avatar";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { getCachedAircraft } from "@/storage/cache";
+import { fetchApi } from "@/lib/api";
 
 export function PilotAircraft({ pilot }: { pilot: PilotLong }) {
-	const [aircraft, setAircraft] = useState<StaticAircraft | null>(null);
+	const { data: aircraftData } = useSWR<StaticAircraft>(`/data/aircraft/${pilot.flight_plan?.ac_reg}`, fetchApi, {
+		revalidateIfStale: false,
+		revalidateOnFocus: false,
+		revalidateOnReconnect: false,
+		shouldRetryOnError: false,
+	});
 
-	useEffect(() => {
-		const registration = pilot.flight_plan?.ac_reg;
-		if (!registration) return;
-		getCachedAircraft(registration).then(setAircraft);
-	}, [pilot]);
-
-	const acType = `${aircraft?.manufacturerName || ""} ${aircraft?.model || ""}`;
+	const acType = `${aircraftData?.manufacturerName || ""} ${aircraftData?.model || ""}`;
 
 	return (
 		<AccordionItem value="aircraft" className="overflow-hidden flex flex-col">
@@ -26,32 +25,32 @@ export function PilotAircraft({ pilot }: { pilot: PilotLong }) {
 				</div>
 			</AccordionTrigger>
 			<AccordionContent className="py-1 grid grid-cols-2 gap-1">
-				{aircraft && (
+				{aircraftData && (
 					<div className="flex gap-2 items-center col-span-2">
-						<AvatarCountry country={aircraft.country} size="sm" />
+						<AvatarCountry country={aircraftData.country} size="sm" />
 						<div className="flex flex-col">
 							<span className="text-muted-foreground">Aircraft Type</span>
 							<span>{acType.trim() ? acType : pilot.aircraft}</span>
 						</div>
 					</div>
 				)}
-				{!aircraft && (
+				{!aircraftData && (
 					<div className="flex flex-col">
 						<span className="text-muted-foreground">Aircraft Type</span>
 						<span>{acType.trim() ? acType : pilot.aircraft}</span>
 					</div>
 				)}
-				{!aircraft && pilot.flight_plan?.ac_reg && (
+				{!aircraftData && pilot.flight_plan?.ac_reg && (
 					<div className="flex flex-col">
 						<span className="text-muted-foreground">Registration</span>
 						<span>{pilot.flight_plan?.ac_reg}</span>
 					</div>
 				)}
-				{aircraft && (
+				{aircraftData && (
 					<>
 						<div className="flex flex-col col-span-2">
 							<span className="text-muted-foreground">Owner</span>
-							<span>{aircraft.owner || "N/A"}</span>
+							<span>{aircraftData.owner || "N/A"}</span>
 						</div>
 						<div className="flex flex-col">
 							<span className="text-muted-foreground">Registration</span>
@@ -59,15 +58,15 @@ export function PilotAircraft({ pilot }: { pilot: PilotLong }) {
 						</div>
 						<div className="flex flex-col">
 							<span className="text-muted-foreground">Serial Number (MSN)</span>
-							<span>{aircraft.serialNumber || "N/A"}</span>
+							<span>{aircraftData.serialNumber || "N/A"}</span>
 						</div>
 						<div className="flex flex-col">
 							<span className="text-muted-foreground">ICAO24</span>
-							<span>{aircraft.icao24 || "N/A"}</span>
+							<span>{aircraftData.icao24 || "N/A"}</span>
 						</div>
 						<div className="flex flex-col">
 							<span className="text-muted-foreground">SELCAL</span>
-							<span>{aircraft.selCal || "N/A"}</span>
+							<span>{aircraftData.selCal || "N/A"}</span>
 						</div>
 						<a href={`/data/aircrafts/${pilot.flight_plan?.ac_reg}`} className="flex col-span-2 items-center group gap-1">
 							View more flights of {pilot.flight_plan?.ac_reg}
