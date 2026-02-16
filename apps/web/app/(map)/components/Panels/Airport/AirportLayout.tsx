@@ -33,7 +33,7 @@ export default function AirportLayout({ icao, children }: { icao: string; childr
 
 	return (
 		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
-			<AirportHeader icao={icao} mapService={mapService} minimized={minimized} setMinimized={setMinimized} />
+			<AirportHeader icao={icao} onClose={() => mapService.resetMap()} minimized={minimized} setMinimized={setMinimized} />
 			<AirportNavigation icao={icao} />
 			{!minimized && children}
 			<AirportFooter icao={icao} />

@@ -1,4 +1,5 @@
 import { SaveIcon } from "lucide-react";
+import { BadgeComingSoon } from "@/components/shared/Badge";
 import { Button } from "@/components/ui/button";
 import { useFiltersStore } from "@/storage/zustand";
 
@@ -12,7 +13,8 @@ export default function FilterFooter() {
 			</Button>
 			<Button onClick={() => savePreset("New Preset")} disabled>
 				<SaveIcon data-icon="inline-start" />
-				Preset (coming soon)
+				Preset
+				<BadgeComingSoon />
 			</Button>
 		</div>
 	);

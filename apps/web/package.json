@@ -7,8 +7,8 @@
 		"build": "next build",
 		"start": "next start",
 		"typecheck": "tsc --noEmit",
-		"format-and-lint": "biome check .",
-		"format-and-lint:fix": "biome check . --write"
+		"biome": "biome check .",
+		"biome:fix": "biome check . --write"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.2.0",

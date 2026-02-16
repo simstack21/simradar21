@@ -18,10 +18,7 @@ export function PilotAircraft({ pilot }: { pilot: PilotLong }) {
 	const acType = `${aircraft?.manufacturerName || ""} ${aircraft?.model || ""}`;
 
 	return (
-		<AccordionItem
-			value="aircraft"
-			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none has-focus-visible:z-10 has-focus-visible:ring-[3px]"
-		>
+		<AccordionItem value="aircraft" className="overflow-hidden flex flex-col">
 			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center gap-4">
 					<PlaneIcon className="size-4 shrink-0" />

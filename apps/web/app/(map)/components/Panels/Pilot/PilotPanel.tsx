@@ -105,7 +105,7 @@ export default function PilotPanel({ id }: { id: string }) {
 
 	return (
 		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
-			<PilotHeader pilot={pilotData} mapService={mapService} minimized={minimized} setMinimized={setMinimized} />
+			<PilotHeader pilot={pilotData} onClose={() => mapService.resetMap()} minimized={minimized} setMinimized={setMinimized} />
 			{!minimized && (
 				<>
 					<PilotRoute pilot={pilotData} />

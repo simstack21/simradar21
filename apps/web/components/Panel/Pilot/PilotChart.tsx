@@ -16,10 +16,7 @@ export function PilotChart({ trackPoints }: { trackPoints: TrackPoint[] }) {
 	}));
 
 	return (
-		<AccordionItem
-			value="chart"
-			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none has-focus-visible:z-10 has-focus-visible:ring-[3px]"
-		>
+		<AccordionItem value="chart" className="overflow-hidden flex flex-col">
 			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center gap-4">
 					<ChartLineIcon className="size-4 shrink-0" />

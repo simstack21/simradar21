@@ -24,7 +24,7 @@ import { AvatarAirline, AvatarCountry } from "../shared/Avatar";
 import { Button } from "../ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../ui/hover-card";
 
-export function PilotOverlay({ feature, airline }: { feature: Feature<Point>; airline: StaticAirline | null }) {
+export function PilotOverlay({ feature, airline, mini }: { feature: Feature<Point>; airline: StaticAirline | null; mini?: boolean }) {
 	const { planeOverlay, altitudeUnit, verticalSpeedUnit, speedUnit } = useSettingsStore();
 
 	const data = feature.getProperties() as PilotProperties;
@@ -39,27 +39,29 @@ export function PilotOverlay({ feature, airline }: { feature: Feature<Point>; ai
 
 	return (
 		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden">
-			{planeOverlay === "full" && (
+			{planeOverlay === "full" && !mini && (
 				<div className="grid grid-cols-2 gap-x-2 text-xs p-0.5 pt-0">
 					<div className="flex gap-2 justify-between">
 						<span className="text-muted-foreground">ALT</span>
-						{data.altitude_ms && convertAltitude(Math.round(data.altitude_ms / 250) * 250, altitudeUnit)}
+						<span className="font-mono">{data.altitude_ms && convertAltitude(Math.round(data.altitude_ms / 250) * 250, altitudeUnit)}</span>
 					</div>
 					<div className="flex gap-2 justify-between">
 						<span className="text-muted-foreground">FPM</span>
-						{data.vertical_speed && convertVerticalSpeed(Math.round(data.vertical_speed / 50) * 50, verticalSpeedUnit, false)}
+						<span className="font-mono">
+							{data.vertical_speed && convertVerticalSpeed(Math.round(data.vertical_speed / 50) * 50, verticalSpeedUnit, false)}
+						</span>
 					</div>
 					<div className="flex gap-2 justify-between">
 						<span className="text-muted-foreground">GS</span>
-						{data.groundspeed && convertSpeed(data.groundspeed, speedUnit)}
+						<span className="font-mono">{data.groundspeed && convertSpeed(data.groundspeed, speedUnit)}</span>
 					</div>
 					<div className="flex gap-2 justify-between">
 						<span className="text-muted-foreground">HDG</span>
-						{hdg}
+						<span className="font-mono">{hdg}</span>
 					</div>
 				</div>
 			)}
-			{planeOverlay !== "callsign" && (
+			{planeOverlay !== "callsign" && !mini && (
 				<div className="flex items-center gap-x-1 bg-red px-1 py-0.5">
 					<AvatarAirline airline={airline} />
 					<div className="flex flex-col text-xs">
@@ -80,7 +82,7 @@ export function PilotOverlay({ feature, airline }: { feature: Feature<Point>; ai
 					</div>
 				</div>
 			)}
-			{planeOverlay === "callsign" && <div className="bg-red px-1 py-0.5 text-sm font-bold">{data.callsign}</div>}
+			{(planeOverlay === "callsign" || mini) && <div className="bg-red px-1 py-0.5 text-sm font-bold">{data.callsign}</div>}
 		</div>
 	);
 }
@@ -89,10 +91,12 @@ export function AirportOverlay({
 	cached,
 	short,
 	merged,
+	mini,
 }: {
 	cached: StaticAirport | null;
 	short: AirportShort | undefined;
 	merged: ControllerMerged | undefined;
+	mini?: boolean;
 }) {
 	const { airportOverlay } = useSettingsStore();
 
@@ -101,8 +105,8 @@ export function AirportOverlay({
 
 	return (
 		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden">
-			{airportOverlay === "full" && <ControllerOverlay controllers={sortedControllers} />}
-			{airportOverlay !== "callsign" && (
+			{airportOverlay === "full" && !mini && <ControllerOverlay controllers={sortedControllers} />}
+			{airportOverlay !== "callsign" && !mini && (
 				<div className="flex items-center gap-x-1 bg-red px-1 py-0.5">
 					<AvatarCountry country={cached?.country || ""} />
 					<div className="flex flex-col text-xs w-full">
@@ -123,19 +127,27 @@ export function AirportOverlay({
 					</div>
 				</div>
 			)}
-			{airportOverlay === "callsign" && <div className="bg-red px-1 py-0.5 text-sm font-bold">{cached?.id || "N/A"}</div>}
+			{(airportOverlay === "callsign" || mini) && <div className="bg-red px-1 py-0.5 text-sm font-bold">{cached?.id || "N/A"}</div>}
 		</div>
 	);
 }
 
-export function SectorOverlay({ cached, merged }: { cached: SimAwareTraconFeature | FIRFeature | null; merged: ControllerMerged | undefined }) {
+export function SectorOverlay({
+	cached,
+	merged,
+	mini,
+}: {
+	cached: SimAwareTraconFeature | FIRFeature | null;
+	merged: ControllerMerged | undefined;
+	mini?: boolean;
+}) {
 	const { sectorOverlay } = useSettingsStore();
 	const controllers = merged?.controllers as ControllerShort[] | undefined;
 
 	return (
 		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden">
-			{sectorOverlay === "full" && <ControllerOverlay controllers={controllers} />}
-			{sectorOverlay !== "callsign" && (
+			{sectorOverlay === "full" && !mini && <ControllerOverlay controllers={controllers} />}
+			{sectorOverlay !== "callsign" && !mini && (
 				<div className="flex items-center gap-x-1 bg-red px-1 py-0.5">
 					<span
 						className={`h-8 w-8 text-muted rounded-full flex justify-center items-center shrink-0 ${controllers && controllers[0].facility === 6 ? "bg-grey" : "bg-magenta"}`}
@@ -152,7 +164,7 @@ export function SectorOverlay({ cached, merged }: { cached: SimAwareTraconFeatur
 					</div>
 				</div>
 			)}
-			{sectorOverlay === "callsign" && <div className="bg-red px-1 py-0.5 text-sm font-bold">{cached?.properties.name || "N/A"}</div>}
+			{(sectorOverlay === "callsign" || mini) && <div className="bg-red px-1 py-0.5 text-sm font-bold">{cached?.properties.name || "N/A"}</div>}
 		</div>
 	);
 }

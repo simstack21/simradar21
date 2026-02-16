@@ -1,7 +1,7 @@
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { PilotLong, TrackPoint } from "@sr24/types/interface";
 import { useState } from "react";
-import PanelGrid from "@/components/Panel/PanelGrid";
+import { PanelGrid } from "@/components/Panel/PanelGrid";
 import { PilotAircraft } from "@/components/Panel/Pilot/PilotAircraft";
 import { PilotChart } from "@/components/Panel/Pilot/PilotChart";
 import { PilotFlightplan } from "@/components/Panel/Pilot/PilotFlightplan";

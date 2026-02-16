@@ -11,6 +11,8 @@ import {
 	MinusIcon,
 	PlusIcon,
 	RefreshCcwDotIcon,
+	SquareIcon,
+	SquareStackIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
@@ -48,7 +50,7 @@ const SwitchMultiView = () => {
 			<Switch id={id} checked={isMultiView} onCheckedChange={(checked) => router.push(checked ? "/multi" : "/")} aria-label="Toggle switch" />
 			<Label htmlFor={id}>
 				<span className="sr-only">Toggle switch</span>
-				{isMultiView ? "Multi View" : "Single View"}
+				{isMultiView ? <SquareStackIcon className="size-4" aria-hidden="true" /> : <SquareIcon className="size-4" aria-hidden="true" />}
 			</Label>
 		</div>
 	);

@@ -39,7 +39,7 @@ export default function SectorPanel({ callsign }: { callsign: string }) {
 
 	return (
 		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
-			<SectorHeader callsign={callsign} mapService={mapService} minimized={minimized} setMinimized={setMinimized} />
+			<SectorHeader callsign={callsign} onClose={() => mapService.resetMap()} minimized={minimized} setMinimized={setMinimized} />
 			{!minimized && (
 				<ScrollArea className="max-h-full overflow-hidden flex flex-col">
 					<Accordion multiple={!isMobile} className="rounded-none border-none" value={panel} onValueChange={setPanel}>

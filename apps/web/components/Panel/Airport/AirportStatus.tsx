@@ -23,6 +23,7 @@ import useSWR from "swr";
 import { Separator } from "@/components/ui/separator";
 import { fetchApi } from "@/lib/api";
 import { convertSpeed, convertTemperature } from "@/lib/helpers";
+import { cn } from "@/lib/utils";
 import { getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
 
@@ -45,7 +46,7 @@ type Condition =
 	| "Few Clouds"
 	| "Poor Visibility";
 
-export function AirportStatus({ icao }: { icao: string }) {
+export function AirportStatus({ icao, size = "default" }: { icao: string; size?: "default" | "sm" }) {
 	const { data: airportData } = useSWR<AirportLong>(`/map/airport/${icao}`, fetchApi, {
 		refreshInterval: 60_000,
 		shouldRetryOnError: false,
@@ -90,11 +91,11 @@ export function AirportStatus({ icao }: { icao: string }) {
 
 	return (
 		<div className="flex items-center gap-2 text-xs">
-			<span className="h-10 w-10 bg-muted-foreground text-muted rounded-full flex justify-center items-center">
-				{getConditionIcon(condition, staticAirport?.timezone)}
+			<span className={cn("bg-muted-foreground text-muted rounded-full flex justify-center items-center", size === "sm" ? "w-6 h-6" : "h-10 w-10")}>
+				{getConditionIcon(condition, staticAirport?.timezone, size)}
 			</span>
 			<div className="flex flex-col gap-1">
-				<div className="text-sm font-bold">{time}</div>
+				<div className={cn("font-bold", size === "sm" ? "text-xs" : "text-sm")}>{time}</div>
 				<div className="flex gap-1.5 text-muted-foreground leading-none">
 					{condition && parsedMetar ? (
 						<>
@@ -166,7 +167,7 @@ function getConditionText(metar: IMetar | null): Condition {
 	return "Clear";
 }
 
-function getConditionIcon(condition: Condition, tz: string | undefined) {
+function getConditionIcon(condition: Condition, tz: string | undefined, size: "default" | "sm" = "default") {
 	const now = new Date();
 	const hour = Number(
 		new Intl.DateTimeFormat(undefined, {
@@ -176,38 +177,39 @@ function getConditionIcon(condition: Condition, tz: string | undefined) {
 		}).format(now),
 	);
 	const isNight = hour < 6 || hour >= 19;
+	const iconSize = size === "sm" ? 16 : 24;
 
 	switch (condition) {
 		case "Clear":
-			return isNight ? <MoonStarIcon /> : <SunIcon />;
+			return isNight ? <MoonStarIcon size={iconSize} /> : <SunIcon size={iconSize} />;
 		case "Thunderstorm":
-			return <CloudLightningIcon />;
+			return <CloudLightningIcon size={iconSize} />;
 		case "Heavy Rain":
-			return <CloudRainWindIcon />;
+			return <CloudRainWindIcon size={iconSize} />;
 		case "Rain":
-			return <CloudRainIcon />;
+			return <CloudRainIcon size={iconSize} />;
 		case "Heavy Snow":
 		case "Snow":
-			return <SnowflakeIcon />;
+			return <SnowflakeIcon size={iconSize} />;
 		case "Drizzle":
-			return <CloudDrizzleIcon />;
+			return <CloudDrizzleIcon size={iconSize} />;
 		case "Fog":
 		case "Mist":
-			return <CloudFogIcon />;
+			return <CloudFogIcon size={iconSize} />;
 		case "Hazy":
 		case "Smoky":
-			return <HazeIcon />;
+			return <HazeIcon size={iconSize} />;
 		case "Overcast":
 		case "Cloudy":
-			return <CloudyIcon />;
+			return <CloudyIcon size={iconSize} />;
 		case "Partly Cloudy":
-			return <CloudIcon />;
+			return <CloudIcon size={iconSize} />;
 		case "Few Clouds":
-			return isNight ? <CloudMoonIcon /> : <CloudSunIcon />;
+			return isNight ? <CloudMoonIcon size={iconSize} /> : <CloudSunIcon size={iconSize} />;
 		case "Poor Visibility":
-			return <EyeOffIcon />;
+			return <EyeOffIcon size={iconSize} />;
 		default:
-			return <BanIcon />;
+			return <BanIcon size={iconSize} />;
 	}
 }
 

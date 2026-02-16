@@ -6,14 +6,14 @@ import { createRoot, type Root } from "react-dom/client";
 import { AirportOverlay, PilotOverlay, SectorOverlay } from "@/components/Map/Overlays";
 import { getCachedAirline, getCachedAirport, getCachedFir, getCachedTracon } from "@/storage/cache";
 
-async function getPilotOverlay(feature: Feature<Point>): Promise<ReactNode> {
+async function getPilotOverlay(feature: Feature<Point>, mini?: boolean): Promise<ReactNode> {
 	const id = feature.get("callsign") as string;
 	const icao = id.substring(0, 3);
 	const airline = await getCachedAirline(icao);
-	return <PilotOverlay feature={feature} airline={airline} />;
+	return <PilotOverlay feature={feature} airline={airline} mini={mini} />;
 }
 
-async function getAirportOverlay(feature: Feature<Point>, short?: AirportShort, merged?: ControllerMerged): Promise<ReactNode> {
+async function getAirportOverlay(feature: Feature<Point>, short?: AirportShort, merged?: ControllerMerged, mini?: boolean): Promise<ReactNode> {
 	const id =
 		feature
 			.getId()
@@ -21,10 +21,10 @@ async function getAirportOverlay(feature: Feature<Point>, short?: AirportShort, 
 			.replace(/^airport_/, "") || "";
 
 	const cached = await getCachedAirport(id);
-	return <AirportOverlay cached={cached} short={short} merged={merged} />;
+	return <AirportOverlay cached={cached} short={short} merged={merged} mini={mini} />;
 }
 
-async function getSectorOverlay(feature: Feature<Point>, merged?: ControllerMerged): Promise<ReactNode> {
+async function getSectorOverlay(feature: Feature<Point>, merged?: ControllerMerged, mini?: boolean): Promise<ReactNode> {
 	const id =
 		feature
 			.getId()
@@ -51,10 +51,10 @@ async function getSectorOverlay(feature: Feature<Point>, merged?: ControllerMerg
 				};
 			}
 		}
-		return <SectorOverlay cached={cachedTracon} merged={merged} />;
+		return <SectorOverlay cached={cachedTracon} merged={merged} mini={mini} />;
 	} else {
 		const cachedFir = await getCachedFir(id);
-		return <SectorOverlay cached={cachedFir} merged={merged} />;
+		return <SectorOverlay cached={cachedFir} merged={merged} mini={mini} />;
 	}
 }
 
@@ -62,23 +62,24 @@ export async function createOverlay(
 	feature: Feature<Point>,
 	airport: AirportShort | undefined,
 	controller: ControllerMerged | undefined,
+	mini?: boolean,
 ): Promise<Overlay> {
 	const element = document.createElement("div");
 	const root = createRoot(element);
 	const type = feature.get("type");
 
 	if (type === "pilot") {
-		const node = await getPilotOverlay(feature);
+		const node = await getPilotOverlay(feature, mini);
 		root.render(node);
 	}
 
 	if (type === "airport") {
-		const node = await getAirportOverlay(feature, airport, controller);
+		const node = await getAirportOverlay(feature, airport, controller, mini);
 		root.render(node);
 	}
 
 	if (type === "fir" || type === "tracon") {
-		const node = await getSectorOverlay(feature, controller);
+		const node = await getSectorOverlay(feature, controller, mini);
 		root.render(node);
 	}
 
@@ -100,6 +101,7 @@ export async function updateOverlay(
 	overlay: Overlay,
 	airport: AirportShort | undefined,
 	controller: ControllerMerged | undefined,
+	mini?: boolean,
 ): Promise<void> {
 	const geom = feature.getGeometry();
 	const coords = geom?.getCoordinates();
@@ -111,17 +113,17 @@ export async function updateOverlay(
 	if (!root || !type) return;
 
 	if (type === "pilot") {
-		const node = await getPilotOverlay(feature);
+		const node = await getPilotOverlay(feature, mini);
 		root.render(node);
 	}
 
 	if (type === "airport") {
-		const node = await getAirportOverlay(feature, airport, controller);
+		const node = await getAirportOverlay(feature, airport, controller, mini);
 		root.render(node);
 	}
 
 	if (type === "fir" || type === "tracon") {
-		const node = await getSectorOverlay(feature, controller);
+		const node = await getSectorOverlay(feature, controller, mini);
 		root.render(node);
 	}
 }

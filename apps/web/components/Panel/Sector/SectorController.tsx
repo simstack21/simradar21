@@ -25,10 +25,7 @@ export default function SectorController({ callsign }: { callsign: string }) {
 	const sortedControllers = controllers?.sort((a, b) => b.facility - a.facility);
 
 	return (
-		<AccordionItem
-			value="controller"
-			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none has-focus-visible:z-10 has-focus-visible:ring-[3px]"
-		>
+		<AccordionItem value="controller" className="overflow-hidden flex flex-col">
 			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center gap-4">
 					<TowerControlIcon className="size-4 shrink-0" />

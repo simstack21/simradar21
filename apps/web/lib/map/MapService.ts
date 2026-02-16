@@ -298,7 +298,7 @@ export class MapService {
 		feature.set("hovered", true);
 		this.controllerService.hoverSector(feature, true, "hovered");
 
-		const overlay = await createOverlay(feature, this.getCachedAirport(feature), this.getCachedController(feature));
+		const overlay = await createOverlay(feature, this.getCachedAirport(feature), this.getCachedController(feature), this.multiView);
 
 		if (this.hoverFeature !== null) {
 			this.hovering = false;
@@ -376,7 +376,7 @@ export class MapService {
 			const id = f?.getId()?.toString() || null;
 			if (!id || !f) continue;
 
-			const overlay = await createOverlay(f, this.getCachedAirport(f), this.getCachedController(f));
+			const overlay = await createOverlay(f, this.getCachedAirport(f), this.getCachedController(f), this.multiView);
 			map.addOverlay(overlay);
 			this.clickOverlays.set(id, overlay);
 
@@ -592,11 +592,17 @@ export class MapService {
 			const overlay = this.clickOverlays.get(id);
 			if (!overlay) continue;
 
-			updateOverlay(feature, overlay, this.getCachedAirport(feature), this.getCachedController(feature));
+			updateOverlay(feature, overlay, this.getCachedAirport(feature), this.getCachedController(feature), this.multiView);
 		}
 
 		if (this.hoverFeature && this.hoverOverlay) {
-			updateOverlay(this.hoverFeature, this.hoverOverlay, this.getCachedAirport(this.hoverFeature), this.getCachedController(this.hoverFeature));
+			updateOverlay(
+				this.hoverFeature,
+				this.hoverOverlay,
+				this.getCachedAirport(this.hoverFeature),
+				this.getCachedController(this.hoverFeature),
+				this.multiView,
+			);
 		}
 
 		if (this.options?.autoTrackPoints) {
@@ -716,7 +722,7 @@ export class MapService {
 			const overlay = this.clickOverlays.get(id);
 			if (overlay) {
 				this.clickOverlays.set(id, overlay);
-				updateOverlay(feature, overlay, this.getCachedAirport(feature), this.getCachedController(feature));
+				updateOverlay(feature, overlay, this.getCachedAirport(feature), this.getCachedController(feature), this.multiView);
 			}
 
 			this.trackService.animateFeatures(id, feature);
@@ -777,6 +783,7 @@ export class MapService {
 				this.hoverFeature,
 				this.getCachedAirport(this.hoverFeature),
 				this.getCachedController(this.hoverFeature),
+				this.multiView,
 			);
 			this.map?.addOverlay(this.hoverOverlay);
 		}

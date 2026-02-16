@@ -10,20 +10,30 @@ import { getDelayColorFromDates, getPilotTimeStatus, pilotAirportTimeMapping } f
 import { getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
 
-export default function PilotRoute({ pilot }: { pilot: PilotLong }) {
+export default function PilotRoute({ size, pilot }: { size?: "default" | "sm"; pilot: PilotLong }) {
+	if (size === "sm") {
+		return (
+			<div className="flex items-center gap-1">
+				<AirportInfo pilot={pilot} type="departure" size="sm" />
+				<MoveRightIcon size={16} className="w-6" />
+				<AirportInfo pilot={pilot} type="arrival" size="sm" />
+			</div>
+		);
+	}
+
 	return (
 		<div className="p-2 bg-muted/50 flex flex-col gap-4">
 			<div className="flex flex-col">
-				<AirportInfo pilot={pilot} type="departure" />
+				<AirportInfo pilot={pilot} type="departure" size="default" />
 				<MoveDownIcon size={16} className="w-6" />
-				<AirportInfo pilot={pilot} type="arrival" />
+				<AirportInfo pilot={pilot} type="arrival" size="default" />
 			</div>
-			<ProgressInfo pilot={pilot} />
+			<PilotProgress pilot={pilot} size="default" />
 		</div>
 	);
 }
 
-function AirportInfo({ pilot, type }: { pilot: PilotLong; type: "departure" | "arrival" }) {
+function AirportInfo({ pilot, type, size }: { pilot: PilotLong; type: "departure" | "arrival"; size: "default" | "sm" }) {
 	const { timeFormat, timeZone } = useSettingsStore();
 	const [airport, setAirport] = useState<StaticAirport | null>(null);
 
@@ -34,6 +44,18 @@ function AirportInfo({ pilot, type }: { pilot: PilotLong; type: "departure" | "a
 		if (!icao) return;
 		getCachedAirport(icao).then(setAirport);
 	}, [icao]);
+
+	if (size === "sm") {
+		return (
+			<div className="flex gap-2 items-center text-xs overflow-hidden">
+				<AvatarCountry country={airport?.country || ""} size="sm" />
+				<div className="flex flex-col overflow-hidden">
+					<span className="text-sm font-bold">{airport?.id || icao || "N/A"}</span>
+					<span>{convertTime(pilot.times?.[pilotAirportTimeMapping[type][1]], timeFormat, timeZone, true, airport?.timezone)}</span>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex gap-2 items-center text-xs overflow-hidden">
@@ -60,7 +82,7 @@ function AirportInfo({ pilot, type }: { pilot: PilotLong; type: "departure" | "a
 	);
 }
 
-function ProgressInfo({ pilot }: { pilot: PilotLong }) {
+export function PilotProgress({ pilot, size }: { pilot: PilotLong; size: "default" | "sm" }) {
 	const { distanceUnit } = useSettingsStore();
 	const [airports, setAirports] = useState<{ departure: StaticAirport | null; arrival: StaticAirport | null }>({ departure: null, arrival: null });
 
@@ -78,6 +100,10 @@ function ProgressInfo({ pilot }: { pilot: PilotLong }) {
 		airports.departure,
 		airports.arrival,
 	);
+
+	if (size === "sm") {
+		return <Progress value={progress} className="w-full max-w-sm" />;
+	}
 
 	return (
 		<div className="flex flex-col text-xs gap-1">

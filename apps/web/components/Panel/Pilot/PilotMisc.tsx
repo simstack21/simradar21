@@ -8,10 +8,7 @@ export function PilotMisc({ pilot, trackPoint }: { pilot: PilotLong; trackPoint?
 	const coordinates: Coordinate = trackPoint ? toLonLat(trackPoint.coordinates) : [pilot.latitude, pilot.longitude];
 
 	return (
-		<AccordionItem
-			value="misc"
-			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none has-focus-visible:z-10 has-focus-visible:ring-[3px]"
-		>
+		<AccordionItem value="misc" className="overflow-hidden flex flex-col">
 			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center gap-4">
 					<RadioIcon className="size-4 shrink-0" />

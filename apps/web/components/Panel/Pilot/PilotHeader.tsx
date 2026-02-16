@@ -3,17 +3,19 @@ import type { PilotLong } from "@sr24/types/interface";
 import { useEffect, useState } from "react";
 import { AvatarAirline } from "@/components/shared/Avatar";
 import { Button } from "@/components/ui/button";
-import type { MapService } from "@/lib/map/MapService";
+import { cn } from "@/lib/utils";
 import { getCachedAirline } from "@/storage/cache";
 
 export function PilotHeader({
+	size = "default",
 	pilot,
-	mapService,
+	onClose,
 	minimized,
 	setMinimized,
 }: {
+	size?: "default" | "sm";
 	pilot: PilotLong;
-	mapService?: MapService;
+	onClose?: () => void;
 	minimized: boolean;
 	setMinimized: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
@@ -25,10 +27,10 @@ export function PilotHeader({
 	}, [pilot]);
 
 	return (
-		<div className="flex gap-2 items-center p-2">
-			<AvatarAirline airline={airline} size="lg" />
-			<div className="flex flex-col gap-1 overflow-hidden">
-				<span className="text-lg font-bold leading-none">{pilot.callsign}</span>
+		<div className={cn("flex gap-2 items-center", size === "sm" ? "px-1.5 py-1" : "p-2")}>
+			<AvatarAirline airline={airline} size={size === "sm" ? "default" : "lg"} />
+			<div className={cn("flex flex-col overflow-hidden", size === "default" && "gap-1")}>
+				<span className={cn("font-bold", size === "sm" ? "text-sm" : "text-lg leading-none")}>{pilot.callsign}</span>
 				<span className="text-xs text-muted-foreground overflow-hidden whitespace-nowrap text-ellipsis">
 					{pilot.aircraft} | {airline?.name || "Unknown Airline"}
 				</span>
@@ -36,8 +38,8 @@ export function PilotHeader({
 			<Button variant="outline" onClick={() => setMinimized((prev) => !prev)} className="ml-auto">
 				{minimized ? "Show" : "Hide"}
 			</Button>
-			{mapService && (
-				<Button variant="destructive" onClick={() => mapService.resetMap()}>
+			{onClose && (
+				<Button variant="destructive" onClick={onClose}>
 					Close
 				</Button>
 			)}

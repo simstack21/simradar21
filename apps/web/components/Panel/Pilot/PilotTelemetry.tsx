@@ -4,7 +4,7 @@ import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/
 import { convertAltitude, convertSpeed, convertVerticalSpeed } from "@/lib/helpers";
 import { useSettingsStore } from "@/storage/zustand";
 
-export function PilotTelemetry({ pilot, trackPoint }: { pilot: PilotLong; trackPoint?: TrackPoint }) {
+export function PilotTelemetry({ pilot, trackPoint, size }: { pilot: PilotLong; trackPoint?: TrackPoint; size?: "default" | "sm" }) {
 	const { altitudeUnit, speedUnit, verticalSpeedUnit } = useSettingsStore();
 
 	let hdg = String(trackPoint?.heading ?? pilot.heading);
@@ -15,11 +15,31 @@ export function PilotTelemetry({ pilot, trackPoint }: { pilot: PilotLong; trackP
 		hdg = `0${hdg}`;
 	}
 
+	if (size === "sm") {
+		return (
+			<div className="grid grid-cols-2 gap-y-1 gap-x-2 text-xs">
+				<div className="flex gap-1 justify-between">
+					<span className="text-muted-foreground">ALT</span>
+					<span>{convertAltitude(Math.round((trackPoint?.altitude_ms ?? pilot.altitude_ms) / 250) * 250, altitudeUnit)}</span>
+				</div>
+				<div className="flex gap-1 justify-between">
+					<span className="text-muted-foreground">SPD</span>
+					<span>{convertSpeed(trackPoint?.groundspeed ?? pilot.groundspeed, speedUnit)}</span>
+				</div>
+				<div className="flex gap-1 justify-between">
+					<span className="text-muted-foreground">V/S</span>
+					<span>{convertVerticalSpeed(Math.round((trackPoint?.vertical_speed ?? pilot.vertical_speed) / 50) * 50, verticalSpeedUnit, false)}</span>
+				</div>
+				<div className="flex gap-1 justify-between">
+					<span className="text-muted-foreground">TRK</span>
+					<span>{hdg}</span>
+				</div>
+			</div>
+		);
+	}
+
 	return (
-		<AccordionItem
-			value="telemetry"
-			className="overflow-hidden flex flex-col has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none has-focus-visible:z-10 has-focus-visible:ring-[3px]"
-		>
+		<AccordionItem value="telemetry" className="overflow-hidden flex flex-col">
 			<AccordionTrigger className="items-center data-panel-open:bg-muted">
 				<div className="flex items-center gap-4">
 					<GaugeIcon className="size-4 shrink-0" />
