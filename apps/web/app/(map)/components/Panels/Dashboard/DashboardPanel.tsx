@@ -20,8 +20,8 @@ export default function DashboardPanel() {
 	if (isLoading || !data) return <LoadingPanel dashboard />;
 
 	return (
-		<MotionPanel key="dashboard">
-			<Accordion multiple={!isMobile} className="max-h-full glass-panel pointer-events-auto" value={panel} onValueChange={setPanel}>
+		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
+			<Accordion multiple={!isMobile} value={panel} onValueChange={setPanel}>
 				<DashboardHistory history={data.history} />
 				<DashboardStats stats={data.stats} />
 				<DashboardEvents events={data.events} />

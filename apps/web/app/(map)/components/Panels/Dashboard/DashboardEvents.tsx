@@ -39,24 +39,6 @@ export function DashboardEvents({ events }: { events: VatsimEvent[] }) {
 	);
 }
 
-function getDurationString(start: string, end: string, timeFormat: "12h" | "24h", timeZone: "utc" | "local"): string {
-	const startDate = new Date(start);
-	const endDate = new Date(end);
-
-	const startDay = String(startDate.getUTCDate()).padStart(2, "0");
-	const startMonth = String(startDate.getUTCMonth() + 1).padStart(2, "0");
-
-	return `${startDay}.${startMonth} ${convertTime(startDate, timeFormat, timeZone, false)} - ${convertTime(endDate, timeFormat, timeZone, true)}`;
-}
-
-function getActiveStatus(start: string, end: string): boolean {
-	const now = Date.now();
-	const startTime = Date.parse(start);
-	const endTime = Date.parse(end);
-
-	return startTime <= now && now < endTime;
-}
-
 function Events({
 	events,
 	day,
@@ -102,7 +84,9 @@ function Events({
 									<span className="whitespace-nowrap overflow-hidden text-ellipsis">{event.name}</span>
 								</div>
 								<div className="whitespace-nowrap overflow-hidden text-ellipsis">{event.airports.map((airport) => airport.icao).join(", ")}</div>
-								<div className="text-muted-foreground">{getDurationString(event.start_time, event.end_time, timeFormat, timeZone)}</div>
+								<div className="text-muted-foreground">
+									{getDurationString(event.start_time, event.end_time, timeFormat, timeZone)} | {getTimeOffset(event.start_time, event.end_time)}
+								</div>
 							</div>
 							<div className="inline-flex rounded-md">
 								<a href={event.link} target="_blank" rel="noreferrer">
@@ -136,4 +120,42 @@ function Events({
 			</CollapsibleContent>
 		</>
 	);
+}
+
+function getDurationString(start: string, end: string, timeFormat: "12h" | "24h", timeZone: "utc" | "local"): string {
+	const startDate = new Date(start);
+	const endDate = new Date(end);
+
+	const startDay = String(startDate.getUTCDate()).padStart(2, "0");
+	const startMonth = String(startDate.getUTCMonth() + 1).padStart(2, "0");
+
+	return `${startDay}.${startMonth} ${convertTime(startDate, timeFormat, timeZone, false)} - ${convertTime(endDate, timeFormat, timeZone, true)}`;
+}
+
+function getTimeOffset(start: string, end: string): string {
+	const now = Date.now();
+	const startTime = Date.parse(start);
+	const endTime = Date.parse(end);
+
+	if (now < startTime) {
+		const diff = startTime - now;
+		const hours = Math.floor(diff / 3600000);
+		const minutes = Math.floor((diff % 3600000) / 60000);
+		return `In ${hours}h ${minutes}m`;
+	} else if (now >= startTime && now < endTime) {
+		const diff = endTime - now;
+		const hours = Math.floor(diff / 3600000);
+		const minutes = Math.floor((diff % 3600000) / 60000);
+		return `${hours}h ${minutes}m left`;
+	} else {
+		return "Ended";
+	}
+}
+
+function getActiveStatus(start: string, end: string): boolean {
+	const now = Date.now();
+	const startTime = Date.parse(start);
+	const endTime = Date.parse(end);
+
+	return startTime <= now && now < endTime;
 }
