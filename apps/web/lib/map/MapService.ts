@@ -535,6 +535,8 @@ export class MapService {
 			this.sunService.setFeatures(sunTime);
 		}
 
+		await new Promise(requestAnimationFrame);
+
 		this.renderFeatures();
 	}
 
