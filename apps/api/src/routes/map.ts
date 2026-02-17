@@ -1,4 +1,4 @@
-import { rdsGetTrackPoints } from "@sr24/db/redis";
+import { rdsGetMultipleTrackPoints, rdsGetTrackPoints } from "@sr24/db/redis";
 import type { FastifyPluginAsync } from "fastify";
 import { getPilotsByAirport } from "../services/db.js";
 import { getMetar, getTaf } from "../services/weather.js";
@@ -127,6 +127,25 @@ const mapRoutes: FastifyPluginAsync = async (app) => {
 			const { icao } = request.params as { icao: string };
 			const { direction, limit, cursor, backwards } = request.query as { direction?: string; limit?: string; cursor?: string; backwards?: string };
 			return await getPilotsByAirport(icao, direction, limit, cursor, backwards);
+		},
+	);
+
+	app.get(
+		"/airport/:icao/arriving-tracks",
+		{
+			schema: {
+				params: {
+					type: "object",
+					properties: { icao: { type: "string", minLength: 4, maxLength: 4 } },
+					required: ["icao"],
+				},
+			},
+		},
+		async (request) => {
+			const { icao } = request.params as { icao: string };
+			const pilotIds = mapStore.getArrivingPilotsIds(icao, 20);
+			const tracks = await rdsGetMultipleTrackPoints(pilotIds);
+			return tracks.map((track, index) => ({ id: pilotIds[index], track }));
 		},
 	);
 

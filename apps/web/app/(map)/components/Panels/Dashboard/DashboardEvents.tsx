@@ -141,14 +141,14 @@ function getTimeOffset(start: string, end: string): string {
 		const diff = startTime - now;
 		const hours = Math.floor(diff / 3600000);
 		const minutes = Math.floor((diff % 3600000) / 60000);
-		return `In ${hours}h ${minutes}m`;
+		return `in ${hours}h ${minutes}m`;
 	} else if (now >= startTime && now < endTime) {
 		const diff = endTime - now;
 		const hours = Math.floor(diff / 3600000);
 		const minutes = Math.floor((diff % 3600000) / 60000);
 		return `${hours}h ${minutes}m left`;
 	} else {
-		return "Ended";
+		return "ended";
 	}
 }
 

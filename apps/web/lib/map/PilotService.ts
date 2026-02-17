@@ -152,6 +152,7 @@ export class PilotService {
 
 		for (const p of pilots) {
 			if (!p.coordinates) continue;
+			if (p.id === "kpve109naTzQZ5nn") console.log(p);
 
 			const { vx, vy } = this.calculateVelocities(p);
 
@@ -400,11 +401,8 @@ export class PilotService {
 	}
 
 	public moveToFeature(id: string, view?: View | undefined): Feature<Point> | null {
-		let feature = this.source.getFeatureById(`pilot_${id}`) as Feature<Point> | undefined;
-		if (!feature) {
-			const item = this.map.get(id);
-			feature = item?.feature;
-		}
+		const item = this.map.get(id);
+		const feature = item?.feature;
 		if (feature) {
 			this.addHighlighted(id);
 		}

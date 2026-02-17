@@ -167,3 +167,21 @@ export async function rdsGetTrackPoints(id: string, buffer?: boolean): Promise<(
 		throw err;
 	}
 }
+
+export async function rdsGetMultipleTrackPoints(ids: string[]): Promise<(TrackPoint | DeltaTrackPoint)[][]>;
+export async function rdsGetMultipleTrackPoints(ids: string[], buffer: true): Promise<Buffer[][]>;
+export async function rdsGetMultipleTrackPoints(ids: string[], buffer?: boolean): Promise<(TrackPoint | DeltaTrackPoint)[][] | Buffer[][]> {
+	try {
+		const pipeline = [];
+		for (const id of ids) {
+			pipeline.push(bufferClient.zRange(`trackpoint:${id}`, 0, -1));
+		}
+		const results = await Promise.all(pipeline);
+
+		if (buffer) return results as Buffer[][];
+		return results.map((buffers) => decodeTrackpoints(buffers));
+	} catch (err) {
+		console.error("Failed to get multiple trackpoints:", err);
+		throw err;
+	}
+}

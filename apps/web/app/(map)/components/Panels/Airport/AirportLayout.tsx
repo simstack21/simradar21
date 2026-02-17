@@ -36,7 +36,7 @@ export default function AirportLayout({ icao, children }: { icao: string; childr
 			<AirportHeader icao={icao} onClose={() => mapService.resetMap()} minimized={minimized} setMinimized={setMinimized} />
 			<AirportNavigation icao={icao} />
 			{!minimized && children}
-			<AirportFooter icao={icao} />
+			<AirportFooter icao={icao} mapService={mapService} />
 		</MotionPanel>
 	);
 }
