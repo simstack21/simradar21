@@ -2,9 +2,9 @@
 
 import type { StaticAirline, StaticAirport } from "@sr24/types/db";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckIcon, MoreHorizontalIcon, ShareIcon, VideoIcon } from "lucide-react";
+import { CheckIcon, LocateIcon, MoreHorizontalIcon, ShareIcon, VideoIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AvatarAirline } from "@/components/shared/Avatar";
@@ -139,6 +139,7 @@ export const columns: ColumnDef<Flight>[] = [
 		id: "actions",
 		cell: ({ row }) => {
 			const router = useRouter();
+			const pathname = usePathname();
 			const flight = row.original;
 
 			return (
@@ -156,9 +157,21 @@ export const columns: ColumnDef<Flight>[] = [
 						<DropdownMenuGroup>
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<ShareButton flight={flight} />
-							<DropdownMenuItem onClick={() => router.push(`/data/flights/${flight.callsign}/${flight.id}`)}>
-								<VideoIcon /> Watch Replay
-							</DropdownMenuItem>
+							{flight.status === "live" && (
+								<DropdownMenuItem onClick={() => window.location.assign(`/pilot/${flight.id}`)}>
+									<LocateIcon /> Watch Live
+								</DropdownMenuItem>
+							)}
+							{flight.status === "off" && (
+								<DropdownMenuItem
+									onClick={() => {
+										const base = pathname.replace(/\/$/, "");
+										router.push(`${base}/${flight.id}`);
+									}}
+								>
+									<VideoIcon /> Watch Replay
+								</DropdownMenuItem>
+							)}
 						</DropdownMenuGroup>
 					</DropdownMenuContent>
 				</DropdownMenu>
