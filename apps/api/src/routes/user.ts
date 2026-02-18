@@ -31,6 +31,12 @@ const userRoutes: FastifyPluginAsync = async (app) => {
 		return { settings: user.settings, filters: user.filters, bookmarks: user.bookmarks };
 	});
 
+	app.get("/navigraph", { preHandler: app.authenticate }, async (request) => {
+		const cid = request.user?.cid;
+		const user = await ensureUser(cid);
+		return { hasNavigraph: user.hasNavigraph };
+	});
+
 	app.patch("/navigraph", { preHandler: app.authenticate }, async (request) => {
 		const cid = request.user?.cid;
 		const { accessToken, refreshToken, expiresAt } = request.body as {

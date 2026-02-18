@@ -11,6 +11,7 @@ declare module "next-auth" {
 			refreshToken?: string;
 			expiresAt?: number;
 		};
+		hasNavigraph?: boolean;
 	}
 
 	interface Profile {
@@ -36,5 +37,6 @@ declare module "next-auth/jwt" {
 			refreshToken?: string;
 			expiresAt?: number;
 		};
+		hasNavigraph?: boolean;
 	}
 }

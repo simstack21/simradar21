@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { AvatarUser } from "./Avatar";
-import { BadgeComingSoon } from "./Badge";
 import { AlertDialogDeleteAccount } from "./Dialog";
 
 type ListItem = {
@@ -78,13 +77,15 @@ export const DropdownUser = () => {
 						<span>{session?.vatsim ? "VATSIM Connected" : "Connect VATSIM"}</span>
 						{session?.vatsim && <CheckIcon className="ml-auto text-green" />}
 					</DropdownMenuItem>
-					<DropdownMenuItem onClick={() => signIn("navigraph")} disabled={true}>
+					<DropdownMenuItem
+						onClick={() => {
+							window.location.href = "/auth/navigraph";
+						}}
+						disabled={!!(session?.navigraph || session?.hasNavigraph)}
+					>
 						<NavigationIcon />
-						<span>
-							{session?.navigraph ? "Navigraph Connected" : "Connect Navigraph"}
-							<BadgeComingSoon />
-						</span>
-						{/* {session?.navigraph && <CheckIcon className="ml-auto text-green" />} */}
+						<span>{session?.navigraph || session?.hasNavigraph ? "Navigraph Connected" : "Connect Navigraph"}</span>
+						{(session?.navigraph || session?.hasNavigraph) && <CheckIcon className="ml-auto text-green" />}
 					</DropdownMenuItem>
 					{session && (
 						<>
