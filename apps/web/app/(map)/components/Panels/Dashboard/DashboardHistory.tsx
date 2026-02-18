@@ -77,24 +77,17 @@ export function DashboardHistory({ history }: { history: DashboardData["history"
 							}}
 						/>
 						<defs>
-							<linearGradient id="primary" x1="0" y1="0" x2="0" y2="1">
-								<stop offset="5%" stopColor="var(--primary)" stopOpacity={0.9} />
-								<stop offset="95%" stopColor="var(--primary)" stopOpacity={0.1} />
+							<linearGradient id="chart-1" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.9} />
+								<stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0.1} />
 							</linearGradient>
-							<linearGradient id="secondary-foreground" x1="0" y1="0" x2="0" y2="1">
-								<stop offset="5%" stopColor="var(--secondary-foreground)" stopOpacity={0.9} />
-								<stop offset="95%" stopColor="var(--secondary-foreground)" stopOpacity={0.1} />
+							<linearGradient id="chart-2" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.9} />
+								<stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.1} />
 							</linearGradient>
 						</defs>
-						<Area type="monotone" dataKey="pilots" stroke="var(--primary)" strokeWidth={1.5} fill="url(#primary)" name="Pilots" />
-						<Area
-							type="monotone"
-							dataKey="controllers"
-							stroke="var(--secondary-foreground)"
-							strokeWidth={1.5}
-							fill="url(#secondary-foreground)"
-							name="Controllers"
-						/>
+						<Area type="monotone" dataKey="pilots" stroke="var(--chart-1)" strokeWidth={1.5} fill="url(#chart-1)" name="Pilots" />
+						<Area type="monotone" dataKey="controllers" stroke="var(--chart-2)" strokeWidth={1.5} fill="url(#chart-2)" name="Controllers" />
 						<Tooltip content={renderTooltip} />
 						<Legend content={renderLegend} />
 					</AreaChart>

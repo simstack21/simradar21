@@ -62,7 +62,7 @@ export function PilotOverlay({ feature, airline, mini }: { feature: Feature<Poin
 				</div>
 			)}
 			{planeOverlay !== "callsign" && !mini && (
-				<div className="flex items-center gap-x-1 bg-red px-1 py-0.5">
+				<div className="flex items-center gap-x-1 bg-red text-white px-1 py-0.5">
 					<AvatarAirline airline={airline} />
 					<div className="flex flex-col text-xs">
 						<div className="flex gap-4 justify-between items-center">
@@ -82,7 +82,7 @@ export function PilotOverlay({ feature, airline, mini }: { feature: Feature<Poin
 					</div>
 				</div>
 			)}
-			{(planeOverlay === "callsign" || mini) && <div className="bg-red px-1 py-0.5 text-sm font-bold">{data.callsign}</div>}
+			{(planeOverlay === "callsign" || mini) && <div className="bg-red text-white px-1 py-0.5 text-sm font-bold">{data.callsign}</div>}
 		</div>
 	);
 }
@@ -107,7 +107,7 @@ export function AirportOverlay({
 		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden">
 			{airportOverlay === "full" && !mini && <ControllerOverlay controllers={sortedControllers} />}
 			{airportOverlay !== "callsign" && !mini && (
-				<div className="flex items-center gap-x-1 bg-red px-1 py-0.5">
+				<div className="flex items-center gap-x-1 bg-red text-white px-1 py-0.5">
 					<AvatarCountry country={cached?.country || ""} />
 					<div className="flex flex-col text-xs w-full">
 						<div className="flex gap-4 justify-between items-center">
@@ -127,7 +127,7 @@ export function AirportOverlay({
 					</div>
 				</div>
 			)}
-			{(airportOverlay === "callsign" || mini) && <div className="bg-red px-1 py-0.5 text-sm font-bold">{cached?.id || "N/A"}</div>}
+			{(airportOverlay === "callsign" || mini) && <div className="bg-red text-white px-1 py-0.5 text-sm font-bold">{cached?.id || "N/A"}</div>}
 		</div>
 	);
 }
@@ -148,9 +148,10 @@ export function SectorOverlay({
 		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden">
 			{sectorOverlay === "full" && !mini && <ControllerOverlay controllers={controllers} />}
 			{sectorOverlay !== "callsign" && !mini && (
-				<div className="flex items-center gap-x-1 bg-red px-1 py-0.5">
+				<div className="flex items-center gap-x-1 bg-red text-white px-1 py-0.5">
 					<span
-						className={`h-8 w-8 text-muted rounded-full flex justify-center items-center shrink-0 ${controllers && controllers[0].facility === 6 ? "bg-grey" : "bg-magenta"}`}
+						className="h-8 w-8 text-white rounded-full flex justify-center items-center shrink-0"
+						style={{ backgroundColor: getControllerColor(controllers && controllers[0].facility === 6 ? 6 : 5) }}
 					>
 						<RadioTowerIcon className="h-4 w-4" />
 					</span>
@@ -164,7 +165,9 @@ export function SectorOverlay({
 					</div>
 				</div>
 			)}
-			{(sectorOverlay === "callsign" || mini) && <div className="bg-red px-1 py-0.5 text-sm font-bold">{cached?.properties.name || "N/A"}</div>}
+			{(sectorOverlay === "callsign" || mini) && (
+				<div className="bg-red text-white px-1 py-0.5 text-sm font-bold">{cached?.properties.name || "N/A"}</div>
+			)}
 		</div>
 	);
 }
@@ -204,7 +207,7 @@ function ControllerOverlay({ controllers }: { controllers: ControllerShort[] | u
 									key={c.callsign}
 									className={cn(
 										"flex items-center gap-2 text-xs bg-muted/50 border rounded-md py-0.5 px-1 hover:bg-muted",
-										clicked === c.callsign && "bg-primary",
+										clicked === c.callsign && "bg-primary text-primary-foreground",
 									)}
 									onClick={() => setClicked(clicked === c.callsign ? null : c.callsign)}
 									onPointerEnter={(e) => {
@@ -213,7 +216,7 @@ function ControllerOverlay({ controllers }: { controllers: ControllerShort[] | u
 										}
 									}}
 								>
-									<span className="h-2 w-2 rounded-xs shrink-0" style={{ backgroundColor: `var(--${getControllerColor(c.facility)})` }} />
+									<span className="h-2 w-2 rounded-xs shrink-0" style={{ backgroundColor: getControllerColor(c.facility) }} />
 									<span className="font-medium pr-4 mr-auto">{c.callsign}</span>
 									{c.frequency && (
 										<div className="flex gap-1">

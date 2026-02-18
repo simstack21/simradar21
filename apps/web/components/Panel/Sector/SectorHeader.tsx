@@ -1,7 +1,7 @@
 import { RadioTowerIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getSectorFeature } from "@/lib/panels";
+import { getControllerColor, getSectorFeature } from "@/lib/panels";
 import { cn } from "@/lib/utils";
 import type { SectorPanelData } from "@/types/panels";
 
@@ -29,11 +29,8 @@ export function SectorHeader({
 	return (
 		<div className={cn("flex gap-2 items-center", size === "sm" ? "px-1.5 py-1" : "p-2")}>
 			<span
-				className={cn(
-					"text-muted rounded-full flex justify-center items-center shrink-0",
-					sector.type === "fir" ? "bg-grey" : "bg-magenta",
-					size === "sm" ? "h-8 w-8" : "h-10 w-10",
-				)}
+				className={cn("text-white rounded-full flex justify-center items-center shrink-0", size === "sm" ? "h-8 w-8" : "h-10 w-10")}
+				style={{ backgroundColor: getControllerColor(sector.type === "fir" ? 6 : 5) }}
 			>
 				<RadioTowerIcon className={size === "sm" ? "h-4 w-4" : "h-5 w-5"} />
 			</span>

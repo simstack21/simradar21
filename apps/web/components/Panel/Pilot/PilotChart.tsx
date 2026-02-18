@@ -41,20 +41,12 @@ export function PilotChart({ trackPoints }: { trackPoints: TrackPoint[] }) {
 							yAxisId="alt"
 							type="monotone"
 							dataKey="altitude"
-							stroke="var(--primary)"
+							stroke="var(--chart-1)"
 							strokeWidth={1.5}
 							name={`Altitude (${altitudeUnit})`}
 							dot={false}
 						/>
-						<Line
-							yAxisId="spd"
-							type="monotone"
-							dataKey="speed"
-							stroke="var(--secondary-foreground)"
-							strokeWidth={1.5}
-							name={`Speed (${speedUnit})`}
-							dot={false}
-						/>
+						<Line yAxisId="spd" type="monotone" dataKey="speed" stroke="var(--chart-2)" strokeWidth={1.5} name={`Speed (${speedUnit})`} dot={false} />
 						<Tooltip content={renderTooltip} />
 						<Legend content={renderLegend} />
 					</LineChart>

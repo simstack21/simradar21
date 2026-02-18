@@ -28,22 +28,22 @@ export function getDelayColorFromNumber(avgDelay: number): "green" | "yellow" | 
 	return "green";
 }
 
-export function getControllerColor(facility: number): "yellow" | "blue" | "green" | "red" | "magenta" | "grey" {
+export function getControllerColor(facility: number): string {
 	switch (facility) {
 		case -1:
-			return "yellow";
+			return "#ff8a2b";
 		case 2:
-			return "blue";
+			return "#3cb1ff";
 		case 3:
-			return "green";
+			return "#0abb94";
 		case 4:
-			return "red";
+			return "#d85270";
 		case 5:
-			return "magenta";
+			return "rgb(222, 89, 234)";
 		case 6:
-			return "grey";
+			return "rgb(77, 95, 131)";
 		default:
-			return "yellow";
+			return "#ff8a2b";
 	}
 }
 

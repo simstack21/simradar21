@@ -36,7 +36,7 @@ export default function ControllerInfo({
 			<CardHeader className="gap-0">
 				<CardTitle className="flex">
 					<span>{controller.callsign}</span>
-					<Badge style={{ backgroundColor: `var(--${getControllerColor(controller.facility)})` }} className="ml-auto px-1.5">
+					<Badge style={{ backgroundColor: getControllerColor(controller.facility) }} className="ml-auto px-1.5">
 						<TowerControlIcon />
 						<span className="leading-none font-mono">{(controller.frequency / 1000).toFixed(3)}</span>
 					</Badge>

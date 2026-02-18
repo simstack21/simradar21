@@ -17,8 +17,8 @@ export default function AirportExpected({ icao }: { icao: string }) {
 			<ResponsiveContainer width="100%" height={150} maxHeight={200}>
 				<BarChart data={data}>
 					<XAxis dataKey="step" axisLine={false} tickLine={false} interval="preserveStart" minTickGap={20} stroke="var(--muted-foreground)" />
-					<Bar type="monotone" dataKey="departures" fill="var(--primary)" name="Departures" />
-					<Bar type="monotone" dataKey="arrivals" fill="var(--secondary-foreground)" name="Arrivals" />
+					<Bar type="monotone" dataKey="departures" fill="var(--chart-1)" name="Departures" />
+					<Bar type="monotone" dataKey="arrivals" fill="var(--chart-2)" name="Arrivals" />
 					<Tooltip content={renderTooltip} />
 					<Legend content={renderLegend} />
 				</BarChart>
