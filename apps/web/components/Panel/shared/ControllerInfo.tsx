@@ -1,3 +1,5 @@
+"use client";
+
 import type { FIRFeature, SimAwareTraconFeature, StaticAirport } from "@sr24/types/db";
 import type { ControllerLong } from "@sr24/types/interface";
 import { ChartNoAxesCombinedIcon, CheckIcon, CopyIcon, EyeIcon, EyeOffIcon, TowerControlIcon } from "lucide-react";

@@ -1,3 +1,5 @@
+"use client";
+
 import type { DeltaTrackPoint, TrackPoint } from "@sr24/types/interface";
 import { CheckIcon, EyeIcon, EyeOffIcon, ShareIcon } from "lucide-react";
 import { useEffect, useState } from "react";

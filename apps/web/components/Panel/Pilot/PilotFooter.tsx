@@ -1,3 +1,5 @@
+"use client";
+
 import type { PilotLong } from "@sr24/types/interface";
 import { ChartNoAxesCombinedIcon, CheckIcon, EyeIcon, EyeOffIcon, RouteIcon, RouteOffIcon, ShareIcon } from "lucide-react";
 import { useState } from "react";

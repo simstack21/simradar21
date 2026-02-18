@@ -1,3 +1,5 @@
+"use client";
+
 import type { FIRFeature, SimAwareTraconFeature, StaticAirline, StaticAirport } from "@sr24/types/db";
 import type { AirportShort, ControllerMerged, ControllerShort } from "@sr24/types/interface";
 import {
