@@ -1,3 +1,5 @@
+"use client";
+
 import type { StaticAirport } from "@sr24/types/db";
 import type { PilotLong, PilotShort, TrackPoint } from "@sr24/types/interface";
 import { fromLonLat } from "ol/proj";

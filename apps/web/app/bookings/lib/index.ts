@@ -1,3 +1,5 @@
+"use client";
+
 import type { Booking, ControllerMerged, ControllerShort } from "@sr24/types/interface";
 import { MapService } from "@/lib/map/MapService";
 import { getCachedAirport } from "@/storage/cache";

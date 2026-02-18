@@ -1,3 +1,5 @@
+"use client";
+
 import type { InitialData } from "@sr24/types/interface";
 import { fetchApi } from "@/lib/api";
 import { MapService } from "@/lib/map/MapService";
