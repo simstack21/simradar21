@@ -1,7 +1,6 @@
-import type { StaticAirline, StaticAirport } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
 import { fetchApi } from "@/lib/api";
-import type { HistoryItem, Match, PilotMatch, PilotResult } from "./types";
+import type { HistoryItem, PilotMatch, PilotResult } from "./types";
 
 const SEARCH_HISTORY_KEY = "simradar21-search-history";
 const MAX_HISTORY = 10;
@@ -31,20 +30,6 @@ export function addSearchHistory(item: HistoryItem) {
 export function removeSearchHistory(value: string) {
 	const history = getSearchHistory().filter((item) => item.value.toLowerCase() !== value.toLowerCase());
 	localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
-}
-
-export function clearSearchHistory() {
-	localStorage.removeItem(SEARCH_HISTORY_KEY);
-}
-
-export function getMatchFields(item: StaticAirport | StaticAirline, query: string): Match {
-	const lowerQuery = query.toLowerCase();
-
-	const match: Match = {};
-
-	if (item.name.toLowerCase().includes(lowerQuery)) match.name = item.name;
-
-	return match;
 }
 
 export function getPilotMatchFields(pilot: PilotLong, query: string): PilotMatch {

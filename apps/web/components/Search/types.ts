@@ -13,10 +13,6 @@ export type PilotResult = {
 	offline: PilotLong[];
 };
 
-export type Match = {
-	name?: string;
-};
-
 export type PilotMatch = {
 	callsign?: string;
 	departure?: string;

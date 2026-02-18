@@ -153,7 +153,7 @@ export interface FilterStats {
 
 type DashboardPanel = "history" | "stats" | "events";
 
-export interface DashboardPanelValues {
+interface DashboardPanelValues {
 	panel: DashboardPanel[];
 	historyMode: "24 hours" | "7 days";
 	eventsToday: boolean;
@@ -169,7 +169,7 @@ export interface DashboardPanelState extends DashboardPanelValues {
 
 type PilotPanel = "flightplan" | "aircraft" | "chart" | "telemetry" | "user" | "misc";
 
-export interface PilotPanelValues {
+interface PilotPanelValues {
 	panel: PilotPanel[];
 }
 
@@ -179,7 +179,7 @@ export interface PilotPanelState extends PilotPanelValues {
 
 type AirportPanel = "weather" | "connections" | "controller";
 
-export interface AirportPanelValues {
+interface AirportPanelValues {
 	panel: AirportPanel[];
 }
 
@@ -189,7 +189,7 @@ export interface AirportPanelState extends AirportPanelValues {
 
 type SectorPanel = "connections";
 
-export interface SectorPanelValues {
+interface SectorPanelValues {
 	panel: SectorPanel[];
 }
 
