@@ -1,67 +1,43 @@
 "use client";
 
-import "./AirportPanel.css";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-import { mapService } from "@/app/(map)/lib";
-import Icon from "@/components/Icon/Icon";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import type { StaticAirport } from "@sr24/types/db";
+import { useEffect, useState } from "react";
+import AirportConnections from "@/components/Panel/Airport/AirportConnections";
+import AirportController from "@/components/Panel/Airport/AirportController";
+import AirportExpected from "@/components/Panel/Airport/AirportExpected";
+import { AirportStatus } from "@/components/Panel/Airport/AirportStatus";
+import { AirportWeather } from "@/components/Panel/Airport/AirportWeather";
+import { Accordion } from "@/components/ui/accordion";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { getCachedAirport } from "@/storage/cache";
+import { useAirportPanelStore } from "@/storage/zustand";
 
-export default function AirportPanel({ icao, children }: { icao: string; children: React.ReactNode }) {
-	const pathname = usePathname();
-	const router = useRouter();
+export default function AirportPanel({ icao }: { icao: string }) {
+	const [staticAirport, setStaticAirport] = useState<StaticAirport | null>(null);
+	const { panel, setPanel } = useAirportPanelStore();
+	const isMobile = useMediaQuery("(max-width: 1024px)");
 
-	const [shared, setShared] = useState(false);
-	const onShareClick = () => {
-		navigator.clipboard.writeText(`${window.location.origin}/airport/${icao}`);
-		setShared(true);
-		setTimeout(() => setShared(false), 2000);
-	};
+	useEffect(() => {
+		getCachedAirport(icao).then(setStaticAirport);
+	}, [icao]);
+
+	if (!staticAirport) return null;
 
 	return (
-		<div className="panel">
-			<div className="panel-header">
-				<div className="panel-id">{icao}</div>
-				<button className="panel-close" type="button" onClick={() => mapService.resetMap()}>
-					<Icon name="cancel" size={24} />
-				</button>
+		<>
+			<div className="p-2 pb-0 bg-muted/50 flex flex-col gap-2">
+				<AirportStatus icao={icao} />
+				<AirportExpected icao={icao} />
 			</div>
-			{children}
-			<div className="panel-navigation">
-				<button
-					className={`panel-navigation-button${pathname === `/airport/${icao}` ? " active" : ""}`}
-					type="button"
-					onClick={() => {
-						router.push(`/airport/${icao}`);
-					}}
-				>
-					<Icon name="geofence" size={20} />
-					<p>General</p>
-				</button>
-				<button
-					className={`panel-navigation-button${pathname === `/airport/${icao}/departures` ? " active" : ""}`}
-					type="button"
-					onClick={() => {
-						router.push(`/airport/${icao}/departures`);
-					}}
-				>
-					<Icon name="departure" size={20} />
-					<p>Departures</p>
-				</button>
-				<button
-					className={`panel-navigation-button${pathname === `/airport/${icao}/arrivals` ? " active" : ""}`}
-					type="button"
-					onClick={() => {
-						router.push(`/airport/${icao}/arrivals`);
-					}}
-				>
-					<Icon name="arrival" size={20} />
-					<p>Arrivals</p>
-				</button>
-				<button className={`panel-navigation-button`} type="button" onClick={() => onShareClick()}>
-					<Icon name="share-android" size={20} />
-					<p>{shared ? "Copied!" : "Share"}</p>
-				</button>
-			</div>
-		</div>
+			<ScrollArea className="max-h-full overflow-hidden flex flex-col">
+				<Accordion multiple={!isMobile} className="rounded-none border-none" value={panel} onValueChange={setPanel}>
+					<AirportWeather icao={icao} />
+					<AirportConnections icao={icao} />
+					<AirportController icao={icao} />
+				</Accordion>
+				<ScrollBar />
+			</ScrollArea>
+		</>
 	);
 }

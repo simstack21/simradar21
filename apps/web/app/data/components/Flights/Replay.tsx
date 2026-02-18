@@ -1,14 +1,14 @@
 "use client";
 
 import type { DeltaTrackPoint, PilotLong, TrackPoint } from "@sr24/types/interface";
+import { SnailIcon } from "lucide-react";
 import { toLonLat } from "ol/proj";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
-import Spinner from "@/components/Spinner/Spinner";
+import { fetchApi } from "@/lib/api";
 import { decodeTrackPoints } from "@/lib/map/tracks";
-import { fetchApi } from "@/utils/api";
 import { init, updatePilot } from "../../lib";
-import { ReplayControl } from "./ReplayControl";
+import ReplayControls from "./ReplayControls";
 import ReplayMap from "./ReplayMap";
 import ReplayPanel from "./ReplayPanel";
 
@@ -63,24 +63,29 @@ export function Replay({ id }: { id: string }) {
 		return () => clearInterval(interval);
 	}, [playing, speedIndex, trackPoints.length]);
 
-	if (!data || isLoading) {
-		return <Spinner />;
-	}
-
 	return (
-		<div id="map-wrapper">
+		<div className="fixed inset-0 bg-background">
 			<ReplayMap />
-			<ReplayPanel pilot={data.pilot} trackPoints={trackPoints} index={progress} />
-			<ReplayControl
-				progress={progress}
-				setProgress={setProgress}
-				setSpeedIndex={setSpeedIndex}
-				speedIndex={speedIndex}
-				setPlaying={setPlaying}
-				playing={playing}
-				onDownload={() => downloadTrackpointsCSV(trackPoints, `${data.pilot.callsign}_track.csv`)}
-				max={trackPoints.length - 1}
-			/>
+			<ReplayPanel pilot={data?.pilot} isLoading={isLoading} trackPoints={trackPoints} index={progress} />
+			{data && (
+				<footer className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2 py-1 px-2 rounded-xl overflow-hidden glass-panel">
+					<ReplayControls
+						progress={progress}
+						setProgress={setProgress}
+						setSpeedIndex={setSpeedIndex}
+						setPlaying={setPlaying}
+						playing={playing}
+						onDownload={() => downloadTrackpointsCSV(trackPoints, `${data.pilot.callsign}_${id}_track.csv`)}
+						max={trackPoints.length - 1}
+					/>
+					<div className="flex items-center justify-center gap-4 text-xs">
+						<div className="flex gap-1">
+							<SnailIcon className="size-4" aria-hidden="true" />
+							<span>{REPLAY_SPEEDS[speedIndex]} x</span>
+						</div>
+					</div>
+				</footer>
+			)}
 		</div>
 	);
 }

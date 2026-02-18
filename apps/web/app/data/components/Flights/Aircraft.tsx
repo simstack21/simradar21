@@ -1,74 +1,90 @@
 "use client";
 
 import type { StaticAircraft } from "@sr24/types/db";
-import { useEffect, useState } from "react";
-import FlagSprite from "@/assets/images/sprites/flagSprite42.png";
-import { getCachedAircraft } from "@/storage/cache";
+import { ChevronRightIcon } from "lucide-react";
+import useSWR from "swr";
+import { AvatarCountry } from "@/components/shared/Avatar";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item";
+import { Separator } from "@/components/ui/separator";
+import { fetchApi } from "@/lib/api";
 
 export default function Aircraft({ registration }: { registration: string }) {
-	const [aircraft, setAircraft] = useState<StaticAircraft | null>(null);
+	const { data: aircraftData } = useSWR<StaticAircraft>(`/data/aircraft/${registration}`, fetchApi, {
+		revalidateIfStale: false,
+		revalidateOnFocus: false,
+		revalidateOnReconnect: false,
+		shouldRetryOnError: false,
+	});
 
-	useEffect(() => {
-		(async () => {
-			const aircraft = await getCachedAircraft(registration);
-			setAircraft(aircraft);
-		})();
-	}, [registration]);
+	const acType = `${aircraftData?.manufacturerName || ""} ${aircraftData?.model || ""}`;
 
-	const acType = `${aircraft?.manufacturerName || ""} ${aircraft?.model || ""}`;
+	if (!aircraftData) {
+		return (
+			<Item className="ml-auto w-fit min-w-60" variant="outline">
+				<ItemMedia>
+					<AvatarCountry country={"unknown"} />
+				</ItemMedia>
+				<ItemContent>
+					<ItemTitle>{registration}</ItemTitle>
+					<ItemDescription className="flex gap-1">Unknown</ItemDescription>
+				</ItemContent>
+			</Item>
+		);
+	}
 
 	return (
-		<div id="flights-page-aircraft">
-			<h1>Aircraft details for registration {registration}</h1>
-			<table>
-				<thead>
-					<tr>
-						<th>Aircraft Type</th>
-						<th>Registration</th>
-						<th>Country of Reg.</th>
-						<th>Owner</th>
-						<th>Serial Number</th>
-						<th>ICAO24</th>
-						<th>SELCAL</th>
-						<th>AGE</th>
-						<th>Details</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>{acType.trim() ? acType : "N/A"}</td>
-						<td>{aircraft?.registration || "N/A"}</td>
-						<td>
-							{aircraft?.country ? (
-								<span
-									className={`fflag ff-lg fflag-${aircraft?.country}`}
-									style={{ backgroundImage: `url(${FlagSprite.src})`, width: 28, height: 18 }}
-								></span>
-							) : (
-								"N/A"
+		<Item
+			className="ml-auto w-full md:w-fit min-w-60"
+			variant="outline"
+			render={
+				<a
+					href={`https://www.flightradar24.com/data/aircraft/${aircraftData.registration || ""}`}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="text-foreground"
+				>
+					<ItemContent className="gap-y-2">
+						<div className="flex gap-2 items-center">
+							<AvatarCountry country={aircraftData.country} />
+							<div className="flex flex-col gap-1">
+								<span className="font-medium">{registration}</span>
+								<span className="text-muted-foreground text-xs">{acType.trim()}</span>
+							</div>
+						</div>
+						<Separator />
+						<div className="flex items-center gap-4">
+							{aircraftData.owner && (
+								<div className="flex flex-col gap-1">
+									<span className="font-medium">Owner</span>
+									<span className="text-muted-foreground text-xs">{aircraftData.owner}</span>
+								</div>
 							)}
-						</td>
-						<td>{aircraft?.owner || "N/A"}</td>
-						<td>{aircraft?.serialNumber || "N/A"}</td>
-						<td>{aircraft?.icao24 || "N/A"}</td>
-						<td>{aircraft?.selCal || "N/A"}</td>
-						<td>N/A</td>
-						<td>
-							{aircraft ? (
-								<a href={`https://www.flightradar24.com/data/aircraft/${aircraft?.registration || ""}`} target="_blank" rel="noopener noreferrer">
-									View on FR24
-								</a>
-							) : (
-								"N/A"
+							{aircraftData.serialNumber && (
+								<div className="flex flex-col gap-1">
+									<span className="font-medium">Serial Number</span>
+									<span className="text-muted-foreground text-xs">{aircraftData.serialNumber}</span>
+								</div>
 							)}
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<p style={{ fontSize: "var(--font-size-small)" }}>
-				<strong>Note:</strong> The current aircraft database is very limited and may not include all aircraft details or aircrafts. This is due to the
-				limited availability of open-source data sources. I hope to improve this in the future, contributions and data sources are welcome.
-			</p>
-		</div>
+							{aircraftData.icao24 && (
+								<div className="flex flex-col gap-1">
+									<span className="font-medium">ICAO24</span>
+									<span className="text-muted-foreground text-xs">{aircraftData.icao24}</span>
+								</div>
+							)}
+							{aircraftData.selCal && (
+								<div className="flex flex-col gap-1">
+									<span className="font-medium">SELCAL</span>
+									<span className="text-muted-foreground text-xs">{aircraftData.selCal}</span>
+								</div>
+							)}
+						</div>
+						<span className="mt-1">View on Flightradar24</span>
+					</ItemContent>
+					<ItemActions>
+						<ChevronRightIcon className="size-4" />
+					</ItemActions>
+				</a>
+			}
+		/>
 	);
 }

@@ -4,72 +4,9 @@ import type { StaticAirport } from "@sr24/types/db";
 import type { PilotDelta, PilotFlightPlan, PilotLong, PilotShort, PilotTimes } from "@sr24/types/interface";
 import type { VatsimData, VatsimPilot, VatsimPilotFlightPlan, VatsimPrefile } from "@sr24/types/vatsim";
 import { fromLonLat, haversineDistance } from "./utils/helpers.js";
+import { MILITARY_RATINGS, PILOT_RATINGS } from "./utils/ratings.js";
 
 const TAXI_TIME_MS = 5 * 60 * 1000;
-const PILOT_RATINGS = [
-	{
-		id: 0,
-		short_name: "NEW",
-		long_name: "Basic Member",
-	},
-	{
-		id: 1,
-		short_name: "PPL",
-		long_name: "Private Pilot License",
-	},
-	{
-		id: 3,
-		short_name: "IR",
-		long_name: "Instrument Rating",
-	},
-	{
-		id: 7,
-		short_name: "CMEL",
-		long_name: "Commercial Multi-Engine License",
-	},
-	{
-		id: 15,
-		short_name: "ATPL",
-		long_name: "Airline Transport Pilot License",
-	},
-	{
-		id: 31,
-		short_name: "FI",
-		long_name: "Flight Instructor",
-	},
-	{
-		id: 63,
-		short_name: "FE",
-		long_name: "Flight Examiner",
-	},
-];
-const MILITARY_RATINGS = [
-	{
-		id: 0,
-		short_name: "M0",
-		long_name: "No Military Rating",
-	},
-	{
-		id: 1,
-		short_name: "M1",
-		long_name: "Military Pilot License",
-	},
-	{
-		id: 3,
-		short_name: "M2",
-		long_name: "Military Instrument Rating",
-	},
-	{
-		id: 7,
-		short_name: "M3",
-		long_name: "Military Multi-Engine Rating",
-	},
-	{
-		id: 15,
-		short_name: "M4",
-		long_name: "Military Mission Ready Pilot",
-	},
-];
 
 let cached: PilotLong[] = [];
 let added: Required<PilotShort>[] = [];
@@ -359,14 +296,14 @@ function mapPilotTimes(
 
 	const sched_off_block = parseStrToDate(vatsimPilot.flight_plan.deptime);
 	const enrouteTimeMs = parseStrToSeconds(vatsimPilot.flight_plan.enroute_time) * 1000;
-	const sched_on_block = new Date(sched_off_block.getTime() + enrouteTimeMs + TAXI_TIME_MS * 2);
+	const sched_on_block = sched_off_block + enrouteTimeMs + TAXI_TIME_MS * 2;
 
 	if (!cache?.times || prefile) {
 		return {
 			sched_off_block: roundDateTo5Min(sched_off_block),
 			off_block: sched_off_block,
-			lift_off: new Date(sched_off_block.getTime() + TAXI_TIME_MS),
-			touch_down: new Date(sched_off_block.getTime() + TAXI_TIME_MS + enrouteTimeMs),
+			lift_off: sched_off_block + TAXI_TIME_MS,
+			touch_down: sched_off_block + TAXI_TIME_MS + enrouteTimeMs,
 			sched_on_block: roundDateTo5Min(sched_on_block),
 			on_block: sched_on_block,
 			state: prefile ? "Boarding" : estimateInitState(current),
@@ -376,47 +313,47 @@ function mapPilotTimes(
 
 	let { off_block, lift_off, touch_down, on_block, state, stop_counter } = cache.times;
 
-	const now = new Date();
+	const now = Date.now();
 
 	// Not moving, @"Boarding", behind scheduled off blocks
 	if (current.groundspeed === 0 && cache.times.state === "Boarding" && cache.times.off_block < now) {
 		// estimate 5 mins into the future
-		off_block = new Date(now.getTime() + 5 * 60 * 1000);
-		on_block = new Date(off_block.getTime() + enrouteTimeMs + TAXI_TIME_MS * 2);
+		off_block = now + 5 * 60 * 1000;
+		on_block = off_block + enrouteTimeMs + TAXI_TIME_MS * 2;
 	}
 
 	// Started moving, @"Boarding"
 	if (current.groundspeed > 0 && cache.times.state === "Boarding") {
 		off_block = now;
-		on_block = new Date(off_block.getTime() + enrouteTimeMs + TAXI_TIME_MS * 2);
+		on_block = off_block + enrouteTimeMs + TAXI_TIME_MS * 2;
 		state = "Taxi Out";
 	}
 
 	// Lift-Off / Climbing, @"Taxi Out"
 	if (current.vertical_speed > 100 && cache.times.state === "Taxi Out") {
 		lift_off = now;
-		on_block = new Date(lift_off.getTime() + enrouteTimeMs + TAXI_TIME_MS);
+		on_block = lift_off + enrouteTimeMs + TAXI_TIME_MS;
 		state = "Climb";
 	}
 
 	// Stop climbing, @"Climb"
 	if (current.vertical_speed < 500 && cache.times.state === "Climb") {
 		touch_down = estimateTouchdown(current) ?? touch_down;
-		on_block = new Date(touch_down.getTime() + TAXI_TIME_MS);
+		on_block = touch_down + TAXI_TIME_MS;
 		state = "Cruise";
 	}
 
 	// Descent, @"Cruise"
 	if (current.vertical_speed < -500 && cache.times.state === "Cruise") {
 		touch_down = estimateTouchdown(current) ?? touch_down;
-		on_block = new Date(touch_down.getTime() + TAXI_TIME_MS);
+		on_block = touch_down + TAXI_TIME_MS;
 		state = "Descent";
 	}
 
 	// Touchdown, @"Descent"
 	if (current.vertical_speed > -100 && current.altitude_agl < 200 && cache.times.state === "Descent") {
 		touch_down = now;
-		on_block = new Date(touch_down.getTime() + TAXI_TIME_MS);
+		on_block = touch_down + TAXI_TIME_MS;
 		state = "Taxi In";
 	}
 
@@ -426,8 +363,8 @@ function mapPilotTimes(
 	}
 
 	// Moving, @"Taxi In", past scheduled on blocks
-	if (cache.times.state !== "Taxi In" && on_block.getTime() < now.getTime()) {
-		on_block = new Date(now.getTime() + TAXI_TIME_MS);
+	if (cache.times.state !== "Taxi In" && on_block < now) {
+		on_block = now + TAXI_TIME_MS;
 	}
 
 	// Not moving, @"Taxi In"
@@ -488,7 +425,7 @@ function estimateInitState(current: PilotLong): PilotTimes["state"] {
 	return "Cruise";
 }
 
-function estimateTouchdown(current: PilotLong): Date | null {
+function estimateTouchdown(current: PilotLong): number | null {
 	if (
 		!current.flight_plan?.departure.latitude ||
 		!current.flight_plan?.departure.longitude ||
@@ -511,7 +448,7 @@ function estimateTouchdown(current: PilotLong): Date | null {
 	// Time needed to lose energy. Covers airport fly-overs
 	const timeToLooseEnergy = ((current.groundspeed - 100) / 1 + current.altitude_agl / 25) * 1000;
 
-	return timeToLooseEnergy > timeForRemainingDistance ? new Date(Date.now() + timeToLooseEnergy) : new Date(Date.now() + timeForRemainingDistance);
+	return timeToLooseEnergy > timeForRemainingDistance ? Date.now() + timeToLooseEnergy : Date.now() + timeForRemainingDistance;
 }
 
 // "0325" ==> 12,300 seconds
@@ -523,24 +460,23 @@ function parseStrToSeconds(time: string): number {
 }
 
 // "0020" ==> 2025-11-14T00:20:00.000Z (next day)
-function parseStrToDate(time: string): Date {
+function parseStrToDate(time: string): number {
 	const hours = Number(time.slice(0, 2));
 	const minutes = Number(time.slice(2, 4));
 	const now = new Date();
 
-	const target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hours, minutes, 0, 0));
+	const target = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hours, minutes, 0, 0);
 
 	// If target time has already passed today, assume next day
-	// TODO: Revise
-	// if (target.getTime() < now.getTime()) {
-	//     target.setUTCDate(target.getUTCDate() + 1)
+	// if (target < now.getTime()) {
+	// 	target += 24 * 60 * 60 * 1000;
 	// }
 
 	return target;
 }
 
-function roundDateTo5Min(date: Date): Date {
-	const newDate = new Date(date.getTime());
+function roundDateTo5Min(date: number): number {
+	const newDate = new Date(date);
 	const minutes = newDate.getMinutes();
 
 	const remainder = minutes % 5;
@@ -552,5 +488,5 @@ function roundDateTo5Min(date: Date): Date {
 	newDate.setSeconds(0);
 	newDate.setMilliseconds(0);
 
-	return newDate;
+	return newDate.getTime();
 }

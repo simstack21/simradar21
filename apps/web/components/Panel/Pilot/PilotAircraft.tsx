@@ -1,80 +1,80 @@
 import type { StaticAircraft } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
-import { useEffect, useState } from "react";
-import FlagSprite from "@/assets/images/sprites/flagSprite42.png";
-import Icon from "@/components/Icon/Icon";
-import { getCachedAircraft } from "@/storage/cache";
+import { ArrowRightIcon, PlaneIcon } from "lucide-react";
+import useSWR from "swr";
+import { AvatarCountry } from "@/components/shared/Avatar";
+import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { fetchApi } from "@/lib/api";
 
 export function PilotAircraft({ pilot }: { pilot: PilotLong }) {
-	const [aircraft, setAircraft] = useState<StaticAircraft | null>(null);
+	const { data: aircraftData } = useSWR<StaticAircraft>(`/data/aircraft/${pilot.flight_plan?.ac_reg}`, fetchApi, {
+		revalidateIfStale: false,
+		revalidateOnFocus: false,
+		revalidateOnReconnect: false,
+		shouldRetryOnError: false,
+	});
 
-	useEffect(() => {
-		const registration = pilot.flight_plan?.ac_reg;
-		if (!registration) {
-			setAircraft(null);
-			return;
-		}
-		getCachedAircraft(registration).then((data) => {
-			setAircraft(data);
-		});
-	}, [pilot.flight_plan?.ac_reg]);
+	const acType = `${aircraftData?.manufacturerName || ""} ${aircraftData?.model || ""}`;
 
-	const acType = `${aircraft?.manufacturerName || ""} ${aircraft?.model || ""}`;
 	return (
-		<div className="panel-sub-container sep">
-			<div className="panel-section-title">
-				<Icon name="aircraft" size={24} />
-			</div>
-			<div className="panel-section-content" id="panel-pilot-aircraft">
-				<div className="panel-data-item" style={!aircraft ? { gridArea: "inherit" } : undefined}>
-					<p>Aircraft type</p>
-					<p>{acType.trim() ? acType : pilot.aircraft}</p>
+		<AccordionItem value="aircraft" className="overflow-hidden flex flex-col">
+			<AccordionTrigger className="items-center data-panel-open:bg-muted">
+				<div className="flex items-center gap-4">
+					<PlaneIcon className="size-4 shrink-0" />
+					<span>Aircraft</span>
 				</div>
-				{!aircraft && pilot.flight_plan?.ac_reg && (
-					<div className="panel-data-item">
-						<p>Registration</p>
-						<p>{pilot.flight_plan?.ac_reg}</p>
+			</AccordionTrigger>
+			<AccordionContent className="py-1 grid grid-cols-2 gap-1">
+				{aircraftData && (
+					<div className="flex gap-2 items-center col-span-2">
+						<AvatarCountry country={aircraftData.country} size="sm" />
+						<div className="flex flex-col">
+							<span className="text-muted-foreground">Aircraft Type</span>
+							<span>{acType.trim() ? acType : pilot.aircraft}</span>
+						</div>
 					</div>
 				)}
-				{aircraft && (
+				{!aircraftData && (
+					<div className="flex flex-col">
+						<span className="text-muted-foreground">Aircraft Type</span>
+						<span>{acType.trim() ? acType : pilot.aircraft}</span>
+					</div>
+				)}
+				{!aircraftData && pilot.flight_plan?.ac_reg && (
+					<div className="flex flex-col">
+						<span className="text-muted-foreground">Registration</span>
+						<span>{pilot.flight_plan?.ac_reg}</span>
+					</div>
+				)}
+				{aircraftData && (
 					<>
-						<div className="panel-data-item">
-							<p>Registration</p>
-							<p>{pilot.flight_plan?.ac_reg}</p>
+						<div className="flex flex-col col-span-2">
+							<span className="text-muted-foreground">Owner</span>
+							<span>{aircraftData.owner || "N/A"}</span>
 						</div>
-						<div className="panel-data-item">
-							<p>Country of reg.</p>
-							<p
-								className={`fflag ff-lg fflag-${aircraft?.country}`}
-								id="panel-pilot-aircraft-country"
-								style={{ backgroundImage: `url(${FlagSprite.src})` }}
-							></p>
+						<div className="flex flex-col">
+							<span className="text-muted-foreground">Registration</span>
+							<span>{pilot.flight_plan?.ac_reg}</span>
 						</div>
-						<div className="panel-data-item">
-							<p>Owner</p>
-							<p>{aircraft?.owner || "N/A"}</p>
+						<div className="flex flex-col">
+							<span className="text-muted-foreground">Serial Number (MSN)</span>
+							<span>{aircraftData.serialNumber || "N/A"}</span>
 						</div>
-						<div className="panel-data-item">
-							<p>Serial number (MSN)</p>
-							<p>{aircraft?.serialNumber || "N/A"}</p>
+						<div className="flex flex-col">
+							<span className="text-muted-foreground">ICAO24</span>
+							<span>{aircraftData.icao24 || "N/A"}</span>
 						</div>
-						<div className="panel-data-item">
-							<p>Icao24</p>
-							<p>{aircraft?.icao24 || "N/A"}</p>
+						<div className="flex flex-col">
+							<span className="text-muted-foreground">SELCAL</span>
+							<span>{aircraftData.selCal || "N/A"}</span>
 						</div>
-						<div className="panel-data-item">
-							<p>SELCAL</p>
-							<p>{aircraft?.selCal || "N/A"}</p>
-						</div>
+						<a href={`/data/aircrafts/${pilot.flight_plan?.ac_reg}`} className="flex col-span-2 items-center group gap-1">
+							View more flights of {pilot.flight_plan?.ac_reg}
+							<ArrowRightIcon className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+						</a>
 					</>
 				)}
-				{pilot.flight_plan?.ac_reg && (
-					<a className="panel-data-link" href={`/data/aircrafts/${pilot.flight_plan?.ac_reg}`} style={{ gridColumn: "span 2" }}>
-						<Icon name="share" size={20} />
-						<p>View more flights of {pilot.flight_plan?.ac_reg}</p>
-					</a>
-				)}
-			</div>
-		</div>
+			</AccordionContent>
+		</AccordionItem>
 	);
 }

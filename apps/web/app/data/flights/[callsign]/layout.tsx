@@ -1,4 +1,4 @@
-import Flights from "../../components/Flights/Flights";
+import FlightsTable from "../../components/Flights/FlightsTable";
 
 export default async function FlightsLayout(
 	props: Readonly<{
@@ -6,9 +6,13 @@ export default async function FlightsLayout(
 		params: Promise<{ callsign: string }>;
 	}>,
 ) {
-	const params = await props.params;
-	const callsign = params.callsign;
+	const callsign = (await props.params).callsign;
 	const { children } = props;
 
-	return <Flights callsign={callsign}>{children}</Flights>;
+	return (
+		<div className="container mx-auto py-10">
+			<FlightsTable callsign={callsign} />
+			{children}
+		</div>
+	);
 }

@@ -6,8 +6,8 @@
 		"dev": "tsx watch src/index.ts",
 		"build": "tsc",
 		"typecheck": "tsc --noEmit",
-		"format-and-lint": "biome check .",
-		"format-and-lint:fix": "biome check . --write"
+		"biome": "biome check .",
+		"biome:fix": "biome check . --write"
 	},
 	"devDependencies": {
 		"@sr24/typescript-config": "*",
@@ -16,7 +16,7 @@
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.948.0",
+		"@aws-sdk/client-s3": "^3.980.0",
 		"@sr24/db": "*",
 		"@sr24/types": "*",
 		"axios": "^1.13.2",

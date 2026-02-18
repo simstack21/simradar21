@@ -1,14 +1,20 @@
-import Flights from "../../components/Flights/Flights";
+import Aircraft from "../../components/Flights/Aircraft";
+import FlightsTable from "../../components/Flights/FlightsTable";
 
-export default async function FlightsLayout(
+export default async function AircraftsLayout(
 	props: Readonly<{
 		children: React.ReactNode;
 		params: Promise<{ reg: string }>;
 	}>,
 ) {
-	const params = await props.params;
-	const registration = params.reg;
+	const registration = (await props.params).reg;
 	const { children } = props;
 
-	return <Flights registration={registration}>{children}</Flights>;
+	return (
+		<div className="flex flex-col container mx-auto py-10 gap-4">
+			<Aircraft registration={registration} />
+			<FlightsTable registration={registration} />
+			{children}
+		</div>
+	);
 }

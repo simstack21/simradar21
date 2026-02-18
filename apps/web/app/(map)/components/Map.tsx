@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import "./Map.css";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import Initializer from "@/components/Initializer/Initializer";
-import BasePanel from "@/components/Panel/BasePanel";
-import { useFilterStatsStore, useMapRotationStore, useSettingsStore } from "@/storage/zustand";
+import { useEffect } from "react";
+import { useFilterStatsStore, useFiltersStore, useSettingsStore } from "@/storage/zustand";
 import { init, mapService } from "../lib";
-import ActiveFilters from "./ActiveFilters";
-import Controls from "./Controls";
 
-export default function OMap({ children }: { children?: React.ReactNode }) {
+export default function OMap() {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
@@ -22,36 +17,29 @@ export default function OMap({ children }: { children?: React.ReactNode }) {
 		dayNightLayerBrightness,
 		airportMarkers,
 		airportMarkerSize,
+		planeMarkers,
 		planeMarkerSize,
 		animatedPlaneMarkers,
 		sectorAreas,
 		traconColor,
 		firColor,
 	} = useSettingsStore();
-	const { setRotation } = useMapRotationStore();
 	const { setPilotCount } = useFilterStatsStore();
+	const filters = useFiltersStore();
 
 	useEffect(() => {
-		const handleMoveEnd = () => {
-			const rotation = map.getView().getRotation();
-			setRotation(rotation);
-		};
-
 		const map = mapService.init({ onNavigate: (href) => router.push(href), autoTrackPoints: true });
 
-		map.on("moveend", handleMoveEnd);
 		mapService.addEventListeners();
-
 		mapService.subscribe((stats) => {
 			setPilotCount([stats.pilots.rendered, stats.pilots.total]);
 		});
 
 		return () => {
 			mapService.removeEventListeners();
-			map.un("moveend", handleMoveEnd);
 			map.setTarget(undefined);
 		};
-	}, [router, setRotation, setPilotCount]);
+	}, [router, setPilotCount]);
 
 	useEffect(() => {
 		init(pathname, searchParams);
@@ -62,11 +50,16 @@ export default function OMap({ children }: { children?: React.ReactNode }) {
 	}, [theme]);
 
 	useEffect(() => {
+		mapService.setFilters(filters);
+	}, [filters]);
+
+	useEffect(() => {
 		mapService.setSettings({
 			dayNightLayer,
 			dayNightLayerBrightness,
 			airportMarkers,
 			airportMarkerSize,
+			planeMarkers,
 			planeMarkerSize,
 			sectorAreas,
 			traconColor,
@@ -78,6 +71,7 @@ export default function OMap({ children }: { children?: React.ReactNode }) {
 		dayNightLayerBrightness,
 		airportMarkers,
 		airportMarkerSize,
+		planeMarkers,
 		planeMarkerSize,
 		sectorAreas,
 		traconColor,
@@ -85,13 +79,5 @@ export default function OMap({ children }: { children?: React.ReactNode }) {
 		animatedPlaneMarkers,
 	]);
 
-	return (
-		<>
-			<Initializer />
-			<BasePanel>{children}</BasePanel>
-			<Controls />
-			<ActiveFilters />
-			<div id="map" />
-		</>
-	);
+	return <div id="map" className="absolute inset-0" />;
 }

@@ -1,97 +1,54 @@
 "use client";
 
-import type { FIRFeature, SimAwareTraconFeature } from "@sr24/types/db";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import type { ControllerLong } from "@sr24/types/interface";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { mapService } from "@/app/(map)/lib";
-import Icon from "@/components/Icon/Icon";
-import { setHeight } from "@/components/Panel/utils";
-import Spinner from "@/components/Spinner/Spinner";
-import { getCachedFir, getCachedTracon } from "@/storage/cache";
-import { fetchApi } from "@/utils/api";
-import { ControllerInfo } from "../shared/ControllerInfo";
-import NotFoundPanel from "../shared/NotFound";
-import { SectorTitle } from "./SectorTitle";
-
-export interface SectorPanelStatic {
-	feature: SimAwareTraconFeature | FIRFeature | null;
-	type: "tracon" | "fir" | null;
-}
-type AccordionSection = "controllers" | null;
+import LoadingPanel from "@/components/Panel/Loading";
+import NotFoundPanel from "@/components/Panel/NotFound";
+import { MotionPanel } from "@/components/Panel/PanelGrid";
+import SectorController from "@/components/Panel/Sector/SectorController";
+import { SectorFooter } from "@/components/Panel/Sector/SectorFooter";
+import { SectorHeader } from "@/components/Panel/Sector/SectorHeader";
+import { Accordion } from "@/components/ui/accordion";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { fetchApi } from "@/lib/api";
+import { getSectorFeature } from "@/lib/panels";
+import { useSectorPanelStore } from "@/storage/zustand";
+import type { SectorPanelData } from "@/types/panels";
 
 export default function SectorPanel({ callsign }: { callsign: string }) {
-	const { data: controllers, isLoading } = useSWR<ControllerLong[]>(`/map/controller/sector/${callsign}`, fetchApi, {
+	const { isLoading } = useSWR<ControllerLong[]>(`/map/controller/sector/${callsign}`, fetchApi, {
 		refreshInterval: 60_000,
 		shouldRetryOnError: false,
 	});
 
-	const [staticData, setStaticData] = useState<SectorPanelStatic | null>(null);
-	const lastCallsignRef = useRef<string | null>(null);
+	const { panel, setPanel } = useSectorPanelStore();
+	const [minimized, setMinimized] = useState(false);
+	const isMobile = useMediaQuery("(max-width: 1024px)");
+
+	const [sector, setSector] = useState<SectorPanelData | null | undefined>();
 
 	useEffect(() => {
-		if (!callsign || lastCallsignRef.current === callsign) return;
-		lastCallsignRef.current = callsign;
-
-		(async () => {
-			let feature: SimAwareTraconFeature | FIRFeature | null = null;
-			let type: "tracon" | "fir" | null = null;
-
-			feature = await getCachedTracon(callsign);
-			type = "tracon";
-			if (!feature) {
-				feature = await getCachedFir(callsign);
-				type = "fir";
-			}
-			if (!feature) {
-				type = null;
-			}
-			setStaticData({ feature, type });
-		})();
+		getSectorFeature(callsign).then(setSector);
 	}, [callsign]);
 
-	const controllersRef = useRef<HTMLDivElement>(null);
-
-	const [openSection, setOpenSection] = useState<AccordionSection>(null);
-	const toggleSection = (section: AccordionSection) => {
-		setOpenSection(openSection === section ? null : section);
-	};
-
-	useEffect(() => {
-		setHeight(controllersRef, openSection === "controllers");
-	}, [openSection]);
-
-	if (isLoading || !staticData) return <Spinner />;
-	if (!controllers || controllers.length === 0)
-		return (
-			<NotFoundPanel
-				title="Sector not found!"
-				text="This sector does not exist or no controllers are available, most likely because of an incorrect callsign or disconnected controllers."
-			/>
-		);
+	if (isLoading || sector === undefined) return <LoadingPanel />;
+	if (!sector) return <NotFoundPanel title="Sector not found" description="This sector does not exist." onClick={() => mapService.resetMap()} />;
 
 	return (
-		<div className="panel">
-			<div className="panel-header">
-				<div className="panel-id">{callsign}</div>
-				<button className="panel-close" type="button" onClick={() => mapService.resetMap()}>
-					<Icon name="cancel" size={24} />
-				</button>
-			</div>
-			<SectorTitle staticData={staticData} />
-			{controllers.length > 0 && (
-				<div className="panel-container main scrollable">
-					<button
-						className={`panel-container-header${openSection === "controllers" ? " open" : ""}`}
-						type="button"
-						onClick={() => toggleSection("controllers")}
-					>
-						<p>Controller Information</p>
-						<Icon name="arrow-down" />
-					</button>
-					<ControllerInfo controllers={controllers} sector={staticData.feature} openSection={openSection} ref={controllersRef} />
-				</div>
+		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
+			<SectorHeader callsign={callsign} onClose={() => mapService.resetMap()} minimized={minimized} setMinimized={setMinimized} />
+			{!minimized && (
+				<ScrollArea className="max-h-full overflow-hidden flex flex-col">
+					<Accordion multiple={!isMobile} className="rounded-none border-none" value={panel} onValueChange={setPanel}>
+						<SectorController callsign={callsign} />
+					</Accordion>
+					<ScrollBar />
+				</ScrollArea>
 			)}
-		</div>
+			<SectorFooter callsign={callsign} />
+		</MotionPanel>
 	);
 }

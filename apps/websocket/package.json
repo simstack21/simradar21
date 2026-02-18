@@ -6,18 +6,16 @@
 		"dev": "tsx watch src/index.ts",
 		"build": "tsc",
 		"typecheck": "tsc --noEmit",
-		"format-and-lint": "biome check .",
-		"format-and-lint:fix": "biome check . --write"
+		"biome": "biome check .",
+		"biome:fix": "biome check . --write"
 	},
 	"devDependencies": {
 		"@sr24/typescript-config": "*",
-		"@types/ws": "^8.18.1",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
 		"@sr24/db": "*",
-		"uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.56.0",
-		"ws": "^8.18.3"
+		"uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.56.0"
 	}
 }

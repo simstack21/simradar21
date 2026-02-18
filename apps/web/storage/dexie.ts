@@ -1,7 +1,7 @@
 import type { FIRFeature, SimAwareTraconFeature, StaticAircraftType, StaticAirline, StaticAirport } from "@sr24/types/db";
 import Dexie, { type EntityTable } from "dexie";
+import { fetchApi } from "@/lib/api";
 import type { StatusSetter } from "@/types/initializer";
-import { fetchApi } from "@/utils/api";
 
 interface StaticVersions {
 	airportsVersion: string;

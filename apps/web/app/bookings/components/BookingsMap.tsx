@@ -3,7 +3,6 @@
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import { useSettingsStore } from "@/storage/zustand";
-import "./Bookings.css";
 import { mapService } from "../lib";
 
 export default function BookingsMap() {
@@ -28,5 +27,5 @@ export default function BookingsMap() {
 		mapService.setSettings({ dayNightLayer, dayNightLayerBrightness, airportMarkerSize, traconColor, firColor });
 	}, [dayNightLayer, dayNightLayerBrightness, airportMarkerSize, traconColor, firColor]);
 
-	return <div id="map" />;
+	return <div id="map" className="absolute inset-0" />;
 }

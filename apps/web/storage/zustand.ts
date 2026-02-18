@@ -1,27 +1,51 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { FilterState, FilterStats, SettingState, SettingValues } from "@/types/zustand";
+import type {
+	AirportPanelState,
+	DashboardPanelState,
+	FilterKey,
+	FilterState,
+	FilterStats,
+	FilterValues,
+	MapSettings,
+	PilotPanelState,
+	SectorPanelState,
+	SettingState,
+	SettingValues,
+	UnitSettings,
+} from "@/types/zustand";
+
+const defaultMapSettings: MapSettings = {
+	dayNightLayer: true,
+	dayNightLayerBrightness: 50,
+	airportMarkers: true,
+	airportOverlay: "full",
+	airportMarkerSize: 50,
+	planeMarkers: true,
+	planeOverlay: "full",
+	planeMarkerSize: 50,
+	animatedPlaneMarkers: false,
+	sectorAreas: true,
+	sectorOverlay: "full",
+	traconColor: { r: 222, g: 89, b: 234, a: 0.1 },
+	firColor: { r: 77, g: 95, b: 131, a: 0.15 },
+};
+
+const defaultUnitSettings: UnitSettings = {
+	theme: "system",
+	timeZone: "utc",
+	timeFormat: "24h",
+	temperatureUnit: "celsius",
+	speedUnit: "knots",
+	verticalSpeedUnit: "fpm",
+	windSpeedUnit: "knots",
+	altitudeUnit: "feet",
+	distanceUnit: "nm",
+};
 
 const defaultSettings: SettingValues = {
-	theme: "dark" as const,
-	dayNightLayer: true as const,
-	dayNightLayerBrightness: 50 as const,
-	airportMarkers: true as const,
-	airportMarkerSize: 50 as const,
-	planeOverlay: "full" as const,
-	planeMarkerSize: 50 as const,
-	animatedPlaneMarkers: false as const,
-	sectorAreas: true as const,
-	traconColor: { r: 222, g: 89, b: 234, a: 0.1 } as const,
-	firColor: { r: 77, g: 95, b: 131, a: 0.15 } as const,
-	timeZone: "utc" as const,
-	timeFormat: "24h" as const,
-	temperatureUnit: "celsius" as const,
-	speedUnit: "knots" as const,
-	verticalSpeedUnit: "fpm" as const,
-	windSpeedUnit: "knots" as const,
-	altitudeUnit: "feet" as const,
-	distanceUnit: "nm" as const,
+	...defaultMapSettings,
+	...defaultUnitSettings,
 };
 
 function getSettingValues(): SettingValues {
@@ -31,11 +55,14 @@ function getSettingValues(): SettingValues {
 		dayNightLayer: s.dayNightLayer,
 		dayNightLayerBrightness: s.dayNightLayerBrightness,
 		airportMarkers: s.airportMarkers,
+		airportOverlay: s.airportOverlay,
 		airportMarkerSize: s.airportMarkerSize,
+		planeMarkers: s.planeMarkers,
 		planeOverlay: s.planeOverlay,
 		planeMarkerSize: s.planeMarkerSize,
 		animatedPlaneMarkers: s.animatedPlaneMarkers,
 		sectorAreas: s.sectorAreas,
+		sectorOverlay: s.sectorOverlay,
 		traconColor: s.traconColor,
 		firColor: s.firColor,
 		timeZone: s.timeZone,
@@ -84,11 +111,14 @@ export const useSettingsStore = create<SettingState>()(
 			setDayNightLayer: (value) => set({ dayNightLayer: value }),
 			setDayNightLayerBrightness: (value) => set({ dayNightLayerBrightness: value }),
 			setAirportMarkers: (value) => set({ airportMarkers: value }),
+			setAirportOverlay: (value) => set({ airportOverlay: value }),
 			setAirportMarkerSize: (value) => set({ airportMarkerSize: value }),
+			setPlaneMarkers: (value) => set({ planeMarkers: value }),
 			setPlaneOverlay: (value) => set({ planeOverlay: value }),
 			setPlaneMarkerSize: (value) => set({ planeMarkerSize: value }),
 			setAnimatedPlaneMarkers: (value) => set({ animatedPlaneMarkers: value }),
 			setSectorAreas: (value) => set({ sectorAreas: value }),
+			setSectorOverlay: (value) => set({ sectorOverlay: value }),
 			setTraconColor: (value) => set({ traconColor: value }),
 			setFirColor: (value) => set({ firColor: value }),
 			setTimeZone: (value) => set({ timeZone: value }),
@@ -101,7 +131,9 @@ export const useSettingsStore = create<SettingState>()(
 			setDistanceUnit: (value) => set({ distanceUnit: value }),
 
 			setSettings: (settings) => set({ ...settings }),
-			resetSettings: () => set({ ...defaultSettings }),
+			resetAllSettings: () => set({ ...defaultSettings }),
+			resetMapSettings: () => set({ ...defaultMapSettings }),
+			resetUnitSettings: () => set({ ...defaultUnitSettings }),
 		}),
 		{
 			name: "simradar21-user-settings",
@@ -109,38 +141,94 @@ export const useSettingsStore = create<SettingState>()(
 	),
 );
 
+const initialFilters: FilterValues = {
+	active: false,
+	airline: [],
+	callsign: [],
+	type: [],
+	registration: [],
+	departure: [],
+	arrival: [],
+	anyAirport: [],
+	altitude: [0, 50000],
+	groundspeed: [0, 1000],
+	squawk: [],
+	rules: [],
+};
+
+const MAX_PRESETS = 5;
+
 export const useFiltersStore = create<FilterState>()(
 	persist(
 		(set) => ({
-			active: false,
-			Airline: [],
-			"Aircraft Type": [],
-			"Aircraft Registration": [],
-			Departure: [],
-			Arrival: [],
-			Any: [],
-			Callsign: [],
-			Squawk: [],
-			"Barometric Altitude": { min: 0, max: 60000 },
-			Groundspeed: { min: 0, max: 2000 },
-			"Flight Rules": [],
+			...initialFilters,
+			activeFilters: [],
+			savedPresets: [],
 
-			setActive: (active: boolean) => set({ active }),
-			setFilters: (filters) => set({ ...filters }),
-			resetAllFilters: () =>
-				set({
-					Airline: [],
-					"Aircraft Type": [],
-					"Aircraft Registration": [],
-					Departure: [],
-					Arrival: [],
-					Any: [],
-					Callsign: [],
-					Squawk: [],
-					"Barometric Altitude": { min: 0, max: 60000 },
-					Groundspeed: { min: 0, max: 2000 },
-					"Flight Rules": [],
+			addFilter: (key: FilterKey) =>
+				set((state) =>
+					state.activeFilters.includes(key)
+						? state
+						: {
+								activeFilters: [...state.activeFilters, key],
+								active: true,
+							},
+				),
+			removeFilter: (key: FilterKey) =>
+				set((state) => {
+					const nextActiveFilters = state.activeFilters.filter((f) => f !== key);
+
+					return {
+						activeFilters: nextActiveFilters,
+						[key]: initialFilters[key],
+						active: nextActiveFilters.length > 0,
+					};
 				}),
+			setFilterValue: <K extends FilterKey>(key: K, value: FilterValues[K]) =>
+				set(() => ({
+					[key]: value,
+					active: true,
+				})),
+			clearFilters: () =>
+				set(() => ({
+					...initialFilters,
+					activeFilters: [],
+					active: false,
+				})),
+
+			savePreset: (name: string) =>
+				set((state) => {
+					if (state.savedPresets.length >= MAX_PRESETS) {
+						return state;
+					}
+
+					return {
+						savedPresets: [
+							...state.savedPresets,
+							{
+								id: crypto.randomUUID(),
+								name,
+								values: { ...state },
+								createdAt: Date.now(),
+							},
+						],
+					};
+				}),
+
+			applyPreset: (id: string) =>
+				set((state) => {
+					const preset = state.savedPresets.find((p) => p.id === id);
+					if (!preset) return state;
+
+					return {
+						...preset.values,
+					};
+				}),
+
+			deletePreset: (id: string) =>
+				set((state) => ({
+					savedPresets: state.savedPresets.filter((p) => p.id !== id),
+				})),
 		}),
 		{
 			name: "simradar21-user-filters",
@@ -165,7 +253,63 @@ export const useMapVisibilityStore = create<{ isHidden: boolean; setHidden: (val
 	),
 );
 
-export const useMapRotationStore = create<{ rotation: number; setRotation: (value: number) => void }>((set) => ({
-	rotation: 0,
-	setRotation: (value: number) => set({ rotation: value }),
+export const useDashboardPanelStore = create<DashboardPanelState>()(
+	persist(
+		(set) => ({
+			panel: ["history", "stats"],
+			historyMode: "24 hours",
+			eventsToday: true,
+			eventsTomorrow: true,
+
+			setPanel: (panel) => set({ panel }),
+			setHistoryMode: (value) => set({ historyMode: value }),
+			setEventsToday: (value) => set({ eventsToday: value }),
+			setEventsTomorrow: (value) => set({ eventsTomorrow: value }),
+		}),
+		{
+			name: "simradar21-dashboard-panel-state",
+		},
+	),
+);
+
+export const usePilotPanelStore = create<PilotPanelState>()(
+	persist(
+		(set) => ({
+			panel: [],
+			setPanel: (panel) => set({ panel }),
+		}),
+		{
+			name: "simradar21-pilot-panel-state",
+		},
+	),
+);
+
+export const useAirportPanelStore = create<AirportPanelState>()(
+	persist(
+		(set) => ({
+			panel: [],
+			setPanel: (panel) => set({ panel }),
+		}),
+		{
+			name: "simradar21-airport-panel-state",
+		},
+	),
+);
+
+export const useSectorPanelStore = create<SectorPanelState>()(
+	persist(
+		(set) => ({
+			panel: [],
+			setPanel: (panel) => set({ panel }),
+		}),
+		{
+			name: "simradar21-sector-panel-state",
+		},
+	),
+);
+
+type ManualPage = "settings" | "filters" | null;
+export const useMapPageStore = create<{ manualPage: ManualPage; setManualPage: (page: ManualPage) => void }>((set) => ({
+	manualPage: null,
+	setManualPage: (page) => set({ manualPage: page }),
 }));

@@ -89,12 +89,12 @@ export interface PilotFlightPlan {
 }
 
 export interface PilotTimes {
-	sched_off_block: Date;
-	off_block: Date;
-	lift_off: Date;
-	touch_down: Date;
-	sched_on_block: Date;
-	on_block: Date;
+	sched_off_block: number;
+	off_block: number;
+	lift_off: number;
+	touch_down: number;
+	sched_on_block: number;
+	on_block: number;
 	state: "Boarding" | "Taxi Out" | "Climb" | "Cruise" | "Descent" | "Taxi In" | "On Block";
 	stop_counter: number;
 }
@@ -111,6 +111,7 @@ export interface ControllerShort {
 	facility: number;
 	atis?: string[] | null;
 	connections?: number;
+	logon_time?: number;
 	booking?: {
 		start: string;
 		end: string;
@@ -126,11 +127,11 @@ export interface ControllerLong {
 	facility: number;
 	atis: string[] | null;
 	connections: number;
-	rating: number;
+	rating: string;
 	server: string;
 	visual_range: number;
-	logon_time: Date;
-	timestamp: Date;
+	logon_time: number;
+	timestamp: number;
 }
 
 export interface ControllerMerged {
@@ -146,8 +147,9 @@ export interface AirportShort {
 }
 
 export interface AirportLong extends Required<AirportShort> {
-	busiest: { departure: string; arrival: string };
+	busiest: { departure: [string, string]; arrival: [string, string] };
 	unique: { departures: number; arrivals: number };
+	expected: { departure: number[]; arrival: number[] };
 }
 
 export interface AirportTraffic {
@@ -199,8 +201,8 @@ export interface DashboardStats {
 	supervisors: number;
 	busiestAirports: { icao: string; departures: number; arrivals: number }[];
 	quietestAirports: { icao: string; departures: number; arrivals: number }[];
-	busiestRoutes: { route: string; count: number }[];
-	quietestRoutes: { route: string; count: number }[];
+	busiestRoutes: { departure: string; arrival: string; count: number }[];
+	quietestRoutes: { departure: string; arrival: string; count: number }[];
 	busiestAircrafts: { aircraft: string; count: number }[];
 	rarestAircrafts: { aircraft: string; count: number }[];
 	busiestControllers: { callsign: string; count: number }[];

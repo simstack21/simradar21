@@ -1,49 +1,98 @@
 import type { DashboardData } from "@sr24/types/interface";
-import { useMemo, useState } from "react";
-import { Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ChooseSwitch } from "@/components/Input/Input";
-import { useSettingsStore } from "@/storage/zustand";
-import { convertTime } from "@/utils/helpers";
+import { ActivityIcon } from "lucide-react";
+import { useId, useMemo } from "react";
+import { Area, AreaChart, Legend, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { renderLegend, renderTooltip } from "@/components/shared/Chart";
+import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { convertTime } from "@/lib/helpers";
+import { useDashboardPanelStore, useSettingsStore } from "@/storage/zustand";
 
 export function DashboardHistory({ history }: { history: DashboardData["history"] }) {
+	const id = useId();
+
+	const { historyMode, setHistoryMode } = useDashboardPanelStore();
 	const { timeZone, timeFormat } = useSettingsStore();
-	const [mode, setMode] = useState<"24 hours" | "7 days">("24 hours");
 
 	const filteredHistory = useMemo(() => {
 		const now = Date.now();
-		const cutoff = mode === "24 hours" ? now - 24 * 60 * 60 * 1000 : now - 7 * 24 * 60 * 60 * 1000;
+		const cutoff = historyMode === "24 hours" ? now - 24 * 60 * 60 * 1000 : now - 7 * 24 * 60 * 60 * 1000;
 
 		return history.filter(([timestamp]) => timestamp * 1000 >= cutoff);
-	}, [history, mode]);
+	}, [history, historyMode]);
 
-	const data = filteredHistory.map((point) => ({
-		name: `${new Date(point[0] * 1000).toLocaleDateString()} ${convertTime(point[0] * 1000, timeFormat, timeZone)}`,
-		pilots: point[1],
-		controllers: point[2],
-	}));
+	const data = useMemo(
+		() =>
+			filteredHistory.map((point) => ({
+				timestamp: point[0] * 1000,
+				pilots: point[1],
+				controllers: point[2],
+			})),
+		[filteredHistory],
+	);
 
 	return (
-		<div className="panel-section-content">
-			<ChooseSwitch options={["24 hours", "7 days"] as const} value={mode} onChange={setMode} />
-			<ResponsiveContainer width="100%" height={150} maxHeight={500}>
-				<LineChart data={data} margin={{ top: 10, right: 5, bottom: 10, left: 5 }}>
-					<YAxis
-						yAxisId="all"
-						orientation="left"
-						stroke="var(--color-main-text)"
-						fontSize="10px"
-						width={30}
-						tickSize={4}
-						tickLine={false}
-						axisLine={false}
+		<AccordionItem
+			value="history"
+			className="has-focus-visible:border-ring has-focus-visible:ring-ring/50 outline-none first:rounded-t-md last:rounded-b-md has-focus-visible:z-10 has-focus-visible:ring-[3px]"
+		>
+			<AccordionTrigger className="items-center data-panel-open:bg-muted">
+				<div className="flex items-center w-full gap-4">
+					<ActivityIcon className="size-4 shrink-0" />
+					<span>Network Activity</span>
+				</div>
+			</AccordionTrigger>
+			<AccordionContent className="pb-0 pt-2">
+				<div className="absolute right-4 flex items-center gap-2 z-10">
+					<Label htmlFor={id}>
+						<span className="sr-only">Toggle switch</span>
+						{historyMode === "24 hours" ? "24 Hours" : "7 Days"}
+					</Label>
+					<Switch
+						id={id}
+						checked={historyMode === "7 days"}
+						onCheckedChange={(checked) => setHistoryMode(checked ? "7 days" : "24 hours")}
+						onPointerDown={(e) => e.stopPropagation()}
+						onClick={(e) => e.stopPropagation()}
+						aria-label="Toggle switch"
 					/>
-					<XAxis dataKey="name" tick={false} mirror={true} axisLine={false} />
-					<Line type="monotone" dataKey="controllers" yAxisId="all" stroke="var(--color-red)" dot={false} name="Controllers" />
-					<Line type="monotone" dataKey="pilots" yAxisId="all" stroke="var(--color-green)" dot={false} name="Pilots" />
-					<Legend verticalAlign="bottom" height={5} iconSize={10} wrapperStyle={{ fontSize: "10px" }} />
-					<Tooltip wrapperStyle={{ fontSize: "10px" }} contentStyle={{ background: "var(--color-bg)", borderColor: "var(--color-border)" }} />
-				</LineChart>
-			</ResponsiveContainer>
-		</div>
+				</div>
+				<ResponsiveContainer width="100%" height={200} maxHeight={500} className="mt-2">
+					<AreaChart data={data}>
+						<XAxis
+							dataKey="timestamp"
+							axisLine={false}
+							tickLine={false}
+							interval="preserveStart"
+							minTickGap={20}
+							stroke="var(--muted-foreground)"
+							tickFormatter={(value) => {
+								const date = new Date(value);
+								if (historyMode === "24 hours") {
+									return convertTime(date, timeFormat, timeZone);
+								} else {
+									return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+								}
+							}}
+						/>
+						<defs>
+							<linearGradient id="chart-1" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.9} />
+								<stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0.1} />
+							</linearGradient>
+							<linearGradient id="chart-2" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.9} />
+								<stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.1} />
+							</linearGradient>
+						</defs>
+						<Area type="monotone" dataKey="pilots" stroke="var(--chart-1)" strokeWidth={1.5} fill="url(#chart-1)" name="Pilots" />
+						<Area type="monotone" dataKey="controllers" stroke="var(--chart-2)" strokeWidth={1.5} fill="url(#chart-2)" name="Controllers" />
+						<Tooltip content={renderTooltip} />
+						<Legend content={renderLegend} />
+					</AreaChart>
+				</ResponsiveContainer>
+			</AccordionContent>
+		</AccordionItem>
 	);
 }

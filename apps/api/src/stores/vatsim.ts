@@ -48,6 +48,21 @@ class MapStore {
 			return ids.map((id) => this.controllers.get(id)).filter((controller) => controller !== undefined);
 		}
 	}
+
+	getArrivingPilotsIds(icao: string, limit?: number): string[] {
+		const pilots = Array.from(this.pilots.values())
+			.filter(
+				(pilot) =>
+					pilot.flight_plan?.arrival?.icao === icao &&
+					pilot.times?.sched_on_block !== undefined &&
+					pilot.times.state !== "On Block" &&
+					pilot.times.state !== "Taxi In" &&
+					pilot.live === "live",
+			)
+			.sort((a, b) => (a.times?.on_block ?? 0) - (b.times?.on_block ?? 0))
+			.map((pilot) => pilot.id);
+		return limit ? pilots.slice(0, limit) : pilots;
+	}
 }
 
 export const mapStore = new MapStore();

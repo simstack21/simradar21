@@ -2,6 +2,7 @@ import type { RgbaColor } from "react-colorful";
 
 type Theme = "light" | "dark" | "system";
 type PlaneOverlayMode = "callsign" | "telemetry-off" | "full";
+type ControllerOverlayMode = "callsign" | "controller-off" | "full";
 type TimeZone = "local" | "utc";
 type TimeFormat = "24h" | "12h";
 type TemperatureUnit = "celsius" | "fahrenheit";
@@ -15,11 +16,14 @@ export interface SettingValues {
 	dayNightLayer: boolean;
 	dayNightLayerBrightness: number;
 	airportMarkers: boolean;
+	airportOverlay: ControllerOverlayMode;
 	airportMarkerSize: number;
+	planeMarkers: boolean;
 	planeOverlay: PlaneOverlayMode;
 	planeMarkerSize: number;
 	animatedPlaneMarkers: boolean;
 	sectorAreas: boolean;
+	sectorOverlay: ControllerOverlayMode;
 	traconColor: RgbaColor;
 	firColor: RgbaColor;
 	timeZone: TimeZone;
@@ -32,16 +36,41 @@ export interface SettingValues {
 	distanceUnit: DistanceUnit;
 }
 
+export type MapSettings = Pick<
+	SettingValues,
+	| "dayNightLayer"
+	| "dayNightLayerBrightness"
+	| "airportMarkers"
+	| "airportOverlay"
+	| "airportMarkerSize"
+	| "planeMarkers"
+	| "planeOverlay"
+	| "planeMarkerSize"
+	| "animatedPlaneMarkers"
+	| "sectorAreas"
+	| "sectorOverlay"
+	| "traconColor"
+	| "firColor"
+>;
+
+export type UnitSettings = Pick<
+	SettingValues,
+	"theme" | "timeZone" | "timeFormat" | "temperatureUnit" | "speedUnit" | "verticalSpeedUnit" | "windSpeedUnit" | "altitudeUnit" | "distanceUnit"
+>;
+
 export interface SettingState extends SettingValues {
 	setTheme: (value: Theme) => void;
 	setDayNightLayer: (value: boolean) => void;
 	setDayNightLayerBrightness: (value: number) => void;
 	setAirportMarkers: (value: boolean) => void;
+	setAirportOverlay: (value: ControllerOverlayMode) => void;
 	setAirportMarkerSize: (value: number) => void;
+	setPlaneMarkers: (value: boolean) => void;
 	setPlaneOverlay: (value: PlaneOverlayMode) => void;
 	setPlaneMarkerSize: (value: number) => void;
 	setAnimatedPlaneMarkers: (value: boolean) => void;
 	setSectorAreas: (value: boolean) => void;
+	setSectorOverlay: (value: ControllerOverlayMode) => void;
 	setTraconColor: (value: RgbaColor) => void;
 	setFirColor: (value: RgbaColor) => void;
 	setTimeZone: (value: TimeZone) => void;
@@ -54,31 +83,116 @@ export interface SettingState extends SettingValues {
 	setDistanceUnit: (value: DistanceUnit) => void;
 
 	setSettings: (settings: SettingValues) => void;
-	resetSettings: () => void;
+	resetAllSettings: () => void;
+	resetMapSettings: () => void;
+	resetUnitSettings: () => void;
 }
 
 export interface FilterValues {
 	active: boolean;
-	Airline: string[];
-	"Aircraft Type": string[];
-	"Aircraft Registration": string[];
-	Departure: string[];
-	Arrival: string[];
-	Any: string[];
-	Callsign: string[];
-	Squawk: string[];
-	"Barometric Altitude": { min: number; max: number };
-	Groundspeed: { min: number; max: number };
-	"Flight Rules": string[];
+	airline: string[];
+	callsign: string[];
+	type: string[];
+	registration: string[];
+	departure: string[];
+	arrival: string[];
+	anyAirport: string[];
+	altitude: [number, number];
+	groundspeed: [number, number];
+	squawk: string[];
+	rules: string[];
 }
 
+export type FilterKey = Exclude<keyof FilterValues, "active">;
+
+export type FilterInputType = "select" | "range";
+
+export type FilterOption = {
+	value: string;
+	label: string;
+};
+
+export type FilterDefinition<K extends FilterKey = FilterKey> = {
+	key: K;
+	label: string;
+	description: string;
+	category: string;
+	input: FilterInputType;
+
+	options?: FilterOption[] | ((inputValue: string) => Promise<FilterOption[]>);
+	uppercase?: boolean;
+	extendedOptions?: boolean;
+
+	min?: number;
+	max?: number;
+};
+
+type FilterPreset = {
+	id: string;
+	name: string;
+	values: FilterValues;
+	createdAt: number;
+};
+
 export interface FilterState extends FilterValues {
-	setActive: (active: boolean) => void;
-	setFilters: (filters: Partial<FilterValues>) => void;
-	resetAllFilters: () => void;
+	activeFilters: FilterKey[];
+	addFilter: (key: FilterKey) => void;
+	removeFilter: (key: FilterKey) => void;
+	setFilterValue: <K extends FilterKey>(key: K, value: FilterValues[K]) => void;
+	clearFilters: () => void;
+	savedPresets: FilterPreset[];
+	savePreset: (name: string) => void;
+	deletePreset: (id: string) => void;
+	applyPreset: (id: string) => void;
 }
 
 export interface FilterStats {
 	pilotCount: [number, number];
 	setPilotCount: (count: [number, number]) => void;
+}
+
+type DashboardPanel = "history" | "stats" | "events";
+
+interface DashboardPanelValues {
+	panel: DashboardPanel[];
+	historyMode: "24 hours" | "7 days";
+	eventsToday: boolean;
+	eventsTomorrow: boolean;
+}
+
+export interface DashboardPanelState extends DashboardPanelValues {
+	setPanel: (panel: DashboardPanel[]) => void;
+	setHistoryMode: (value: "24 hours" | "7 days") => void;
+	setEventsToday: (value: boolean) => void;
+	setEventsTomorrow: (value: boolean) => void;
+}
+
+type PilotPanel = "flightplan" | "aircraft" | "chart" | "telemetry" | "user" | "misc";
+
+interface PilotPanelValues {
+	panel: PilotPanel[];
+}
+
+export interface PilotPanelState extends PilotPanelValues {
+	setPanel: (panel: PilotPanel[]) => void;
+}
+
+type AirportPanel = "weather" | "connections" | "controller";
+
+interface AirportPanelValues {
+	panel: AirportPanel[];
+}
+
+export interface AirportPanelState extends AirportPanelValues {
+	setPanel: (panel: AirportPanel[]) => void;
+}
+
+type SectorPanel = "connections";
+
+interface SectorPanelValues {
+	panel: SectorPanel[];
+}
+
+export interface SectorPanelState extends SectorPanelValues {
+	setPanel: (panel: SectorPanel[]) => void;
 }

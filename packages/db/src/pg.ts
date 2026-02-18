@@ -49,20 +49,18 @@ export async function pgUpsertPilots(pilots: PilotLong[]): Promise<void> {
 
 			const blob = Buffer.concat(buffers);
 			const compressed = deflateSync(blob);
-			transactions.push(
-				prisma.trackpoint.upsert({
-					where: { id: p.id },
-					update: { points: compressed, created_at: new Date() },
-					create: { id: p.id, points: compressed, created_at: new Date() },
-				}),
-			);
+			transactions.push({
+				where: { id: p.id },
+				update: { points: compressed, created_at: new Date() },
+				create: { id: p.id, points: compressed, created_at: new Date() },
+			});
 		} catch (err) {
 			console.error(`Error upserting trackpoints for pilot ${p.id}:`, err);
 		}
 	}
 
 	if (transactions.length > 0) {
-		await prisma.$transaction(transactions);
+		await prisma.$transaction(transactions.map((t) => prisma.trackpoint.upsert(t)));
 	}
 }
 
@@ -114,8 +112,8 @@ async function pgUpsertPilotsBatch(pilots: PilotLong[]): Promise<void> {
 			p.last_update,
 			p.live,
 			// ---- Indexes ----
-			p.times.sched_off_block || null,
-			p.times.sched_on_block || null,
+			new Date(p.times.sched_off_block) || null,
+			new Date(p.times.sched_on_block) || null,
 			p.flight_plan.departure.icao || null,
 			p.flight_plan.arrival.icao || null,
 			p.flight_plan.ac_reg || null,

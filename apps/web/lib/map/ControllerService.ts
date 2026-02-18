@@ -5,8 +5,7 @@ import type { MultiPolygon, Point, Polygon } from "ol/geom";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import type { RgbaColor } from "react-colorful";
-import { toast } from "react-toastify";
-import MessageBox from "@/components/MessageBox/MessageBox";
+import { toast } from "sonner";
 import { createAirportFeature, createFirFeature, createTraconFeature, stripPrefix } from "./controllers";
 import { type ControllerStyleVars, getAirportStyle, getFirStyle, getLabelStyle, getTraconStyle } from "./styles/controller";
 
@@ -267,7 +266,7 @@ export class ControllerService {
 		if (this.highlighted.size > 0) {
 			for (const id of this.highlighted) {
 				if (!this.set.has(id)) {
-					toast.info(MessageBox, { data: { title: "Controller Disconnected", message: `A viewed controller has disconnected.` } });
+					toast.error("Controller Disconnected", { description: `A viewed controller has disconnected.` });
 					this.highlighted.delete(id);
 					removedIds.push(`sector_${id.replace(/^(tracon_|fir_|airport_)/, "")}`);
 				}

@@ -28,19 +28,6 @@ export async function init(pilot: PilotLong, trackPoints: Required<TrackPoint>[]
 	pilotId = pilot.id;
 }
 
-export function fitRouteToView(): void {
-	if (airports.length < 2) return;
-	mapService.fitFeatures({ airports: airports.map((a) => a.id), rememberView: false });
-}
-
-export function followPilot(follow: boolean): void {
-	if (follow) {
-		mapService.followPilot({ rememberView: false });
-	} else {
-		mapService.unfollowPilot();
-	}
-}
-
 export function updatePilot(trackPoint: Required<TrackPoint> | undefined): void {
 	if (!trackPoint) return;
 

@@ -6,8 +6,8 @@
 		"dev": "tsx watch src/index.ts",
 		"build": "tsc",
 		"typecheck": "tsc --noEmit",
-		"format-and-lint": "biome check .",
-		"format-and-lint:fix": "biome check . --write"
+		"biome": "biome check .",
+		"biome:fix": "biome check . --write"
 	},
 	"devDependencies": {
 		"@sr24/typescript-config": "*",

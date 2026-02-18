@@ -1,7 +1,6 @@
-import type { StaticAirline, StaticAirport } from "@sr24/types/db";
+import type { FIRFeature, SimAwareTraconFeature } from "@sr24/types/db";
 
-export interface PilotPanelStatic {
-	airline: StaticAirline | null;
-	departure: StaticAirport | null;
-	arrival: StaticAirport | null;
+export interface SectorPanelData {
+	feature: SimAwareTraconFeature | FIRFeature | null;
+	type: "tracon" | "fir" | null;
 }

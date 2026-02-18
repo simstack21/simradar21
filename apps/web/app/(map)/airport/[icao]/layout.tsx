@@ -1,4 +1,4 @@
-import AirportPanel from "../../components/Panels/Airport/AirportPanel";
+import AirportLayout from "../../components/Panels/Airport/AirportLayout";
 
 export default async function Layout(
 	props: Readonly<{
@@ -9,5 +9,5 @@ export default async function Layout(
 	const params = await props.params;
 	const { children } = props;
 
-	return <AirportPanel icao={params.icao}>{children}</AirportPanel>;
+	return <AirportLayout icao={params.icao}>{children}</AirportLayout>;
 }

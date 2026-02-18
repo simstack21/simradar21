@@ -1,26 +1,30 @@
 import type { PilotLong } from "@sr24/types/interface";
-import Icon from "@/components/Icon/Icon";
+import { UserIcon } from "lucide-react";
+import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-export function PilotUser({ pilot, openSection, ref }: { pilot: PilotLong; openSection: string | null; ref: React.Ref<HTMLDivElement> }) {
+export function PilotUser({ pilot }: { pilot: PilotLong }) {
 	return (
-		<div ref={ref} className={`panel-sub-container accordion${openSection === "pilot" ? " open" : ""}`}>
-			<div className="panel-section-title">
-				<Icon name="user" size={24} />
-			</div>
-			<div className="panel-section-content" id="panel-pilot-user">
-				<div className="panel-data-item">
-					<p>Name</p>
-					<p>{pilot.name}</p>
+		<AccordionItem value="user" className="overflow-hidden flex flex-col">
+			<AccordionTrigger className="items-center data-panel-open:bg-muted">
+				<div className="flex items-center gap-4">
+					<UserIcon className="size-4 shrink-0" />
+					<span>Pilot</span>
 				</div>
-				<div className="panel-data-item">
-					<p>Vatsim ID</p>
-					<p>{pilot.cid}</p>
+			</AccordionTrigger>
+			<AccordionContent className="py-1 grid grid-cols-2 gap-1">
+				<div className="flex flex-col col-span-2">
+					<span className="text-muted-foreground">Name</span>
+					<span>{pilot.name}</span>
 				</div>
-				<div className="panel-data-item">
-					<p>Rating</p>
-					<p>{pilot.pilot_rating}</p>
+				<div className="flex flex-col">
+					<span className="text-muted-foreground">VATSIM ID</span>
+					<span>{pilot.cid}</span>
 				</div>
-			</div>
-		</div>
+				<div className="flex flex-col">
+					<span className="text-muted-foreground">Pilot Rating</span>
+					<span>{pilot.pilot_rating}</span>
+				</div>
+			</AccordionContent>
+		</AccordionItem>
 	);
 }

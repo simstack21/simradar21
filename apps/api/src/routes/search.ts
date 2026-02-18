@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { searchPilotsByAirline, searchPilotsByAll, searchPilotsByRoute } from "../services/db.js";
+import { searchPilotsByAll, searchPilotsByRoutes, searchPilotsByUsers } from "../services/db.js";
 
 const searchRoutes: FastifyPluginAsync = async (app) => {
 	app.get(
@@ -24,7 +24,7 @@ const searchRoutes: FastifyPluginAsync = async (app) => {
 	);
 
 	app.get(
-		"/airline",
+		"/users",
 		{
 			schema: {
 				querystring: {
@@ -40,12 +40,12 @@ const searchRoutes: FastifyPluginAsync = async (app) => {
 				throw app.httpErrors.badRequest({ error: "Query parameter 'q' is required" });
 			}
 
-			return searchPilotsByAirline(query);
+			return searchPilotsByUsers(query);
 		},
 	);
 
 	app.get(
-		"/route",
+		"/routes",
 		{
 			schema: {
 				querystring: {
@@ -66,7 +66,7 @@ const searchRoutes: FastifyPluginAsync = async (app) => {
 				throw app.httpErrors.badRequest({ error: "Query parameter 'q' must be in the format DEP-ARR" });
 			}
 
-			return searchPilotsByRoute(icaos[0], icaos[1]);
+			return searchPilotsByRoutes(icaos[0], icaos[1]);
 		},
 	);
 };

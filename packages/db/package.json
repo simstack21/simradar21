@@ -23,8 +23,8 @@
 		"build": "tsc && shx cp -r src/generated dist/generated",
 		"typecheck": "tsc --noEmit",
 		"prebuild": "prisma generate",
-		"format-and-lint": "biome check .",
-		"format-and-lint:fix": "biome check . --write",
+		"biome": "biome check .",
+		"biome:fix": "biome check . --write",
 		"db:generate": "prisma generate",
 		"db:migrate": "prisma migrate dev",
 		"db:deploy": "prisma migrate deploy",
@@ -32,13 +32,12 @@
 	},
 	"devDependencies": {
 		"@sr24/typescript-config": "*",
-		"prisma": "^7.1.0",
+		"prisma": "^7.3.0",
 		"shx": "^0.4.0",
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
 		"@prisma/adapter-pg": "^7.1.0",
-		"@prisma/client": "^7.1.0",
 		"@sr24/types": "*",
 		"dotenv": "^17.2.3",
 		"redis": "^5.10.0"

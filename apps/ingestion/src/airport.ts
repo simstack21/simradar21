@@ -14,11 +14,9 @@ export async function mapAirports(pilotsLong: PilotLong[]): Promise<AirportLong[
 		const departure = pilotLong.flight_plan.departure;
 		const arrival = pilotLong.flight_plan.arrival;
 
-		// Add airport if not existing already
 		if (!airportRecord[departure.icao]) {
 			airportRecord[departure.icao] = initAirportRecord(departure.icao);
 		}
-
 		if (!airportRecord[arrival.icao]) {
 			airportRecord[arrival.icao] = initAirportRecord(arrival.icao);
 		}
@@ -32,6 +30,12 @@ export async function mapAirports(pilotsLong: PilotLong[]): Promise<AirportLong[
 			depTraffic.average_delay = Math.round((depTraffic.average_delay * (depTraffic.flights_delayed - 1) + depDelay) / depTraffic.flights_delayed);
 		}
 
+		const depExpectedIndex = getExpectedIndex(pilotLong, "departure");
+		if (depExpectedIndex !== -1) {
+			airportRecord[departure.icao].expected.departure[depExpectedIndex] =
+				(airportRecord[departure.icao].expected.departure[depExpectedIndex] || 0) + 1;
+		}
+
 		const arrTraffic = airportRecord[arrival.icao].arr_traffic;
 		arrTraffic.traffic_count++;
 
@@ -39,6 +43,11 @@ export async function mapAirports(pilotsLong: PilotLong[]): Promise<AirportLong[
 		if (arrDelay !== 0) {
 			arrTraffic.flights_delayed++;
 			arrTraffic.average_delay = Math.round((arrTraffic.average_delay * (arrTraffic.flights_delayed - 1) + arrDelay) / arrTraffic.flights_delayed);
+		}
+
+		const arrExpectedIndex = getExpectedIndex(pilotLong, "arrival");
+		if (arrExpectedIndex !== -1) {
+			airportRecord[arrival.icao].expected.arrival[arrExpectedIndex] = (airportRecord[arrival.icao].expected.arrival[arrExpectedIndex] || 0) + 1;
 		}
 
 		const setRoute = (icao: string, route: string) => {
@@ -58,8 +67,8 @@ export async function mapAirports(pilotsLong: PilotLong[]): Promise<AirportLong[
 		const routes = routeRecord[icao];
 		if (!routes) continue;
 
-		let busiestDeparture = "-";
-		let busiestArrival = "-";
+		let busiestDeparture: [string, string] = ["", ""];
+		let busiestArrival: [string, string] = ["", ""];
 		let busiestDepCount = 0;
 		let busiestArrCount = 0;
 		let uniqueDepartures = 0;
@@ -70,13 +79,13 @@ export async function mapAirports(pilotsLong: PilotLong[]): Promise<AirportLong[
 			if (depIcao === icao) {
 				uniqueDepartures++;
 				if (count > busiestDepCount) {
-					busiestDeparture = route;
+					busiestDeparture = [depIcao, arrIcao];
 					busiestDepCount = count;
 				}
 			} else if (arrIcao === icao) {
 				uniqueArrivals++;
 				if (count > busiestArrCount) {
-					busiestArrival = route;
+					busiestArrival = [depIcao, arrIcao];
 					busiestArrCount = count;
 				}
 			}
@@ -147,15 +156,16 @@ function initAirportRecord(icao: string): AirportLong {
 		icao: icao,
 		dep_traffic: { traffic_count: 0, average_delay: 0, flights_delayed: 0 },
 		arr_traffic: { traffic_count: 0, average_delay: 0, flights_delayed: 0 },
-		busiest: { departure: "-", arrival: "-" },
+		busiest: { departure: ["", ""], arrival: ["", ""] },
 		unique: { departures: 0, arrivals: 0 },
+		expected: { departure: [], arrival: [] },
 	};
 }
 
 function calculateDepartureDelay(pilot: PilotLong): number {
 	if (!pilot.times?.off_block) return 0;
 	const times = pilot.times;
-	const delay_min = (times.off_block.getTime() - times.sched_off_block.getTime()) / 1000 / 60;
+	const delay_min = (times.off_block - times.sched_off_block) / 1000 / 60;
 
 	return Math.min(Math.max(delay_min, 0), 120);
 }
@@ -163,7 +173,20 @@ function calculateDepartureDelay(pilot: PilotLong): number {
 function calculateArrivalDelay(pilot: PilotLong): number {
 	if (!pilot.times?.on_block) return 0;
 	const times = pilot.times;
-	const delay_min = (times.on_block.getTime() - times.sched_on_block.getTime()) / 1000 / 60;
+	const delay_min = (times.on_block - times.sched_on_block) / 1000 / 60;
 
 	return Math.min(Math.max(delay_min, 0), 120);
+}
+
+const INDEX_INTERVAL_MIN = 30;
+const INDEX_LIMITS_MIN = [-30, 360];
+
+function getExpectedIndex(pilot: PilotLong, type: "departure" | "arrival"): number {
+	if (!pilot.times) return -1;
+
+	const time = pilot.times[type === "departure" ? "off_block" : "on_block"];
+	const minFromNow = (time - Date.now()) / 1000 / 60;
+	if (minFromNow < INDEX_LIMITS_MIN[0] || minFromNow > INDEX_LIMITS_MIN[1]) return -1;
+
+	return Math.floor((minFromNow - INDEX_LIMITS_MIN[0]) / INDEX_INTERVAL_MIN);
 }
