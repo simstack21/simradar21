@@ -196,6 +196,8 @@ function ShareButton({ flight }: { flight: Flight }) {
 	const [shared, setShared] = useState(false);
 
 	const onShareClick = () => {
+		if (typeof window === "undefined") return;
+
 		navigator.clipboard.writeText(`${window.location.origin}/data/flights/${flight.callsign}/${flight.id}`);
 		toast.success("Replay Link Copied to Clipboard!");
 		setShared(true);

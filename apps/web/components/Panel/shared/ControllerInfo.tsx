@@ -27,6 +27,8 @@ export default function ControllerInfo({
 	const atis = controller.atis?.join("\n") || "No ATIS information available.";
 
 	const onCopyClick = () => {
+		if (typeof window === "undefined") return;
+
 		navigator.clipboard.writeText(atis);
 		toast.success("ATIS Copied to Clipboard!");
 		setCopied(true);

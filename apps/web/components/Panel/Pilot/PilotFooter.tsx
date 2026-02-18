@@ -20,6 +20,8 @@ export function PilotFooter({ pilot, mapService }: { pilot: PilotLong; mapServic
 	};
 
 	const onShareClick = () => {
+		if (typeof window === "undefined") return;
+
 		navigator.clipboard.writeText(window.location.href);
 		toast.success("Link Copied to Clipboard!");
 		setShared(true);

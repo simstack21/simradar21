@@ -183,6 +183,8 @@ function ControllerOverlay({ controllers }: { controllers: ControllerShort[] | u
 	if (!controllers || controllers.length === 0) return null;
 
 	const onCopy = (controller: ControllerShort) => {
+		if (typeof window === "undefined") return;
+
 		const atis = controller?.atis?.join("\n") || "";
 		navigator.clipboard.writeText(atis);
 		setCopied(controller.callsign);

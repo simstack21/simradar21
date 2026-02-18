@@ -21,6 +21,8 @@ export function AirportFooter({ icao, mapService }: { icao: string; mapService?:
 	const [loading, setLoading] = useState(false);
 
 	const onShareClick = () => {
+		if (typeof window === "undefined") return;
+
 		navigator.clipboard.writeText(`${window.location.origin}/airport/${icao}`);
 		toast.success("Link Copied to Clipboard!");
 		setShared(true);

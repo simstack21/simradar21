@@ -9,6 +9,8 @@ export function SectorFooter({ callsign }: { callsign: string }) {
 	const [shared, setShared] = useState(false);
 
 	const onShareClick = () => {
+		if (typeof window === "undefined") return;
+
 		navigator.clipboard.writeText(`${window.location.origin}/sector/${callsign}`);
 		toast.success("Link Copied to Clipboard!");
 		setShared(true);

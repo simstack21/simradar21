@@ -230,6 +230,8 @@ export class MapService {
 	}
 
 	public addEventListeners() {
+		if (typeof window === "undefined") return;
+
 		this.map?.on("moveend", this.onMoveEnd);
 
 		const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;

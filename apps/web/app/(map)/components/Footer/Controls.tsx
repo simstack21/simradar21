@@ -71,6 +71,7 @@ const SwitchVisibility = ({ checked, onCheckedChange }: { checked: boolean; onCh
 };
 
 const onCenterOnLocation = () => {
+	if (typeof window === "undefined") return;
 	if (navigator.geolocation) {
 		navigator.geolocation.getCurrentPosition(
 			(pos) => {
@@ -127,7 +128,7 @@ const ButtonGroupControls = () => {
 				></TooltipTrigger>
 				<TooltipContent className="pr-1.5">
 					<div className="flex items-center gap-2">
-						Fullscreen <Kbd>{navigator.platform.startsWith("Mac") ? "⌃⌘F" : "F11"}</Kbd>
+						Fullscreen <Kbd>F11</Kbd>
 					</div>
 				</TooltipContent>
 			</Tooltip>
