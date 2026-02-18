@@ -9,10 +9,10 @@ export const mapService = new MapService();
 let initialized = false;
 let lastMessageSeq: number | null = null;
 
-export async function init(pathname: string, searchParams: URLSearchParams): Promise<void> {
+export async function init(pathname: string): Promise<void> {
 	if (initialized) {
 		mapService.setView({ multi: pathname.startsWith("/multi") });
-		setClickedFromPath(pathname, searchParams);
+		setClickedFromPath(pathname);
 		return;
 	}
 
@@ -40,15 +40,15 @@ export async function init(pathname: string, searchParams: URLSearchParams): Pro
 	wsClient.addListener(handleMessage);
 
 	mapService.setView({ multi: pathname.startsWith("/multi") });
-	setClickedFromPath(pathname, searchParams);
+	setClickedFromPath(pathname);
 	initialized = true;
 }
 
 let lastIds: string[] = [];
 
-function setClickedFromPath(pathname: string, searchParams: URLSearchParams): void {
+function setClickedFromPath(pathname: string): void {
 	if (pathname.startsWith("/multi")) {
-		const selected = searchParams.get("selected");
+		const selected = new URLSearchParams(window.location.search).get("selected");
 		const ids = selected ? selected.split(",") : [];
 
 		for (const fullId of ids) {

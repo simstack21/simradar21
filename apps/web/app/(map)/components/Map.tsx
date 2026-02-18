@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import { useFilterStatsStore, useFiltersStore, useSettingsStore } from "@/storage/zustand";
@@ -9,7 +9,6 @@ import { init, mapService } from "../lib";
 export default function OMap() {
 	const router = useRouter();
 	const pathname = usePathname();
-	const searchParams = useSearchParams();
 
 	const { theme } = useTheme();
 	const {
@@ -42,8 +41,8 @@ export default function OMap() {
 	}, [router, setPilotCount]);
 
 	useEffect(() => {
-		init(pathname, searchParams);
-	}, [pathname, searchParams]);
+		init(pathname);
+	}, [pathname]);
 
 	useEffect(() => {
 		mapService.setTheme(theme);

@@ -2,12 +2,12 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback } from "react";
+import LoadingPanel from "@/components/Panel/Loading";
 import { MotionPanel } from "@/components/Panel/PanelGrid";
 import DashboardPanel from "../../components/Panels/Dashboard/DashboardPanel";
 import MultiAirportPanel from "./MultiAirportPanel";
 import MultiPilotPanel from "./MultiPilotPanel";
 import MultiSectorPanel from "./MultiSectorPanel";
-import LoadingPanel from "@/components/Panel/Loading";
 
 export default function MultiPanel() {
 	const searchParams = useSearchParams();
@@ -36,7 +36,12 @@ export default function MultiPanel() {
 		[searchParams, router, pathname],
 	);
 
-	if (ids.length === 0) return <DashboardPanel />;
+	if (ids.length === 0)
+		return (
+			<MotionPanel className="max-h-full pointer-events-auto flex flex-col gap-3">
+				<DashboardPanel />
+			</MotionPanel>
+		);
 
 	return (
 		<Suspense fallback={<LoadingPanel />}>
