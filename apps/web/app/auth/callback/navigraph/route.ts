@@ -39,7 +39,6 @@ export async function GET(req: NextRequest) {
 		return fail("no VATSIM session");
 	}
 
-	// Exchange authorization code for tokens
 	const tokenRes = await fetch(`${NAVIGRAPH_AUTH_URL}/connect/token`, {
 		method: "POST",
 		headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -63,13 +62,8 @@ export async function GET(req: NextRequest) {
 		expires_in: number;
 	};
 
-	const navigraphData = {
-		accessToken: tokens.access_token,
-		refreshToken: tokens.refresh_token,
-		expiresAt: Date.now() + tokens.expires_in * 1000,
-	};
-
-	// Persist to backend DB
+	// Send tokens to backend — the backend verifies the access token against
+	// Navigraph's public JWKS before storing, and extracts the subscription claim.
 	const jwtToken = sign({ vatsim: existingToken.vatsim }, JWT_SECRET, { expiresIn: "5m" });
 	try {
 		const saveRes = await fetch(`${API_URL}/user/navigraph`, {
@@ -78,18 +72,21 @@ export async function GET(req: NextRequest) {
 				"Content-Type": "application/json",
 				Authorization: `Bearer ${jwtToken}`,
 			},
-			body: JSON.stringify(navigraphData),
+			body: JSON.stringify({
+				accessToken: tokens.access_token,
+				refreshToken: tokens.refresh_token,
+				expiresAt: Date.now() + tokens.expires_in * 1000,
+			}),
 		});
 		if (!saveRes.ok) {
-			console.error("Failed to save Navigraph connection:", await saveRes.text());
+			return fail(`backend rejected Navigraph token: ${await saveRes.text()}`);
 		}
 	} catch (err) {
-		console.error("Failed to save Navigraph connection:", err);
+		return fail(`failed to save Navigraph connection: ${err}`);
 	}
 
 	const newToken = {
 		...existingToken,
-		navigraph: navigraphData,
 		hasNavigraph: true,
 	};
 

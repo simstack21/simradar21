@@ -100,66 +100,10 @@ export const authOptions: NextAuthOptions = {
 				};
 			}
 
-			if (token.navigraph) {
-				if (!token.navigraph.expiresAt || Date.now() < token.navigraph.expiresAt) {
-					return token;
-				}
-
-				if (!token.navigraph.refreshToken) throw new TypeError("Missing refresh_token");
-
-				try {
-					const response = await fetch(`${NAVIGRAPH_AUTH_URL}/connect/token`, {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/x-www-form-urlencoded",
-						},
-						body: new URLSearchParams({
-							client_id: process.env.NAVIGRAPH_CLIENT_ID || "",
-							client_secret: process.env.NAVIGRAPH_CLIENT_SECRET || "",
-							grant_type: "refresh_token",
-							refresh_token: token.navigraph.refreshToken,
-						}),
-					});
-
-					const tokensOrError = await response.json();
-					if (!response.ok) throw tokensOrError;
-
-					const newTokens = tokensOrError as {
-						access_token: string;
-						expires_in: number;
-						refresh_token?: string;
-					};
-
-					const refreshedNavigraph = {
-						accessToken: newTokens.access_token,
-						refreshToken: newTokens.refresh_token ?? token.navigraph.refreshToken,
-						expiresAt: Date.now() + newTokens.expires_in * 1000,
-					};
-
-					if (token.vatsim?.cid) {
-						const jwtToken = sign({ vatsim: token.vatsim }, JWT_SECRET, { expiresIn: "5m" });
-						fetch(`${API_URL}/user/navigraph`, {
-							method: "PATCH",
-							headers: {
-								"Content-Type": "application/json",
-								Authorization: `Bearer ${jwtToken}`,
-							},
-							body: JSON.stringify(refreshedNavigraph),
-						}).catch((err) => console.error("Failed to sync refreshed Navigraph token:", err));
-					}
-
-					return { ...token, navigraph: refreshedNavigraph };
-				} catch (error) {
-					console.error("Error refreshing Navigraph access_token", error);
-					return token;
-				}
-			}
-
 			return token;
 		},
 		async session({ session, token }) {
 			session.vatsim = token.vatsim;
-			session.navigraph = token.navigraph;
 			session.hasNavigraph = token.hasNavigraph;
 
 			return session;

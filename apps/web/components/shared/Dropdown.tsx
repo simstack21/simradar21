@@ -81,11 +81,11 @@ export const DropdownUser = () => {
 						onClick={() => {
 							window.location.href = "/auth/navigraph";
 						}}
-						disabled={!!(session?.navigraph || session?.hasNavigraph)}
+						disabled={!!session?.hasNavigraph}
 					>
 						<NavigationIcon />
-						<span>{session?.navigraph || session?.hasNavigraph ? "Navigraph Connected" : "Connect Navigraph"}</span>
-						{(session?.navigraph || session?.hasNavigraph) && <CheckIcon className="ml-auto text-green" />}
+						<span>{session?.hasNavigraph ? "Navigraph Connected" : "Connect Navigraph"}</span>
+						{session?.hasNavigraph && <CheckIcon className="ml-auto text-green" />}
 					</DropdownMenuItem>
 					{session && (
 						<>

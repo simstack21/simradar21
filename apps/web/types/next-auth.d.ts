@@ -6,11 +6,6 @@ declare module "next-auth" {
 			cid: number;
 			name: string;
 		};
-		navigraph?: {
-			accessToken?: string;
-			refreshToken?: string;
-			expiresAt?: number;
-		};
 		hasNavigraph?: boolean;
 	}
 
@@ -31,11 +26,6 @@ declare module "next-auth/jwt" {
 		vatsim?: {
 			cid: number;
 			name: string;
-		};
-		navigraph?: {
-			accessToken?: string;
-			refreshToken?: string;
-			expiresAt?: number;
 		};
 		hasNavigraph?: boolean;
 	}
