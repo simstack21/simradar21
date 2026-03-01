@@ -1,20 +1,25 @@
 import type { FIRFeature, SimAwareTraconFeature, StaticAircraftType, StaticAirline, StaticAirport } from "@sr24/types/db";
-import Dexie, { type EntityTable } from "dexie";
+import type { NavigraphAirport, NavigraphAirway, NavigraphNavaid, NavigraphSid, NavigraphWaypoint } from "@sr24/types/navigraph";
+import Dexie, { type EntityTable, type Table } from "dexie";
 import { fetchApi } from "@/lib/api";
-import type { StatusSetter } from "@/types/initializer";
+import { StatusSetter } from "@/hooks/useInitializer";
+import { ensureNavigraphData } from "./navigraph";
 
-interface StaticVersions {
+interface DatabaseVersions {
 	airportsVersion: string;
 	traconsVersion: string;
 	firsVersion: string;
 	airlinesVersion: string;
 	aircraftsVersion: string;
+	navigraphCycle?: string;
 }
+
 interface DexieFeature {
 	id: string;
 	feature: FIRFeature | SimAwareTraconFeature;
 }
-type Manifest = { key: string; versions: StaticVersions };
+
+type Manifest = { key: string; versions: DatabaseVersions };
 
 const R2_BUCKET_URL = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_R2_BUCKET_URL_DEV : process.env.NEXT_PUBLIC_R2_BUCKET_URL;
 
@@ -25,6 +30,12 @@ const db = new Dexie("StaticDatabase") as Dexie & {
 	airlines: EntityTable<StaticAirline, "id">;
 	aircrafts: EntityTable<StaticAircraftType, "icao">;
 	manifest: EntityTable<Manifest, "key">;
+	ngNavaids: Table<NavigraphNavaid, "[id+areaCode]">;
+	ngWaypoints: Table<NavigraphWaypoint, "[id+areaCode]">;
+	ngAirways: Table<NavigraphAirway, "[id+areaCode]">;
+	ngAirports: EntityTable<NavigraphAirport, "id">;
+	ngSids: Table<NavigraphSid, "[airportId+id]">;
+	ngStars: Table<NavigraphSid, "[airportId+id]">;
 };
 
 db.version(1).stores({
@@ -34,6 +45,12 @@ db.version(1).stores({
 	airlines: "id",
 	aircrafts: "icao",
 	manifest: "key",
+	ngNavaids: "[id+areaCode]",
+	ngWaypoints: "[id+areaCode]",
+	ngAirways: "[id+areaCode]",
+	ngAirports: "id",
+	ngSids: "[airportId+id]",
+	ngStars: "[airportId+id]",
 });
 
 let initPromise: Promise<void> | null = null;
@@ -58,7 +75,7 @@ export function dxDatabaseIsStale(): boolean {
 }
 
 async function dxInitDatabases(setStatus?: StatusSetter): Promise<void> {
-	const latestManifest = await fetchApi<StaticVersions>("/data/static/versions");
+	const latestManifest = await fetchApi<DatabaseVersions>("/data/static/versions");
 	const storedManifest = (await db.manifest.get("databaseVersions")) as Manifest | undefined;
 
 	if (latestManifest.airportsVersion !== storedManifest?.versions.airportsVersion) {
@@ -111,7 +128,28 @@ async function dxInitDatabases(setStatus?: StatusSetter): Promise<void> {
 	}
 	setStatus?.((prev) => ({ ...prev, aircrafts: true }));
 
-	await db.manifest.put({ key: "databaseVersions", versions: latestManifest });
+	const ngData = await ensureNavigraphData(storedManifest?.versions.navigraphCycle);
+	if (ngData) {
+		const { dataset } = ngData;
+		await db.ngNavaids.clear();
+		await db.ngNavaids.bulkPut(dataset.navaids);
+		await db.ngWaypoints.clear();
+		await db.ngWaypoints.bulkPut(dataset.waypoints);
+		await db.ngAirways.clear();
+		await db.ngAirways.bulkPut(dataset.airways);
+		await db.ngAirports.clear();
+		await db.ngAirports.bulkPut(dataset.airports);
+		await db.ngSids.clear();
+		await db.ngSids.bulkPut(dataset.sids);
+		await db.ngStars.clear();
+		await db.ngStars.bulkPut(dataset.stars);
+	}
+	setStatus?.((prev) => ({ ...prev, navigraph: true }));
+
+	await db.manifest.put({
+		key: "databaseVersions",
+		versions: { ...latestManifest, navigraphCycle: ngData?.cycle ?? storedManifest?.versions.navigraphCycle },
+	});
 	localStorage.setItem("simradar21-db", Date.now().toString());
 }
 

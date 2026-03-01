@@ -96,3 +96,12 @@ export interface StaticAircraftType {
 	iata: string;
 	icao: string;
 }
+
+export interface NavigraphPackage {
+	id: string;
+	name: string;
+	format: string;
+	cycle: string;
+	r2Key: string;
+	package_status: "current" | "outdated" | "future";
+}

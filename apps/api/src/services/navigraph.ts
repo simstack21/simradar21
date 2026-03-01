@@ -1,4 +1,8 @@
 import crypto from "node:crypto";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { rdsGetSingle } from "@sr24/db/redis";
+import type { NavigraphPackage } from "@sr24/types/db";
 import jwt from "jsonwebtoken";
 
 const NAVIGRAPH_JWKS_URL = "https://identity.api.navigraph.com/.well-known/jwks";
@@ -110,5 +114,25 @@ export async function refreshNavigraphToken(refreshToken: string): Promise<{
 		refreshToken: tokens.refresh_token ?? refreshToken,
 		expiresAt: Date.now() + tokens.expires_in * 1000,
 		subscriptions: payload.subscriptions ?? [],
+	};
+}
+
+const r2 = new S3Client({
+	region: "auto",
+	endpoint: `https://${process.env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+	credentials: {
+		accessKeyId: process.env.R2_ACCESS_KEY_ID ?? "",
+		secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? "",
+	},
+});
+const r2Bucket = process.env.R2_BUCKET_NAME ?? "";
+
+export async function getNavigraphPackage(status: "current" | "outdated") {
+	const pkg = (await rdsGetSingle(`navigraph:package:${status}`)) as NavigraphPackage | null;
+	if (!pkg) return null;
+
+	return {
+		...pkg,
+		url: await getSignedUrl(r2, new GetObjectCommand({ Bucket: r2Bucket, Key: pkg.r2Key }), { expiresIn: 600 }),
 	};
 }

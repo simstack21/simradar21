@@ -37,25 +37,26 @@ export async function updateR2Storage(): Promise<void> {
 		"static_airlines:all",
 		"static_aircrafts:all",
 	]);
-	await uploadDataToR2(`airports_${manifest.airportsVersion}.json`, JSON.stringify(datas[0]));
-	await uploadDataToR2(`firs_${manifest.firsVersion}.json`, JSON.stringify(datas[1]));
-	await uploadDataToR2(`tracons_${manifest.traconsVersion}.json`, JSON.stringify(datas[2]));
-	await uploadDataToR2(`airlines_${manifest.airlinesVersion}.json`, JSON.stringify(datas[3]));
-	await uploadDataToR2(`aircrafts_${manifest.aircraftsVersion}.json`, JSON.stringify(datas[4]));
+	await uploadToR2(`airports_${manifest.airportsVersion}.json`, JSON.stringify(datas[0]));
+	await uploadToR2(`firs_${manifest.firsVersion}.json`, JSON.stringify(datas[1]));
+	await uploadToR2(`tracons_${manifest.traconsVersion}.json`, JSON.stringify(datas[2]));
+	await uploadToR2(`airlines_${manifest.airlinesVersion}.json`, JSON.stringify(datas[3]));
+	await uploadToR2(`aircrafts_${manifest.aircraftsVersion}.json`, JSON.stringify(datas[4]));
 	console.log("✅ R2 storage update completed!");
 }
 
-async function uploadDataToR2(key: string, body: Buffer | Uint8Array | Blob | string) {
+export async function uploadToR2(key: string, body: Buffer | Uint8Array | Blob | string, contentLength?: number) {
 	return await r2.send(
 		new PutObjectCommand({
 			Bucket: bucket,
 			Key: key,
 			Body: body,
+			ContentLength: contentLength,
 		}),
 	);
 }
 
 async function uploadManifestToR2(manifest: object) {
 	const manifestJson = JSON.stringify(manifest);
-	return await uploadDataToR2("manifest.json", manifestJson);
+	return await uploadToR2("manifest.json", manifestJson);
 }

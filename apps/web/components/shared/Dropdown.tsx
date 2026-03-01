@@ -72,16 +72,23 @@ export const DropdownUser = () => {
 							<DropdownMenuSeparator />
 						</>
 					)}
-					<DropdownMenuItem onClick={() => signIn("vatsim")} disabled={!!session?.vatsim}>
+					<DropdownMenuItem
+						onClick={() => {
+							localStorage.removeItem("simradar21-db");
+							signIn("vatsim");
+						}}
+						disabled={!!session?.vatsim}
+					>
 						<UserIcon />
 						<span>{session?.vatsim ? "VATSIM Connected" : "Connect VATSIM"}</span>
 						{session?.vatsim && <CheckIcon className="ml-auto text-green" />}
 					</DropdownMenuItem>
 					<DropdownMenuItem
 						onClick={() => {
+							localStorage.removeItem("simradar21-db");
 							window.location.href = "/auth/navigraph";
 						}}
-						disabled={!!session?.hasNavigraph}
+						disabled={!!session?.hasNavigraph || !session?.vatsim}
 					>
 						<NavigationIcon />
 						<span>{session?.hasNavigraph ? "Navigraph Connected" : "Connect Navigraph"}</span>
@@ -89,7 +96,12 @@ export const DropdownUser = () => {
 					</DropdownMenuItem>
 					{session && (
 						<>
-							<DropdownMenuItem onClick={() => signOut()}>
+							<DropdownMenuItem
+								onClick={() => {
+									localStorage.removeItem("simradar21-db");
+									signOut();
+								}}
+							>
 								<LogOutIcon />
 								<span>Sign Out</span>
 							</DropdownMenuItem>
