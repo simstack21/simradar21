@@ -1,12 +1,12 @@
 import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { path7za } from "7zip-bin";
-import Database from "better-sqlite3";
-import Seven from "node-7z";
 import { rdsGetSingle, rdsSetSingle } from "@sr24/db/redis";
 import type { NavigraphPackage } from "@sr24/types/db";
 import type { NavigraphAirport, NavigraphAirway, NavigraphDataset, NavigraphNavaid, NavigraphSid, NavigraphWaypoint } from "@sr24/types/navigraph";
+import { path7za } from "7zip-bin";
+import Database from "better-sqlite3";
+import Seven from "node-7z";
 import { uploadToR2 } from "./s3.js";
 
 const NAVIGRAPH_TOKEN_URL = "https://identity.api.navigraph.com/connect/token";
@@ -170,8 +170,6 @@ function queryAirways(db: Database.Database): NavigraphAirway[] {
 }
 
 function queryAirports(db: Database.Database): NavigraphAirport[] {
-	const airports = db.prepare("SELECT airport_identifier as id FROM tbl_pa_airports").all() as { id: string }[];
-
 	type GateRow = { airport_identifier: string; id: string; latitude: number; longitude: number };
 	const gateRows = db
 		.prepare(
@@ -191,7 +189,7 @@ function queryAirports(db: Database.Database): NavigraphAirport[] {
 		list.push({ id: gate.id, latitude: gate.latitude, longitude: gate.longitude });
 	}
 
-	return airports.map((a) => ({ id: a.id, gates: gatesByAirport.get(a.id) ?? [] }));
+	return [...gatesByAirport.entries()].map(([id, gates]) => ({ id, gates }));
 }
 
 function queryProcedures(db: Database.Database, table: string): NavigraphSid[] {

@@ -1,5 +1,5 @@
 import type { NavigraphPackage } from "@sr24/types/db";
-import { NavigraphDataset } from "@sr24/types/navigraph";
+import type { NavigraphDataset } from "@sr24/types/navigraph";
 
 export interface NavigraphPackageSigned extends NavigraphPackage {
 	url: string;

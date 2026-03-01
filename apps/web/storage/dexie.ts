@@ -1,8 +1,8 @@
 import type { FIRFeature, SimAwareTraconFeature, StaticAircraftType, StaticAirline, StaticAirport } from "@sr24/types/db";
 import type { NavigraphAirport, NavigraphAirway, NavigraphNavaid, NavigraphSid, NavigraphWaypoint } from "@sr24/types/navigraph";
 import Dexie, { type EntityTable, type Table } from "dexie";
+import type { StatusSetter } from "@/hooks/useInitializer";
 import { fetchApi } from "@/lib/api";
-import { StatusSetter } from "@/hooks/useInitializer";
 import { ensureNavigraphData } from "./navigraph";
 
 interface DatabaseVersions {
@@ -222,4 +222,9 @@ export async function dxGetTracons(ids: string[]): Promise<(DexieFeature | undef
 export async function dxGetFirs(ids: string[]): Promise<(DexieFeature | undefined)[]> {
 	await dxEnsureInitialized();
 	return await db.firs.bulkGet(ids);
+}
+
+export async function dxGetNavigraphAirports(ids: string[]): Promise<(NavigraphAirport | undefined)[]> {
+	await dxEnsureInitialized();
+	return await db.ngAirports.bulkGet(ids);
 }

@@ -13,6 +13,7 @@ import { fromLonLat, toLonLat, transformExtent } from "ol/proj";
 import type { FilterValues, SettingValues } from "@/types/zustand";
 import { AirportService } from "./AirportService";
 import { ControllerService } from "./ControllerService";
+import { NavigraphService } from "./NavigraphService";
 import { createOverlay, updateOverlay } from "./overlays";
 import { PilotService } from "./PilotService";
 import styleDark from "./positron_dark.json";
@@ -52,6 +53,7 @@ export class MapService {
 	private airportService = new AirportService();
 	private controllerService = new ControllerService();
 	private trackService = new TrackService();
+	private navigraphService = new NavigraphService();
 
 	private multiView: boolean | undefined;
 	private minimalOverlays = false;
@@ -121,10 +123,11 @@ export class MapService {
 		const airportLayer = this.airportService.init();
 		const controllerLayers = this.controllerService.init();
 		const trackLayer = this.trackService.init();
+		const navigraphLayer = this.navigraphService.init();
 
 		this.map = new OlMap({
 			target: "map",
-			layers: [this.baseLayer, sunLayer, ...pilotLayers, airportLayer, ...controllerLayers, trackLayer],
+			layers: [this.baseLayer, sunLayer, ...pilotLayers, airportLayer, ...controllerLayers, trackLayer, navigraphLayer],
 			view: new View({
 				center: fromLonLat(center),
 				zoom,
@@ -147,6 +150,7 @@ export class MapService {
 		this.sunService.setTheme(isDark);
 		this.pilotService.setTheme(isDark);
 		this.controllerService.setTheme(isDark);
+		this.navigraphService.setTheme(isDark);
 	}
 
 	public setSettings(settings: Partial<SettingValues>): void {
@@ -710,6 +714,7 @@ export class MapService {
 
 		this.pilotService.renderFeatures(extent, resolution);
 		this.airportService.renderFeatures(extent, resolution);
+		this.navigraphService.renderFeatures(extent, resolution);
 
 		this.emit();
 	}

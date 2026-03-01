@@ -31,7 +31,7 @@ export class TrackService {
 			properties: {
 				type: "track",
 			},
-			zIndex: 3,
+			zIndex: 4,
 		});
 		return this.layer;
 	}
