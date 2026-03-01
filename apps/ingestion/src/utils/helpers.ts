@@ -1,3 +1,12 @@
+// Equirectangular approximation — accurate for distances < 1 km, much faster than haversine
+export function distanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+	const R = 6371000;
+	const dLat = ((lat2 - lat1) * Math.PI) / 180;
+	const dLon = ((lon2 - lon1) * Math.PI) / 180;
+	const cosLat = Math.cos(((lat1 + lat2) / 2) * (Math.PI / 180));
+	return R * Math.sqrt(dLat * dLat + dLon * cosLat * (dLon * cosLat));
+}
+
 // [lon, lat]
 export function haversineDistance(start: number[], end: number[]): number {
 	const R = 3440.065;

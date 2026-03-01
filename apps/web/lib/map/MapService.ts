@@ -654,6 +654,9 @@ export class MapService {
 		if (airports) {
 			for (const airport of airports) {
 				this.storedAirports.set(airport.icao, airport);
+				if (airport.blocked_gates) {
+					this.navigraphService.setBlockedGates(airport.icao, airport.blocked_gates);
+				}
 			}
 		}
 		if (controllers) {
@@ -669,6 +672,7 @@ export class MapService {
 
 			for (const airport of airports.added) {
 				nextAirports.set(airport.icao, airport);
+				this.navigraphService.setBlockedGates(airport.icao, airport.blocked_gates ?? []);
 			}
 
 			for (const a of airports.updated) {
@@ -678,6 +682,9 @@ export class MapService {
 					...existing,
 					...a,
 				});
+				if (a.blocked_gates !== undefined) {
+					this.navigraphService.setBlockedGates(a.icao, a.blocked_gates);
+				}
 			}
 			this.storedAirports = nextAirports;
 		}

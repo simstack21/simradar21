@@ -31,6 +31,7 @@ export function getNavigraphGateStyle(vars?: NavigraphStyleVars) {
 					padding: [3, 2, 1, 4],
 					textAlign: "center",
 				}),
+				zIndex: blocked ? 1 : 0,
 			});
 			styleCache.set(cacheKey, style);
 		}

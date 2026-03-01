@@ -26,6 +26,7 @@ export class NavigraphService {
 	private cachedAirports = new Set<string>();
 
 	private styleVars: NavigraphStyleVars = {};
+	private blockedGatesAirport = new Map<string, Set<string>>();
 
 	public init(): VectorLayer {
 		this.initRBush();
@@ -35,7 +36,7 @@ export class NavigraphService {
 			properties: {
 				type: "navigraph",
 			},
-			declutter: true,
+			declutter: "separate",
 			zIndex: 3,
 		});
 
@@ -59,6 +60,20 @@ export class NavigraphService {
 		this.layer?.setStyle(getNavigraphGateStyle(this.styleVars));
 	}
 
+	public setBlockedGates(icao: string, blockedGates: string[]): void {
+		this.blockedGatesAirport.set(icao, new Set(blockedGates));
+
+		if (!this.cachedAirports.has(icao)) return;
+
+		const prefix = `navigraph_gate_${icao}_`;
+		const blocked = this.blockedGatesAirport.get(icao) ?? new Set<string>();
+		for (const feature of this.source.getFeatures()) {
+			const id = feature.getId()?.toString();
+			if (!id?.startsWith(prefix)) continue;
+			feature.set("blocked", blocked.has(id.slice(prefix.length)));
+		}
+	}
+
 	public async renderFeatures(extent: Extent, resolution: number) {
 		if (resolution > 10) {
 			this.source.clear();
@@ -77,11 +92,12 @@ export class NavigraphService {
 			if (!a) return;
 			this.cachedAirports.add(a.id);
 
+			const blocked = this.blockedGatesAirport.get(a.id) ?? new Set<string>();
 			a.gates.forEach((gate) => {
 				const feature = new Feature({
 					geometry: new Point(fromLonLat([gate.longitude, gate.latitude])),
 					label: gate.id,
-					blocked: false, // TODO: implement blocked status
+					blocked: blocked.has(gate.id),
 				});
 				feature.setId(`navigraph_gate_${a.id}_${gate.id}`);
 				features.push(feature);

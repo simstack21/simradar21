@@ -144,6 +144,7 @@ export interface AirportShort {
 	icao: string;
 	dep_traffic?: AirportTraffic;
 	arr_traffic?: AirportTraffic;
+	blocked_gates?: string[];
 }
 
 export interface AirportLong extends Required<AirportShort> {

@@ -269,6 +269,9 @@ export async function updateNavigraphPackages(): Promise<void> {
 		};
 
 		await rdsSetSingle(`navigraph:package:${packageStatus}`, stored);
+		if (packageStatus === "current") {
+			await rdsSetSingle("navigraph:data:current", dataset);
+		}
 		console.log(`✅ Navigraph package ${packageId} (${cycle}) [${packageStatus}] uploaded to R2`);
 	}
 }
