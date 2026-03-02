@@ -12,6 +12,7 @@ export type NavigraphNavaid = {
 	id: string;
 	areaCode: string;
 	name: string;
+	type: "VOR" | "NDB";
 	latitude: number;
 	longitude: number;
 	frequency: number;

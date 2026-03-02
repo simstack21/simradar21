@@ -53,7 +53,7 @@ export class ControllerService {
 			properties: {
 				type: "airport_label",
 			},
-			zIndex: 7,
+			zIndex: 8,
 		});
 		this.labelLayer = new VectorLayer({
 			source: this.labelSource,
@@ -62,7 +62,7 @@ export class ControllerService {
 				type: "sector_label",
 			},
 			declutter: true,
-			zIndex: 9,
+			zIndex: 10,
 		});
 
 		return [this.firLayer, this.traconLayer, this.airportLayer, this.labelLayer];

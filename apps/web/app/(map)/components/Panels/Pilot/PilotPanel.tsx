@@ -2,7 +2,7 @@
 
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { DeltaTrackPoint, PilotLong, TrackPoint } from "@sr24/types/interface";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 import { mapService } from "@/app/(map)/lib";
 import LoadingPanel from "@/components/Panel/Loading";
@@ -34,6 +34,7 @@ export default function PilotPanel({ id }: { id: string }) {
 	} = useSWR<PilotLong>(`/map/pilot/${id}`, fetchApi, {
 		refreshInterval: 60_000,
 	});
+
 	const { panel, setPanel } = usePilotPanelStore();
 	const [minimized, setMinimized] = useState(false);
 	const [trackPoints, setTrackPoints] = useState<TrackPoint[]>([]);
@@ -47,6 +48,15 @@ export default function PilotPanel({ id }: { id: string }) {
 		});
 		lastMessageSeq = null;
 	}, [id]);
+
+	const routeRef = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (pilotData?.flight_plan?.parsed_route && pilotData.flight_plan.route !== routeRef.current) {
+			mapService.setFeatures({ autoTrackId: pilotData.id, route: pilotData.flight_plan.parsed_route });
+			routeRef.current = pilotData.flight_plan.route;
+		}
+	}, [pilotData]);
 
 	useEffect(() => {
 		const handleMessage = (msg: WsData | WsPresence) => {

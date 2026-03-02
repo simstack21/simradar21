@@ -3,6 +3,7 @@ import { rdsGetMultiple, rdsGetSingle, rdsSetMultiple } from "@sr24/db/redis";
 import type { StaticAirport } from "@sr24/types/db";
 import type { PilotDelta, PilotFlightPlan, PilotLong, PilotShort, PilotTimes } from "@sr24/types/interface";
 import type { VatsimData, VatsimPilot, VatsimPilotFlightPlan, VatsimPrefile } from "@sr24/types/vatsim";
+import { parseRouteString } from "./navigraph.js";
 import { fromLonLat, haversineDistance } from "./utils/helpers.js";
 import { MILITARY_RATINGS, PILOT_RATINGS } from "./utils/ratings.js";
 
@@ -247,6 +248,7 @@ async function mapPilotFlightPlan(fp?: VatsimPilotFlightPlan): Promise<PilotFlig
 		fuel_time: parseStrToSeconds(fp.fuel_time),
 		remarks: fp.remarks,
 		route: fp.route,
+		parsed_route: parseRouteString(fp),
 		revision_id: fp.revision_id,
 	};
 

@@ -1,6 +1,15 @@
 import { MapLibreLayer } from "@geoblocks/ol-maplibre-layer";
 import type { StaticAirport } from "@sr24/types/db";
-import type { AirportDelta, AirportShort, ControllerDelta, ControllerMerged, PilotDelta, PilotShort, TrackPoint } from "@sr24/types/interface";
+import type {
+	AirportDelta,
+	AirportShort,
+	ControllerDelta,
+	ControllerMerged,
+	PilotDelta,
+	PilotParsedRoute,
+	PilotShort,
+	TrackPoint,
+} from "@sr24/types/interface";
 import type { StyleSpecification } from "maplibre-gl";
 import { type Feature, type MapBrowserEvent, Map as OlMap, type Overlay, View } from "ol";
 import { click } from "ol/events/condition";
@@ -123,11 +132,11 @@ export class MapService {
 		const airportLayer = this.airportService.init();
 		const controllerLayers = this.controllerService.init();
 		const trackLayer = this.trackService.init();
-		const navigraphLayer = this.navigraphService.init();
+		const navigraphLayers = this.navigraphService.init();
 
 		this.map = new OlMap({
 			target: "map",
-			layers: [this.baseLayer, sunLayer, ...pilotLayers, airportLayer, ...controllerLayers, trackLayer, navigraphLayer],
+			layers: [this.baseLayer, sunLayer, ...pilotLayers, airportLayer, ...controllerLayers, trackLayer, ...navigraphLayers],
 			view: new View({
 				center: fromLonLat(center),
 				zoom,
@@ -428,6 +437,7 @@ export class MapService {
 			this.navigate(strippedId, "pilot", isManual, "delete");
 			this.pilotService.removeHighlighted(strippedId);
 			this.trackService.removeFeatures(strippedId);
+			this.navigraphService.removeRouteFeatures(strippedId);
 		}
 
 		if (type === "airport" && id) {
@@ -477,6 +487,7 @@ export class MapService {
 
 	public clearMap(): void {
 		this.trackService.clearFeatures();
+		this.navigraphService.clearFeatures();
 	}
 
 	public resetMap(nav: boolean = true): void {
@@ -517,6 +528,7 @@ export class MapService {
 		trackPoints,
 		autoTrackId,
 		sunTime,
+		route,
 	}: {
 		pilots?: Required<PilotShort>[];
 		airports?: StaticAirport[];
@@ -524,6 +536,7 @@ export class MapService {
 		trackPoints?: TrackPoint[];
 		autoTrackId?: string;
 		sunTime?: Date;
+		route?: PilotParsedRoute;
 	}): Promise<void> {
 		if (pilots) {
 			this.pilotService.setFeatures(pilots);
@@ -539,6 +552,9 @@ export class MapService {
 		}
 		if (sunTime) {
 			this.sunService.setFeatures(sunTime);
+		}
+		if (route && autoTrackId) {
+			this.navigraphService.setRouteFeatures(route, autoTrackId);
 		}
 
 		await new Promise(requestAnimationFrame);

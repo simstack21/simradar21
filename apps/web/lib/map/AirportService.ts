@@ -43,7 +43,7 @@ export class AirportService {
 			properties: {
 				type: "airport_main",
 			},
-			zIndex: 8,
+			zIndex: 9,
 		});
 		return this.layer;
 	}

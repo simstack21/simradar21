@@ -33,6 +33,15 @@ export default function MultiPilotPanel({ id, removeSelected }: { id: string; re
 		lastMessageSeqRef.current = null;
 	}, [id]);
 
+	const routeRef = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (pilotData?.flight_plan?.parsed_route && pilotData.flight_plan.route !== routeRef.current) {
+			mapService.setFeatures({ autoTrackId: pilotData.id, route: pilotData.flight_plan.parsed_route });
+			routeRef.current = pilotData.flight_plan.route;
+		}
+	}, [pilotData]);
+
 	useEffect(() => {
 		const handleMessage = (msg: WsData | WsPresence) => {
 			if (msg.t === "delta") {

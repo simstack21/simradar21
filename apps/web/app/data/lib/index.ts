@@ -18,6 +18,7 @@ export async function init(pilot: PilotLong, trackPoints: Required<TrackPoint>[]
 	await mapService.setFeatures({
 		airports,
 		trackPoints,
+		route: pilot.flight_plan?.parsed_route,
 		pilots: [getPilotShort(pilot, trackPoints[0])],
 		sunTime: new Date(trackPoints[0].timestamp),
 		autoTrackId: pilot.id,

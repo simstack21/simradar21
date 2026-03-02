@@ -95,7 +95,14 @@ function queryNavaids(db: Database.Database): NavigraphNavaid[] {
 	const seen = new Set<string>();
 	const navaids: NavigraphNavaid[] = [];
 
-	for (const table of ["tbl_d_vhfnavaids", "tbl_db_enroute_ndbnavaids", "tbl_pn_terminal_ndbnavaids"]) {
+	const tables: [string, NavigraphNavaid["type"]][] = [
+		["tbl_d_vhfnavaids", "VOR"],
+		["tbl_db_enroute_ndbnavaids", "NDB"],
+		["tbl_pn_terminal_ndbnavaids", "NDB"],
+	];
+
+	for (const [table, type] of tables) {
+		type NavaidRow = Omit<NavigraphNavaid, "type">;
 		const rows = db
 			.prepare(
 				`SELECT navaid_identifier as id, area_code as areaCode, navaid_name as name,
@@ -103,13 +110,13 @@ function queryNavaids(db: Database.Database): NavigraphNavaid[] {
 				 FROM ${table}
 				 WHERE navaid_latitude IS NOT NULL AND navaid_longitude IS NOT NULL`,
 			)
-			.all() as NavigraphNavaid[];
+			.all() as NavaidRow[];
 
 		for (const row of rows) {
 			const key = `${row.id}:${row.areaCode}`;
 			if (!seen.has(key)) {
 				seen.add(key);
-				navaids.push(row);
+				navaids.push({ ...row, type });
 			}
 		}
 	}

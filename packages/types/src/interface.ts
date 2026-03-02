@@ -85,8 +85,24 @@ export interface PilotFlightPlan {
 	fuel_time: number;
 	remarks: string;
 	route: string;
+	parsed_route: PilotParsedRoute;
 	revision_id: number;
 }
+
+export type PilotParsedRoute = {
+	sid: string | null;
+	star: string | null;
+	waypoints: PilotRoutePoint[];
+};
+
+export type PilotRoutePoint = {
+	id: string;
+	name: string;
+	type: "NDB" | "VOR" | "WP";
+	airway?: string;
+	latitude: number;
+	longitude: number;
+};
 
 export interface PilotTimes {
 	sched_off_block: number;
