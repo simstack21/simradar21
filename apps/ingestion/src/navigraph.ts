@@ -89,24 +89,45 @@ function stripConstraint(token: string): string {
 	return token.split("/")[0];
 }
 
-function lookupFix(id: string): PilotRoutePoint | null {
-	const wps = waypointsByName.get(id);
-	if (wps?.length) {
-		const { id: wId, name, latitude, longitude } = wps[0];
-		return { id: wId, name, latitude, longitude, type: "WP" };
+function closestCandidate<T extends { latitude: number; longitude: number }>(
+	candidates: T[],
+	near: { latitude: number; longitude: number } | null,
+): T {
+	if (!near || candidates.length === 1) return candidates[0];
+
+	let best = candidates[0];
+	let bestDist = Infinity;
+
+	for (const c of candidates) {
+		const dlat = c.latitude - near.latitude;
+		const dlon = c.longitude - near.longitude;
+		const dist = dlat * dlat + dlon * dlon;
+		if (dist < bestDist) {
+			bestDist = dist;
+			best = c;
+		}
 	}
 
-	const navs = navaidsByName.get(id);
-	if (navs?.length) {
-		const { id: nId, name, latitude, longitude, type } = navs[0];
-		return { id: nId, name, latitude, longitude, type };
+	return best;
+}
+
+function lookupFix(id: string, near: { latitude: number; longitude: number } | null): PilotRoutePoint | null {
+	const candidates: PilotRoutePoint[] = [];
+
+	for (const wp of waypointsByName.get(id) ?? []) {
+		candidates.push({ id: wp.id, name: wp.name, latitude: wp.latitude, longitude: wp.longitude, type: "WP" });
+	}
+	for (const nav of navaidsByName.get(id) ?? []) {
+		candidates.push({ id: nav.id, name: nav.name, latitude: nav.latitude, longitude: nav.longitude, type: nav.type });
 	}
 
-	return null;
+	if (!candidates.length) return null;
+	if (id === "SPY") console.log(candidates, near);
+	return closestCandidate(candidates, near);
 }
 
 // Return intermediate waypoints between entry and exit along an airway (exclusive of both endpoints)
-function expandAirway(airwayId: string, entryId: string, exitId: string): PilotRoutePoint[] {
+function expandAirway(airwayId: string, entryId: string, exitId: string, near: { latitude: number; longitude: number } | null): PilotRoutePoint[] {
 	const airways = airwaysByName.get(airwayId);
 	if (!airways) return [];
 
@@ -117,10 +138,14 @@ function expandAirway(airwayId: string, entryId: string, exitId: string): PilotR
 
 		const step = entryIdx < exitIdx ? 1 : -1;
 		const result: PilotRoutePoint[] = [];
+		let pos = near;
 
 		for (let j = entryIdx + step; j !== exitIdx; j += step) {
-			const fix = lookupFix(airway.waypoints[j]);
-			if (fix) result.push({ ...fix, airway: airwayId });
+			const fix = lookupFix(airway.waypoints[j], pos);
+			if (fix) {
+				result.push({ ...fix, airway: airwayId });
+				pos = fix;
+			}
 		}
 
 		return result;
@@ -160,6 +185,11 @@ export function parseRouteString(flightplan: VatsimPilotFlightPlan): PilotParsed
 		}
 	}
 
+	const depAirport = gatesByAirport.get(flightplan.departure);
+	let lastPos: { latitude: number; longitude: number } | null = depAirport
+		? { latitude: depAirport.latitude, longitude: depAirport.longitude }
+		: null;
+
 	const waypoints: PilotRoutePoint[] = [];
 	let lastId: string | null = null;
 	let i = startIdx;
@@ -178,24 +208,37 @@ export function parseRouteString(flightplan: VatsimPilotFlightPlan): PilotParsed
 		if (latLon) {
 			waypoints.push({ id: fixId, name: fixId, ...latLon, type: "WP" });
 			lastId = fixId;
+			lastPos = latLon;
 			i++;
 			continue;
 		}
 
-		const fix = lookupFix(fixId);
+		if (airwaysByName.has(fixId) && lastId && i + 1 <= endIdx) {
+			const entryId = lastId;
+			const exitId = stripConstraint(tokens[i + 1]);
 
-		if (!fix && airwaysByName.has(fixId)) {
-			if (lastId && i + 1 <= endIdx) {
-				const exitId = stripConstraint(tokens[i + 1]);
-				waypoints.push(...expandAirway(fixId, lastId, exitId));
+			const airways = airwaysByName.get(fixId) ?? [];
+			const isAirway = airways.some((aw) => aw.waypoints.includes(entryId) && aw.waypoints.includes(exitId));
+
+			if (isAirway) {
+				const expanded = expandAirway(fixId, lastId, exitId, lastPos);
+				waypoints.push(...expanded);
+
+				if (expanded.length > 0) {
+					const last = expanded[expanded.length - 1];
+					lastPos = { latitude: last.latitude, longitude: last.longitude };
+				}
+
+				i++;
+				continue;
 			}
-			i++;
-			continue;
 		}
 
+		const fix = lookupFix(fixId, lastPos);
 		if (fix) {
 			waypoints.push(fix);
 			lastId = fix.id;
+			lastPos = { latitude: fix.latitude, longitude: fix.longitude };
 		}
 
 		i++;

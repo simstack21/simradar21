@@ -36,6 +36,8 @@ export type NavigraphAirway = {
 
 export type NavigraphAirport = {
 	id: string;
+	latitude: number;
+	longitude: number;
 	gates: NavigraphGate[];
 };
 

@@ -161,7 +161,7 @@ export class NavigraphService {
 				geometry: new LineString([fromLonLat([start.longitude, start.latitude]), fromLonLat([end.longitude, end.latitude])]),
 				type: "navigraph_route_track",
 			});
-			if (start.airway) trackFeature.set("label", start.airway);
+			if (start.airway || end.airway) trackFeature.set("label", start.airway || end.airway);
 
 			trackFeature.setId(`navigraph_route_track_${id}_${i}`);
 			trackFeatures.push(trackFeature);

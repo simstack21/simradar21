@@ -95,14 +95,31 @@ function queryNavaids(db: Database.Database): NavigraphNavaid[] {
 	const seen = new Set<string>();
 	const navaids: NavigraphNavaid[] = [];
 
-	const tables: [string, NavigraphNavaid["type"]][] = [
-		["tbl_d_vhfnavaids", "VOR"],
-		["tbl_db_enroute_ndbnavaids", "NDB"],
-		["tbl_pn_terminal_ndbnavaids", "NDB"],
-	];
+	type NavaidRow = Omit<NavigraphNavaid, "type">;
 
-	for (const [table, type] of tables) {
-		type NavaidRow = Omit<NavigraphNavaid, "type">;
+	const vorRows = db
+		.prepare(
+			`SELECT navaid_identifier as id,
+			        area_code as areaCode,
+			        navaid_name as name,
+			        COALESCE(navaid_latitude, dme_latitude) as latitude,
+			        COALESCE(navaid_longitude, dme_longitude) as longitude,
+			        navaid_frequency as frequency
+			 FROM tbl_d_vhfnavaids
+			 WHERE COALESCE(navaid_latitude, dme_latitude) IS NOT NULL
+			   AND COALESCE(navaid_longitude, dme_longitude) IS NOT NULL`,
+		)
+		.all() as NavaidRow[];
+
+	for (const row of vorRows) {
+		const key = `${row.id}:${Math.round(row.latitude * 10)}:${Math.round(row.longitude * 10)}`;
+		if (!seen.has(key)) {
+			seen.add(key);
+			navaids.push({ ...row, type: "VOR" });
+		}
+	}
+
+	for (const table of ["tbl_db_enroute_ndbnavaids", "tbl_pn_terminal_ndbnavaids"]) {
 		const rows = db
 			.prepare(
 				`SELECT navaid_identifier as id, area_code as areaCode, navaid_name as name,
@@ -113,10 +130,10 @@ function queryNavaids(db: Database.Database): NavigraphNavaid[] {
 			.all() as NavaidRow[];
 
 		for (const row of rows) {
-			const key = `${row.id}:${row.areaCode}`;
+			const key = `${row.id}:${Math.round(row.latitude * 10)}:${Math.round(row.longitude * 10)}`;
 			if (!seen.has(key)) {
 				seen.add(key);
-				navaids.push({ ...row, type });
+				navaids.push({ ...row, type: "NDB" });
 			}
 		}
 	}
@@ -139,7 +156,7 @@ function queryWaypoints(db: Database.Database): NavigraphWaypoint[] {
 			.all() as NavigraphWaypoint[];
 
 		for (const row of rows) {
-			const key = `${row.id}:${row.areaCode}`;
+			const key = `${row.id}:${Math.round(row.latitude * 10)}:${Math.round(row.longitude * 10)}`;
 			if (!seen.has(key)) {
 				seen.add(key);
 				waypoints.push(row);
@@ -177,6 +194,20 @@ function queryAirways(db: Database.Database): NavigraphAirway[] {
 }
 
 function queryAirports(db: Database.Database): NavigraphAirport[] {
+	type AirportRow = { id: string; latitude: number; longitude: number };
+	const airportRows = db
+		.prepare(
+			`SELECT airport_identifier as id, airport_ref_latitude as latitude, airport_ref_longitude as longitude
+			 FROM tbl_pa_airports
+			 WHERE airport_ref_latitude IS NOT NULL AND airport_ref_longitude IS NOT NULL`,
+		)
+		.all() as AirportRow[];
+
+	const airportMap = new Map<string, NavigraphAirport>();
+	for (const row of airportRows) {
+		airportMap.set(row.id, { id: row.id, latitude: row.latitude, longitude: row.longitude, gates: [] });
+	}
+
 	type GateRow = { airport_identifier: string; id: string; latitude: number; longitude: number };
 	const gateRows = db
 		.prepare(
@@ -186,17 +217,14 @@ function queryAirports(db: Database.Database): NavigraphAirport[] {
 		)
 		.all() as GateRow[];
 
-	const gatesByAirport = new Map<string, { id: string; latitude: number; longitude: number }[]>();
 	for (const gate of gateRows) {
-		let list = gatesByAirport.get(gate.airport_identifier);
-		if (!list) {
-			list = [];
-			gatesByAirport.set(gate.airport_identifier, list);
+		const airport = airportMap.get(gate.airport_identifier);
+		if (airport) {
+			airport.gates.push({ id: gate.id, latitude: gate.latitude, longitude: gate.longitude });
 		}
-		list.push({ id: gate.id, latitude: gate.latitude, longitude: gate.longitude });
 	}
 
-	return [...gatesByAirport.entries()].map(([id, gates]) => ({ id, gates }));
+	return [...airportMap.values()];
 }
 
 function queryProcedures(db: Database.Database, table: string): NavigraphSid[] {
