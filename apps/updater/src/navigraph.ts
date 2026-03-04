@@ -258,7 +258,7 @@ function queryAirports(db: Database.Database): NavigraphAirport[] {
 
 	const airportMap = new Map<string, NavigraphAirport>();
 	for (const row of airportRows) {
-		airportMap.set(row.id, { id: row.id, latitude: row.latitude, longitude: row.longitude, gates: [] });
+		airportMap.set(row.id, { id: row.id, latitude: row.latitude, longitude: row.longitude, gates: [], runways: [] });
 	}
 
 	type GateRow = { airport_identifier: string; id: string; latitude: number; longitude: number };
@@ -274,6 +274,22 @@ function queryAirports(db: Database.Database): NavigraphAirport[] {
 		const airport = airportMap.get(gate.airport_identifier);
 		if (airport) {
 			airport.gates.push({ id: gate.id, latitude: gate.latitude, longitude: gate.longitude });
+		}
+	}
+
+	type RunwayRow = { airport_identifier: string; id: string; latitude: number; longitude: number };
+	const runwayRows = db
+		.prepare(
+			`SELECT airport_identifier, runway_identifier as id, runway_latitude as latitude, runway_longitude as longitude
+			 FROM tbl_pg_runways
+			 WHERE runway_latitude IS NOT NULL AND runway_longitude IS NOT NULL`,
+		)
+		.all() as RunwayRow[];
+
+	for (const runway of runwayRows) {
+		const airport = airportMap.get(runway.airport_identifier);
+		if (airport) {
+			airport.runways.push({ id: runway.id, latitude: runway.latitude, longitude: runway.longitude });
 		}
 	}
 

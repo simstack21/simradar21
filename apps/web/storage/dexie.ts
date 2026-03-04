@@ -225,6 +225,11 @@ export async function dxGetNavigraphAirports(ids: string[]): Promise<(NavigraphA
 	return await db.ngAirports.bulkGet(ids);
 }
 
+export async function dxGetNavigraphAirport(id: string): Promise<NavigraphAirport | undefined> {
+	await dxEnsureInitialized();
+	return await db.ngAirports.get(id);
+}
+
 export async function dxGetNavigraphWaypoints(uids: string[]): Promise<(NavigraphWaypoint | undefined)[]> {
 	await dxEnsureInitialized();
 	return await db.ngWaypoints.bulkGet(uids);

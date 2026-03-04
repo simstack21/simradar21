@@ -1,6 +1,6 @@
 import { rdsGetSingle } from "@sr24/db/redis";
 import type { NavigraphPackage } from "@sr24/types/db";
-import type { PilotParsedRoute, PilotRoutePoint } from "@sr24/types/interface";
+import type { PilotParsedRoute, PilotRoutePoint, PilotRouteSid, PilotRouteStar } from "@sr24/types/interface";
 import type { NavigraphAirport, NavigraphAirway, NavigraphDataset, NavigraphProcedure, NavigraphWaypoint } from "@sr24/types/navigraph";
 import type { VatsimPilotFlightPlan } from "@sr24/types/vatsim";
 
@@ -83,6 +83,11 @@ function stripConstraint(token: string): string {
 	return token.split("/")[0];
 }
 
+// Detect standalone ICAO speed/level designators like M084F370, N0450F370, K0830A100
+function isRestriction(token: string): boolean {
+	return /^[KNM]\d{3,4}[AFMS]\d{3,4}$/.test(token);
+}
+
 function matchesProcedureId(dbId: string, filedId: string): boolean {
 	if (dbId === filedId) return true;
 	if (filedId.length === dbId.length + 1) return dbId === filedId.slice(0, 4) + filedId.slice(5);
@@ -151,61 +156,8 @@ function expandAirway(
 
 export function parseRouteString(flightplan: VatsimPilotFlightPlan): PilotParsedRoute {
 	if (!flightplan?.route) return { sid: null, star: null, waypoints: [] };
-
-	const tokens = flightplan.route.trim().split(/\s+/).filter(Boolean);
+	const tokens = getTokens(flightplan);
 	if (tokens.length === 0) return { sid: null, star: null, waypoints: [] };
-
-	let startIdx = 0;
-	let endIdx = tokens.length - 1;
-
-	let sid: string[] | null = null;
-	const depSids = sidsByAirport.get(flightplan.departure);
-	if (depSids) {
-		const first = tokens[0];
-		const slashIdx = first.indexOf("/");
-		const procName = slashIdx !== -1 ? first.slice(0, slashIdx) : stripConstraint(first);
-		const runwaySuffix = slashIdx !== -1 ? first.slice(slashIdx + 1) : null;
-
-		const matches = depSids.filter((s) => matchesProcedureId(s.id, procName));
-		if (matches.length > 0) {
-			const allMatch = matches.find((s) => s.uid.split(":")[2] === "ALL");
-			if (allMatch) {
-				startIdx = 1;
-				if (runwaySuffix) {
-					const rwId = `RW${runwaySuffix}`;
-					const transMatch = depSids.find((s) => s.id === allMatch.id && s.uid.split(":")[2] === rwId);
-					sid = transMatch ? [transMatch.uid, allMatch.uid] : [allMatch.uid];
-				} else {
-					sid = [allMatch.uid];
-				}
-			} else if (matches.length === 1) {
-				startIdx = 1;
-				sid = [matches[0].uid];
-			}
-		}
-	}
-
-	let starUid: string | null = null;
-	let starId: string | null = null;
-	let starHasMultiple = false;
-
-	const arrStars = starsByAirport.get(flightplan.arrival);
-	if (arrStars && endIdx >= startIdx) {
-		const last = stripConstraint(tokens[endIdx]);
-		const matches = arrStars.filter((s) => matchesProcedureId(s.id, last));
-
-		if (matches.length > 0) {
-			const allMatch = matches.find((s) => s.uid.split(":")[2] === "ALL");
-			const picked = allMatch ?? (matches.length === 1 ? matches[0] : null);
-
-			if (picked) {
-				starUid = picked.uid;
-				starId = picked.id;
-				starHasMultiple = !!allMatch;
-				endIdx--;
-			}
-		}
-	}
 
 	const depAirport = gatesByAirport.get(flightplan.departure);
 	let lastPos: { latitude: number; longitude: number } | null = depAirport
@@ -214,12 +166,13 @@ export function parseRouteString(flightplan: VatsimPilotFlightPlan): PilotParsed
 
 	const waypoints: PilotRoutePoint[] = [];
 	let lastUid: string | null = null;
-	let i = startIdx;
+	let i = 0;
+	const endIdx = tokens.length - 1;
 
-	while (i <= endIdx) {
+	while (i <= tokens.length - 1) {
 		const raw = tokens[i];
 
-		if (raw === "DCT") {
+		if (raw === "DCT" || isRestriction(raw)) {
 			i++;
 			continue;
 		}
@@ -274,15 +227,136 @@ export function parseRouteString(flightplan: VatsimPilotFlightPlan): PilotParsed
 		i++;
 	}
 
-	let star: string[] | null = null;
-	if (starUid && starId) {
-		star = [starUid];
-		if (starHasMultiple && lastUid && arrStars) {
-			const lastFixId = lastUid.split(":")[2];
-			const transMatch = arrStars.find((s) => s.id === starId && s.uid.split(":")[2] === lastFixId);
-			if (transMatch) star = [transMatch.uid, starUid];
-		}
-	}
+	const sid = parseSid(flightplan);
+	const star = parseStar(flightplan);
 
 	return { sid, star, waypoints };
+}
+
+function getTokens(flightplan: VatsimPilotFlightPlan): string[] {
+	if (!flightplan?.route) return [];
+	return flightplan.route.trim().split(/\s+/).filter(Boolean);
+}
+
+function parseSid(flightplan: VatsimPilotFlightPlan): PilotRouteSid | null {
+	if (!flightplan?.route) return null;
+	const tokens = getTokens(flightplan);
+	if (tokens.length === 0) return null;
+
+	const firstIdx = tokens.findIndex((t) => !isRestriction(t));
+	if (firstIdx === -1) return null;
+
+	const sid: PilotRouteSid = { override: false, airport: flightplan.departure };
+
+	const first = tokens[firstIdx];
+	const firstTwoIds = tokens.slice(firstIdx + 1);
+	const slashIdx = first.indexOf("/");
+	const procId = slashIdx !== -1 ? first.slice(0, slashIdx) : stripConstraint(first);
+	const runwaySuffix = slashIdx !== -1 ? first.slice(slashIdx + 1) : null;
+	const rwId = runwaySuffix ? `RW${runwaySuffix}` : null;
+
+	if (rwId) {
+		sid.rwy = rwId;
+	}
+
+	const depSids = sidsByAirport.get(flightplan.departure);
+	if (!depSids) return sid;
+
+	const matches = depSids.filter((s) => matchesProcedureId(s.id, procId));
+	if (matches.length === 0) return sid;
+
+	const bothRwyId = rwId?.replace(/[A-Za-z]+$/, "B");
+	const rwyMatch = matches.find((s) => s.uid.split(":")[2] === rwId || s.uid.split(":")[2] === bothRwyId);
+	if (rwyMatch) {
+		const connects = sidConnectsToFirstWaypoint(rwyMatch, firstTwoIds);
+		if (connects) {
+			sid.proc = rwyMatch.uid;
+			return sid;
+		}
+		sid.rwyCon = rwyMatch.uid;
+	}
+
+	const allMatch = matches.find((s) => s.uid.split(":")[2] === "ALL");
+	if (allMatch) {
+		const connects = sidConnectsToFirstWaypoint(allMatch, firstTwoIds);
+		sid.proc = allMatch.uid;
+		if (connects) return sid;
+	}
+
+	if (!sid.proc && matches.length === 1 && sid.rwyCon !== matches[0].uid) {
+		sid.proc = matches[0].uid;
+		const rwIdFromProc = matches[0].uid.split(":")[2];
+		if (rwIdFromProc.includes("RW") && !rwId) {
+			sid.rwy = rwIdFromProc;
+		}
+		const connects = sidConnectsToFirstWaypoint(matches[0], firstTwoIds);
+		if (connects) return sid;
+	}
+
+	const transMatch = matches.find((s) => firstTwoIds.includes(s.uid.split(":")[2]));
+	if (transMatch) {
+		sid.trans = transMatch.uid;
+	}
+
+	return sid;
+}
+
+function sidConnectsToFirstWaypoint(sid: NavigraphProcedure, firstWpIds: string[]): boolean {
+	if (!sid.waypoints.length) return false;
+	return firstWpIds.includes(sid.waypoints[sid.waypoints.length - 1].split(":")[2]);
+}
+
+function parseStar(flightplan: VatsimPilotFlightPlan): PilotRouteStar | null {
+	if (!flightplan?.route) return null;
+	const tokens = getTokens(flightplan);
+	if (tokens.length === 0) return null;
+
+	const star: PilotRouteStar = { override: false, airport: flightplan.arrival };
+
+	const last = tokens[tokens.length - 1];
+	const lastTwoIds = tokens.slice(Math.max(0, tokens.length - 2));
+	const slashIdx = last.indexOf("/");
+	const procId = slashIdx !== -1 ? last.slice(0, slashIdx) : stripConstraint(last);
+	const runwaySuffix = slashIdx !== -1 ? last.slice(slashIdx + 1) : null;
+	const rwId = runwaySuffix ? `RW${runwaySuffix}` : null;
+
+	if (rwId) {
+		star.rwy = rwId;
+	}
+
+	const arrStars = starsByAirport.get(flightplan.arrival);
+	if (!arrStars) return star;
+
+	const matches = arrStars.filter((s) => matchesProcedureId(s.id, procId));
+	if (matches.length === 0) return star;
+
+	const transMatch = matches.find((s) => lastTwoIds.includes(s.uid.split(":")[2]));
+	if (transMatch) {
+		star.trans = transMatch.uid;
+	}
+
+	const bothRwyId = rwId?.replace(/[A-Za-z]+$/, "B");
+	const rwyMatch = matches.find((s) => s.uid.split(":")[2] === rwId || s.uid.split(":")[2] === bothRwyId);
+	if (rwyMatch) {
+		star.proc = rwyMatch.uid;
+		return star;
+	}
+
+	const allMatch = matches.find((s) => s.uid.split(":")[2] === "ALL");
+	if (allMatch) {
+		star.proc = allMatch.uid;
+		return star;
+	}
+
+	if (matches.length === 1) {
+		star.proc = matches[0].uid;
+		const rwIdFromProc = matches[0].uid.split(":")[2];
+
+		if (rwIdFromProc.includes("RW") && !rwId) {
+			star.rwy = rwIdFromProc;
+		}
+		return star;
+	}
+
+	return star;
 }

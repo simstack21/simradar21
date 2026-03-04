@@ -1,4 +1,4 @@
-import type { PilotParsedRoute } from "@sr24/types/interface";
+import type { PilotParsedRoute, PilotRouteSid, PilotRouteStar } from "@sr24/types/interface";
 import { Feature } from "ol";
 import type { Extent } from "ol/extent";
 import { LineString, Point } from "ol/geom";
@@ -6,8 +6,8 @@ import VectorLayer from "ol/layer/Vector";
 import { fromLonLat, transformExtent } from "ol/proj";
 import VectorSource from "ol/source/Vector";
 import RBush from "rbush";
-import { dxGetAllAirports, dxGetNavigraphAirports, dxGetNavigraphProcedure, dxGetNavigraphWaypoints } from "@/storage/dexie";
-import { getLonLatPoint } from "./navigraph";
+import { dxGetAllAirports, dxGetNavigraphAirports, dxGetNavigraphWaypoints } from "@/storage/dexie";
+import { getLonLatPoint, getSidPoints, getStarPoints } from "./navigraph";
 import { getNavigraphGateStyle, getNavigraphRoutePointStyle, getNavigraphRouteTrackStyle, type NavigraphStyleVars } from "./styles/navigraph";
 
 type RBushAirport = {
@@ -109,7 +109,7 @@ export class NavigraphService {
 	}
 
 	private async renderGates(extent: Extent, resolution: number) {
-		if (resolution > 5) {
+		if (resolution > 10) {
 			this.gateSource.clear();
 			this.cachedAirports.clear();
 			return;
@@ -186,23 +186,16 @@ export class NavigraphService {
 		}
 		this.routeTrackSource.addFeatures(trackFeatures);
 
-		this.setRouteProcedureFeatures(id, "sid", route.sid);
-		this.setRouteProcedureFeatures(id, "star", route.star);
+		this.setProcedureFeatures("sid", id, route.sid);
+		this.setProcedureFeatures("star", id, route.star);
 
 		this.cachedRoutes.add(id);
 	}
 
-	private async setRouteProcedureFeatures(id: string, type: "sid" | "star", uids: string[] | null): Promise<void> {
-		if (!uids || uids.length === 0) return;
-
-		const allWaypointUids: string[] = [];
-		for (const uid of uids) {
-			const procedure = await dxGetNavigraphProcedure(type, uid);
-			if (procedure) allWaypointUids.push(...procedure.waypoints);
-		}
-		if (allWaypointUids.length === 0) return;
-
-		const waypoints = await dxGetNavigraphWaypoints(allWaypointUids);
+	private async setProcedureFeatures(type: "sid" | "star", id: string, proc: PilotRouteSid | PilotRouteStar | null): Promise<void> {
+		if (!proc) return;
+		console.log(proc);
+		const waypoints = type === "sid" ? await getSidPoints(proc) : await getStarPoints(proc);
 		const pointFeatures: Feature<Point>[] = [];
 
 		for (const [i, point] of waypoints.entries()) {
@@ -213,13 +206,13 @@ export class NavigraphService {
 				label: point.id,
 				class: point.class,
 			});
-			feature.setId(`navigraph_${type}_point_${id}_${i}`);
+			feature.setId(`navigraph_route_point_${id}_${i}_${type}`);
 			pointFeatures.push(feature);
 		}
 		this.routePointSource.addFeatures(pointFeatures);
 
+		const label = proc.rwyCon?.split(":")[1] || proc.proc?.split(":")[1] || proc.trans?.split(":")[1] || type.toUpperCase();
 		const trackFeatures: Feature<LineString>[] = [];
-		const procName = uids[0].split(":")[1];
 		for (let i = 0; i < waypoints.length - 1; i++) {
 			const start = waypoints[i];
 			const end = waypoints[i + 1];
@@ -229,9 +222,8 @@ export class NavigraphService {
 				geometry: new LineString([fromLonLat([start.longitude, start.latitude]), fromLonLat([end.longitude, end.latitude])]),
 				type,
 			});
-			if (procName) trackFeature.set("label", procName);
-
-			trackFeature.setId(`navigraph_${type}_track_${id}_${i}`);
+			trackFeature.set("label", label);
+			trackFeature.setId(`navigraph_route_track_${id}_${i}_${type}`);
 			trackFeatures.push(trackFeature);
 		}
 		this.routeTrackSource.addFeatures(trackFeatures);
@@ -240,22 +232,12 @@ export class NavigraphService {
 	public removeRouteFeatures(id: string): void {
 		this.routePointSource
 			.getFeatures()
-			.filter(
-				(f) =>
-					String(f.getId()).startsWith(`navigraph_route_point_${id}_`) ||
-					String(f.getId()).startsWith(`navigraph_sid_point_${id}_`) ||
-					String(f.getId()).startsWith(`navigraph_star_point_${id}_`),
-			)
+			.filter((f) => String(f.getId()).startsWith(`navigraph_route_point_${id}_`))
 			.forEach((f) => void this.routePointSource.removeFeature(f));
 
 		this.routeTrackSource
 			.getFeatures()
-			.filter(
-				(f) =>
-					String(f.getId()).startsWith(`navigraph_route_track_${id}_`) ||
-					String(f.getId()).startsWith(`navigraph_sid_track_${id}_`) ||
-					String(f.getId()).startsWith(`navigraph_star_track_${id}_`),
-			)
+			.filter((f) => String(f.getId()).startsWith(`navigraph_route_track_${id}_`))
 			.forEach((f) => void this.routeTrackSource.removeFeature(f));
 
 		this.cachedRoutes.delete(id);

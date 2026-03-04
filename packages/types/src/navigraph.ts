@@ -30,12 +30,19 @@ export type NavigraphAirport = {
 	latitude: number;
 	longitude: number;
 	gates: NavigraphGate[];
+	runways: NavigraphRunway[];
 };
 
 export type NavigraphGate = {
 	id: string;
 	latitude: number;
 	longitude: number;
+};
+
+export type NavigraphRunway = {
+	id: string;
+	longitude: number;
+	latitude: number;
 };
 
 // SIDs and STARs
