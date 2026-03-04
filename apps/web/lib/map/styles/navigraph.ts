@@ -1,3 +1,4 @@
+import type { NavigraphWaypoint } from "@sr24/types/navigraph";
 import type { FeatureLike } from "ol/Feature";
 import Fill from "ol/style/Fill";
 import Icon from "ol/style/Icon";
@@ -53,7 +54,7 @@ export function getNavigraphRoutePointStyle(vars?: NavigraphStyleVars) {
 	const xOffset = vars?.theme ? ICON_SIZE : 0;
 
 	return (feature: FeatureLike) => {
-		const type = feature.get("class") as "VOR" | "VORDME" | "NDB" | "WPT";
+		const type = feature.get("class") as NavigraphWaypoint["class"];
 		const text = feature.get("label") as string;
 		const scale = Math.round(((vars?.waypointSize || 50) / 100) * 100) / 100;
 
@@ -86,15 +87,22 @@ export function getNavigraphRoutePointStyle(vars?: NavigraphStyleVars) {
 	};
 }
 
-function getWaypointOffset(type: "VOR" | "VORDME" | "NDB" | "WPT"): number {
+function getWaypointOffset(type: NavigraphWaypoint["class"]): number {
 	switch (type) {
-		case "WPT":
-			return 0;
 		case "VOR":
-		case "VORDME":
+			return 0;
+		case "DME":
 			return ICON_SIZE;
+		case "VORDME":
+			return ICON_SIZE * 2;
+		case "TACAN":
+			return ICON_SIZE * 3;
 		case "NDB":
-			return 2 * ICON_SIZE;
+			return ICON_SIZE * 4;
+		case "INT":
+			return ICON_SIZE * 5;
+		case "WPT":
+			return ICON_SIZE * 6;
 		default:
 			return 0;
 	}
