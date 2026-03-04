@@ -1,6 +1,6 @@
 import type { FIRFeature, SimAwareTraconFeature, StaticAircraftType, StaticAirline, StaticAirport } from "@sr24/types/db";
-import type { NavigraphAirport, NavigraphAirway, NavigraphNavaid, NavigraphSid, NavigraphWaypoint } from "@sr24/types/navigraph";
-import Dexie, { type EntityTable, type Table } from "dexie";
+import type { NavigraphAirport, NavigraphAirway, NavigraphProcedure, NavigraphWaypoint } from "@sr24/types/navigraph";
+import Dexie, { type EntityTable } from "dexie";
 import type { StatusSetter } from "@/hooks/useInitializer";
 import { fetchApi } from "@/lib/api";
 import { ensureNavigraphData } from "./navigraph";
@@ -30,12 +30,11 @@ const db = new Dexie("StaticDatabase") as Dexie & {
 	airlines: EntityTable<StaticAirline, "id">;
 	aircrafts: EntityTable<StaticAircraftType, "icao">;
 	manifest: EntityTable<Manifest, "key">;
-	ngNavaids: Table<NavigraphNavaid, "[id+areaCode]">;
-	ngWaypoints: Table<NavigraphWaypoint, "[id+areaCode]">;
-	ngAirways: Table<NavigraphAirway, "[id+areaCode]">;
+	ngWaypoints: EntityTable<NavigraphWaypoint, "uid">;
+	ngAirways: EntityTable<NavigraphAirway, "uid">;
 	ngAirports: EntityTable<NavigraphAirport, "id">;
-	ngSids: Table<NavigraphSid, "[airportId+id]">;
-	ngStars: Table<NavigraphSid, "[airportId+id]">;
+	ngSids: EntityTable<NavigraphProcedure, "uid">;
+	ngStars: EntityTable<NavigraphProcedure, "uid">;
 };
 
 db.version(1).stores({
@@ -45,12 +44,11 @@ db.version(1).stores({
 	airlines: "id",
 	aircrafts: "icao",
 	manifest: "key",
-	ngNavaids: "[id+areaCode]",
-	ngWaypoints: "[id+areaCode]",
-	ngAirways: "[id+areaCode]",
+	ngWaypoints: "uid",
+	ngAirways: "uid",
 	ngAirports: "id",
-	ngSids: "[airportId+id]",
-	ngStars: "[airportId+id]",
+	ngSids: "uid",
+	ngStars: "uid",
 });
 
 let initPromise: Promise<void> | null = null;
@@ -131,8 +129,6 @@ async function dxInitDatabases(setStatus?: StatusSetter): Promise<void> {
 	const ngData = await ensureNavigraphData(storedManifest?.versions.navigraphCycle);
 	if (ngData) {
 		const { dataset } = ngData;
-		await db.ngNavaids.clear();
-		await db.ngNavaids.bulkPut(dataset.navaids);
 		await db.ngWaypoints.clear();
 		await db.ngWaypoints.bulkPut(dataset.waypoints);
 		await db.ngAirways.clear();
@@ -227,4 +223,15 @@ export async function dxGetFirs(ids: string[]): Promise<(DexieFeature | undefine
 export async function dxGetNavigraphAirports(ids: string[]): Promise<(NavigraphAirport | undefined)[]> {
 	await dxEnsureInitialized();
 	return await db.ngAirports.bulkGet(ids);
+}
+
+export async function dxGetNavigraphWaypoints(uids: string[]): Promise<(NavigraphWaypoint | undefined)[]> {
+	await dxEnsureInitialized();
+	return await db.ngWaypoints.bulkGet(uids);
+}
+
+export async function dxGetNavigraphProcedure(type: "sid" | "star", uid: string): Promise<NavigraphProcedure | undefined> {
+	await dxEnsureInitialized();
+	const table = type === "sid" ? db.ngSids : db.ngStars;
+	return await table.get(uid);
 }

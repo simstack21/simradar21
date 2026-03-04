@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { rdsGetSingle, rdsSetSingle } from "@sr24/db/redis";
 import type { NavigraphPackage } from "@sr24/types/db";
-import type { NavigraphAirport, NavigraphAirway, NavigraphDataset, NavigraphNavaid, NavigraphSid, NavigraphWaypoint } from "@sr24/types/navigraph";
+import type { NavigraphAirport, NavigraphAirway, NavigraphDataset, NavigraphProcedure, NavigraphWaypoint } from "@sr24/types/navigraph";
 import { path7za } from "7zip-bin";
 import Database from "better-sqlite3";
 import Seven from "node-7z";
@@ -91,20 +91,31 @@ async function withExtractedDb<T>(sevenZipBuffer: Buffer, callback: (db: Databas
 	}
 }
 
-function queryNavaids(db: Database.Database): NavigraphNavaid[] {
+function queryNavaids(db: Database.Database): NavigraphWaypoint[] {
 	const seen = new Set<string>();
-	const navaids: NavigraphNavaid[] = [];
+	const navaids: NavigraphWaypoint[] = [];
 
-	type NavaidRow = Omit<NavigraphNavaid, "type">;
+	type NavaidRow = {
+		id: string;
+		areaCode: string;
+		icaoCode: string;
+		name: string;
+		latitude: number;
+		longitude: number;
+		frequency: number;
+		class: string;
+	};
 
 	const vorRows = db
 		.prepare(
 			`SELECT navaid_identifier as id,
 			        area_code as areaCode,
+			        icao_code as icaoCode,
 			        navaid_name as name,
 			        COALESCE(navaid_latitude, dme_latitude) as latitude,
 			        COALESCE(navaid_longitude, dme_longitude) as longitude,
-			        navaid_frequency as frequency
+			        navaid_frequency as frequency,
+                    navaid_class as class
 			 FROM tbl_d_vhfnavaids
 			 WHERE COALESCE(navaid_latitude, dme_latitude) IS NOT NULL
 			   AND COALESCE(navaid_longitude, dme_longitude) IS NOT NULL`,
@@ -112,28 +123,44 @@ function queryNavaids(db: Database.Database): NavigraphNavaid[] {
 		.all() as NavaidRow[];
 
 	for (const row of vorRows) {
-		const key = `${row.id}:${Math.round(row.latitude * 10)}:${Math.round(row.longitude * 10)}`;
-		if (!seen.has(key)) {
-			seen.add(key);
-			navaids.push({ ...row, type: "VOR" });
+		const uid = `${row.areaCode}:${row.icaoCode}:${row.id}`;
+		if (!seen.has(uid)) {
+			seen.add(uid);
+			navaids.push({
+				uid,
+				id: row.id,
+				name: row.name,
+				latitude: row.latitude,
+				longitude: row.longitude,
+				class: parseNavaidClass(row.class),
+				frequency: row.frequency,
+			});
 		}
 	}
 
 	for (const table of ["tbl_db_enroute_ndbnavaids", "tbl_pn_terminal_ndbnavaids"]) {
 		const rows = db
 			.prepare(
-				`SELECT navaid_identifier as id, area_code as areaCode, navaid_name as name,
-				        navaid_latitude as latitude, navaid_longitude as longitude, navaid_frequency as frequency
+				`SELECT navaid_identifier as id, area_code as areaCode, icao_code as icaoCode, navaid_name as name,
+				        navaid_latitude as latitude, navaid_longitude as longitude, navaid_frequency as frequency, navaid_class as class
 				 FROM ${table}
 				 WHERE navaid_latitude IS NOT NULL AND navaid_longitude IS NOT NULL`,
 			)
 			.all() as NavaidRow[];
 
 		for (const row of rows) {
-			const key = `${row.id}:${Math.round(row.latitude * 10)}:${Math.round(row.longitude * 10)}`;
-			if (!seen.has(key)) {
-				seen.add(key);
-				navaids.push({ ...row, type: "NDB" });
+			const uid = `${row.areaCode}:${row.icaoCode}:${row.id}`;
+			if (!seen.has(uid)) {
+				seen.add(uid);
+				navaids.push({
+					uid,
+					id: row.id,
+					name: row.name,
+					latitude: row.latitude,
+					longitude: row.longitude,
+					class: parseNavaidClass(row.class),
+					frequency: row.frequency,
+				});
 			}
 		}
 	}
@@ -145,21 +172,23 @@ function queryWaypoints(db: Database.Database): NavigraphWaypoint[] {
 	const seen = new Set<string>();
 	const waypoints: NavigraphWaypoint[] = [];
 
+	type WaypointRow = { id: string; areaCode: string; icaoCode: string; name: string; latitude: number; longitude: number };
+
 	for (const table of ["tbl_ea_enroute_waypoints", "tbl_pc_terminal_waypoints"]) {
 		const rows = db
 			.prepare(
-				`SELECT waypoint_identifier as id, area_code as areaCode, waypoint_name as name,
+				`SELECT waypoint_identifier as id, area_code as areaCode, icao_code as icaoCode, waypoint_name as name,
 				        waypoint_latitude as latitude, waypoint_longitude as longitude
 				 FROM ${table}
 				 WHERE waypoint_latitude IS NOT NULL AND waypoint_longitude IS NOT NULL`,
 			)
-			.all() as NavigraphWaypoint[];
+			.all() as WaypointRow[];
 
 		for (const row of rows) {
-			const key = `${row.id}:${Math.round(row.latitude * 10)}:${Math.round(row.longitude * 10)}`;
-			if (!seen.has(key)) {
-				seen.add(key);
-				waypoints.push(row);
+			const uid = `${row.areaCode}:${row.icaoCode}:${row.id}`;
+			if (!seen.has(uid)) {
+				seen.add(uid);
+				waypoints.push({ uid, id: row.id, name: row.name, latitude: row.latitude, longitude: row.longitude, class: "WPT" });
 			}
 		}
 	}
@@ -168,29 +197,53 @@ function queryWaypoints(db: Database.Database): NavigraphWaypoint[] {
 }
 
 function queryAirways(db: Database.Database): NavigraphAirway[] {
-	type AirwayRow = { id: string; areaCode: string; type: string; seqno: number; waypoint_identifier: string };
+	type AirwayRow = {
+		id: string;
+		areaCode: string;
+		icaoCode: string;
+		type: string;
+		seqno: number;
+		waypointId: string;
+		inboundCourse: number;
+		inboundDistance: number;
+	};
 	const rows = db
 		.prepare(
-			`SELECT route_identifier as id, area_code as areaCode, route_type as type, seqno, waypoint_identifier
+			`SELECT route_identifier as id, area_code as areaCode, icao_code as icaoCode, route_type as type, seqno,
+			        waypoint_identifier as waypointId, inbound_course as inboundCourse, inbound_distance as inboundDistance
 			 FROM tbl_er_enroute_airways
 			 ORDER BY route_identifier, area_code, seqno`,
 		)
 		.all() as AirwayRow[];
 
-	const airwayMap = new Map<string, NavigraphAirway>();
+	const airways: NavigraphAirway[] = [];
+	let current: { id: string; type: string; waypoints: string[] } | null = null;
+
 	for (const row of rows) {
-		const key = `${row.id}:${row.areaCode}`;
-		let entry = airwayMap.get(key);
-		if (!entry) {
-			entry = { id: row.id, areaCode: row.areaCode, type: row.type, waypoints: [] };
-			airwayMap.set(key, entry);
+		if (!row.waypointId) continue;
+
+		const waypointUid = `${row.areaCode}:${row.icaoCode}:${row.waypointId}`;
+
+		if (row.inboundCourse === 0) {
+			if (current && current.waypoints.length >= 2) {
+				const entryUid = current.waypoints[0];
+				const exitUid = current.waypoints[current.waypoints.length - 1];
+				airways.push({ uid: `${entryUid}:${current.id}:${exitUid}`, id: current.id, type: current.type, waypoints: current.waypoints });
+			}
+			current = { id: row.id, type: row.type, waypoints: [waypointUid] };
+		} else if (current) {
+			current.waypoints.push(waypointUid);
 		}
-		if (row.waypoint_identifier) {
-			entry.waypoints.push(row.waypoint_identifier);
+
+		if (row.inboundDistance === 0 && current && current.waypoints.length >= 2) {
+			const entryUid = current.waypoints[0];
+			const exitUid = current.waypoints[current.waypoints.length - 1];
+			airways.push({ uid: `${entryUid}:${current.id}:${exitUid}`, id: current.id, type: current.type, waypoints: current.waypoints });
+			current = null;
 		}
 	}
 
-	return [...airwayMap.values()];
+	return airways;
 }
 
 function queryAirports(db: Database.Database): NavigraphAirport[] {
@@ -227,26 +280,41 @@ function queryAirports(db: Database.Database): NavigraphAirport[] {
 	return [...airportMap.values()];
 }
 
-function queryProcedures(db: Database.Database, table: string): NavigraphSid[] {
-	type ProcRow = { id: string; airportId: string; seqno: number; waypoint_identifier: string };
+function queryProcedures(db: Database.Database, table: string): NavigraphProcedure[] {
+	type ProcRow = {
+		id: string;
+		airportId: string;
+		seqno: number;
+		transitionId: string | null;
+		waypointId: string;
+		waypointIcaoCode: string;
+		areaCode: string;
+		latitude: number;
+		longitude: number;
+	};
 	const rows = db
 		.prepare(
-			`SELECT procedure_identifier as id, airport_identifier as airportId, seqno, waypoint_identifier
+			`SELECT procedure_identifier as id, airport_identifier as airportId, seqno, transition_identifier as transitionId,
+			        waypoint_identifier as waypointId, waypoint_icao_code as waypointIcaoCode, area_code as areaCode,
+			        waypoint_latitude as latitude, waypoint_longitude as longitude
 			 FROM ${table}
 			 WHERE waypoint_identifier IS NOT NULL AND waypoint_identifier != ''
+			   AND waypoint_latitude IS NOT NULL AND waypoint_longitude IS NOT NULL
 			 ORDER BY procedure_identifier, airport_identifier, seqno`,
 		)
 		.all() as ProcRow[];
 
-	const procMap = new Map<string, NavigraphSid>();
+	const procMap = new Map<string, NavigraphProcedure>();
 	for (const row of rows) {
-		const key = `${row.airportId}:${row.id}`;
-		let entry = procMap.get(key);
+		const uid = `${row.airportId}:${row.id}:${row.transitionId || "ALL"}`;
+		let entry = procMap.get(uid);
+
 		if (!entry) {
-			entry = { id: row.id, airportId: row.airportId, waypoints: [] };
-			procMap.set(key, entry);
+			entry = { uid, id: row.id, waypoints: [] };
+			procMap.set(uid, entry);
 		}
-		entry.waypoints.push(row.waypoint_identifier);
+
+		entry.waypoints.push(`${row.areaCode}:${row.waypointIcaoCode}:${row.waypointId}`);
 	}
 
 	return [...procMap.values()];
@@ -279,8 +347,7 @@ export async function updateNavigraphPackages(): Promise<void> {
 		let dataset: NavigraphDataset;
 		try {
 			dataset = await withExtractedDb(sevenZipBuffer, (db) => ({
-				navaids: queryNavaids(db),
-				waypoints: queryWaypoints(db),
+				waypoints: [...queryWaypoints(db), ...queryNavaids(db)],
 				airways: queryAirways(db),
 				airports: queryAirports(db),
 				sids: queryProcedures(db, "tbl_pd_sids"),
@@ -309,4 +376,13 @@ export async function updateNavigraphPackages(): Promise<void> {
 		}
 		console.log(`✅ Navigraph package ${packageId} (${cycle}) [${packageStatus}] uploaded to R2`);
 	}
+}
+
+function parseNavaidClass(navaidClass: string): "VOR" | "DME" | "VORDME" | "TACAN" | "NDB" | "WPT" {
+	if (navaidClass.startsWith("VD")) return "VORDME";
+	if (navaidClass.startsWith("V")) return "VOR";
+	if (navaidClass.startsWith(" D")) return "DME";
+	if (navaidClass.startsWith(" T") || navaidClass.startsWith(" M")) return "TACAN";
+	if (navaidClass.startsWith("H")) return "NDB";
+	return "WPT";
 }

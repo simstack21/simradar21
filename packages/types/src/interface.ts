@@ -90,18 +90,14 @@ export interface PilotFlightPlan {
 }
 
 export type PilotParsedRoute = {
-	sid: string | null;
-	star: string | null;
+	sid: string[] | null;
+	star: string[] | null;
 	waypoints: PilotRoutePoint[];
 };
 
 export type PilotRoutePoint = {
-	id: string;
-	name: string;
-	type: "NDB" | "VOR" | "WP";
-	airway?: string;
-	latitude: number;
-	longitude: number;
+	uid: string;
+	airwayUid?: string;
 };
 
 export interface PilotTimes {

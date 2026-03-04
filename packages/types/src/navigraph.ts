@@ -1,37 +1,28 @@
 export type NavigraphDataset = {
-	navaids: NavigraphNavaid[];
 	waypoints: NavigraphWaypoint[];
 	airways: NavigraphAirway[];
 	airports: NavigraphAirport[];
-	sids: NavigraphSid[];
-	stars: NavigraphSid[];
+	sids: NavigraphProcedure[];
+	stars: NavigraphProcedure[];
 };
 
 // VHFs and NDBs
-export type NavigraphNavaid = {
-	id: string;
-	areaCode: string;
-	name: string;
-	type: "VOR" | "NDB";
-	latitude: number;
-	longitude: number;
-	frequency: number;
-};
-
-// Enroute and terminal waypoints
+// type: VOR, DME, VORDME, TACAN, NDB, INT, WPT
 export type NavigraphWaypoint = {
+	uid: string; // type:areaCode:countryCode:id
 	id: string;
-	areaCode: string;
 	name: string;
 	latitude: number;
 	longitude: number;
+	class: "VOR" | "DME" | "VORDME" | "TACAN" | "NDB" | "INT" | "WPT";
+	frequency?: number;
 };
 
 export type NavigraphAirway = {
+	uid: string; // entryId:id:exitId
 	id: string;
-	areaCode: string;
 	type: string;
-	waypoints: string[]; // waypoint ids sorted by seqno
+	waypoints: string[];
 };
 
 export type NavigraphAirport = {
@@ -48,10 +39,8 @@ export type NavigraphGate = {
 };
 
 // SIDs and STARs
-export type NavigraphSid = {
+export type NavigraphProcedure = {
+	uid: string; // airportId:id:transitionId
 	id: string;
-	airportId: string;
-	waypoints: string[]; // waypoint ids sorted by seqno
+	waypoints: string[];
 };
-
-export type NavigraphStar = NavigraphSid;

@@ -6,7 +6,8 @@ import VectorLayer from "ol/layer/Vector";
 import { fromLonLat, transformExtent } from "ol/proj";
 import VectorSource from "ol/source/Vector";
 import RBush from "rbush";
-import { dxGetAllAirports, dxGetNavigraphAirports } from "@/storage/dexie";
+import { dxGetAllAirports, dxGetNavigraphAirports, dxGetNavigraphProcedure, dxGetNavigraphWaypoints } from "@/storage/dexie";
+import { getLonLatPoint } from "./navigraph";
 import { getNavigraphGateStyle, getNavigraphRoutePointStyle, getNavigraphRouteTrackStyle, type NavigraphStyleVars } from "./styles/navigraph";
 
 type RBushAirport = {
@@ -139,47 +140,122 @@ export class NavigraphService {
 		this.gateSource.addFeatures(features);
 	}
 
-	public setRouteFeatures(route: PilotParsedRoute, id: string): void {
+	public async setRouteFeatures(route: PilotParsedRoute, id: string): Promise<void> {
 		const pointFeatures: Feature<Point>[] = [];
-		route.waypoints.forEach((point, idx) => {
+		const waypoints = await dxGetNavigraphWaypoints(route.waypoints.map((wp) => wp.uid));
+
+		for (const [i, point] of route.waypoints.entries()) {
+			let wp = waypoints.find((w) => w?.uid === point.uid);
+			if (!wp) {
+				wp = getLonLatPoint(point.uid);
+			}
+			if (!wp) continue;
+
 			const feature = new Feature({
-				geometry: new Point(fromLonLat([point.longitude, point.latitude])),
-				label: point.id,
-				type: point.type,
+				geometry: new Point(fromLonLat([wp.longitude, wp.latitude])),
+				label: wp.id,
+				class: wp.class,
 			});
-			feature.setId(`navigraph_route_point_${id}_${idx}`);
+			feature.setId(`navigraph_route_point_${id}_${i}`);
 			pointFeatures.push(feature);
-		});
+		}
 		this.routePointSource.addFeatures(pointFeatures);
 
 		const trackFeatures: Feature<LineString>[] = [];
 		for (let i = 0; i < route.waypoints.length - 1; i++) {
-			const start = route.waypoints[i];
-			const end = route.waypoints[i + 1];
+			let start = waypoints.find((w) => w?.uid === route.waypoints[i].uid);
+			if (!start) {
+				start = getLonLatPoint(route.waypoints[i].uid);
+			}
+			let end = waypoints.find((w) => w?.uid === route.waypoints[i + 1].uid);
+			if (!end) {
+				end = getLonLatPoint(route.waypoints[i + 1].uid);
+			}
+			if (!start || !end) continue;
 
 			const trackFeature = new Feature({
 				geometry: new LineString([fromLonLat([start.longitude, start.latitude]), fromLonLat([end.longitude, end.latitude])]),
 				type: "navigraph_route_track",
 			});
-			if (start.airway || end.airway) trackFeature.set("label", start.airway || end.airway);
+			const airway = route.waypoints[i].airwayUid || route.waypoints[i + 1].airwayUid;
+			const airwayParts = airway?.split(":") || [];
+			if (airway) trackFeature.set("label", airwayParts[3]);
 
 			trackFeature.setId(`navigraph_route_track_${id}_${i}`);
 			trackFeatures.push(trackFeature);
 		}
 		this.routeTrackSource.addFeatures(trackFeatures);
 
+		this.setRouteProcedureFeatures(id, "sid", route.sid);
+		this.setRouteProcedureFeatures(id, "star", route.star);
+
 		this.cachedRoutes.add(id);
+	}
+
+	private async setRouteProcedureFeatures(id: string, type: "sid" | "star", uids: string[] | null): Promise<void> {
+		if (!uids || uids.length === 0) return;
+
+		const allWaypointUids: string[] = [];
+		for (const uid of uids) {
+			const procedure = await dxGetNavigraphProcedure(type, uid);
+			if (procedure) allWaypointUids.push(...procedure.waypoints);
+		}
+		if (allWaypointUids.length === 0) return;
+
+		const waypoints = await dxGetNavigraphWaypoints(allWaypointUids);
+		const pointFeatures: Feature<Point>[] = [];
+
+		for (const [i, point] of waypoints.entries()) {
+			if (!point) continue;
+
+			const feature = new Feature({
+				geometry: new Point(fromLonLat([point.longitude, point.latitude])),
+				label: point.id,
+				class: point.class,
+			});
+			feature.setId(`navigraph_${type}_point_${id}_${i}`);
+			pointFeatures.push(feature);
+		}
+		this.routePointSource.addFeatures(pointFeatures);
+
+		const trackFeatures: Feature<LineString>[] = [];
+		const procName = uids[0].split(":")[1];
+		for (let i = 0; i < waypoints.length - 1; i++) {
+			const start = waypoints[i];
+			const end = waypoints[i + 1];
+			if (!start || !end) continue;
+
+			const trackFeature = new Feature({
+				geometry: new LineString([fromLonLat([start.longitude, start.latitude]), fromLonLat([end.longitude, end.latitude])]),
+				type,
+			});
+			if (procName) trackFeature.set("label", procName);
+
+			trackFeature.setId(`navigraph_${type}_track_${id}_${i}`);
+			trackFeatures.push(trackFeature);
+		}
+		this.routeTrackSource.addFeatures(trackFeatures);
 	}
 
 	public removeRouteFeatures(id: string): void {
 		this.routePointSource
 			.getFeatures()
-			.filter((f) => String(f.getId()).startsWith(`navigraph_route_point_${id}_`))
+			.filter(
+				(f) =>
+					String(f.getId()).startsWith(`navigraph_route_point_${id}_`) ||
+					String(f.getId()).startsWith(`navigraph_sid_point_${id}_`) ||
+					String(f.getId()).startsWith(`navigraph_star_point_${id}_`),
+			)
 			.forEach((f) => void this.routePointSource.removeFeature(f));
 
 		this.routeTrackSource
 			.getFeatures()
-			.filter((f) => String(f.getId()).startsWith(`navigraph_route_track_${id}_`))
+			.filter(
+				(f) =>
+					String(f.getId()).startsWith(`navigraph_route_track_${id}_`) ||
+					String(f.getId()).startsWith(`navigraph_sid_track_${id}_`) ||
+					String(f.getId()).startsWith(`navigraph_star_track_${id}_`),
+			)
 			.forEach((f) => void this.routeTrackSource.removeFeature(f));
 
 		this.cachedRoutes.delete(id);

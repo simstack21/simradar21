@@ -1,15 +1,14 @@
 import { rdsGetSingle } from "@sr24/db/redis";
 import type { NavigraphPackage } from "@sr24/types/db";
 import type { PilotParsedRoute, PilotRoutePoint } from "@sr24/types/interface";
-import type { NavigraphAirport, NavigraphAirway, NavigraphDataset, NavigraphNavaid, NavigraphSid, NavigraphWaypoint } from "@sr24/types/navigraph";
+import type { NavigraphAirport, NavigraphAirway, NavigraphDataset, NavigraphProcedure, NavigraphWaypoint } from "@sr24/types/navigraph";
 import type { VatsimPilotFlightPlan } from "@sr24/types/vatsim";
 
 let gatesByAirport: Map<string, NavigraphAirport> = new Map();
 let waypointsByName: Map<string, NavigraphWaypoint[]> = new Map();
-let navaidsByName: Map<string, NavigraphNavaid[]> = new Map();
 let airwaysByName: Map<string, NavigraphAirway[]> = new Map();
-let sidsByAirport: Map<string, NavigraphSid[]> = new Map();
-let starsByAirport: Map<string, NavigraphSid[]> = new Map();
+let sidsByAirport: Map<string, NavigraphProcedure[]> = new Map();
+let starsByAirport: Map<string, NavigraphProcedure[]> = new Map();
 let loadedCycle: string | null = null;
 
 export async function ensureNavigraphData(): Promise<void> {
@@ -28,13 +27,6 @@ export async function ensureNavigraphData(): Promise<void> {
 		waypointsByName.set(wp.id, arr);
 	}
 
-	navaidsByName = new Map();
-	for (const nav of dataset.navaids) {
-		const arr = navaidsByName.get(nav.id) ?? [];
-		arr.push(nav);
-		navaidsByName.set(nav.id, arr);
-	}
-
 	airwaysByName = new Map();
 	for (const airway of dataset.airways) {
 		const arr = airwaysByName.get(airway.id) ?? [];
@@ -44,16 +36,18 @@ export async function ensureNavigraphData(): Promise<void> {
 
 	sidsByAirport = new Map();
 	for (const sid of dataset.sids) {
-		const arr = sidsByAirport.get(sid.airportId) ?? [];
+		const airportId = sid.uid.split(":")[0];
+		const arr = sidsByAirport.get(airportId) ?? [];
 		arr.push(sid);
-		sidsByAirport.set(sid.airportId, arr);
+		sidsByAirport.set(airportId, arr);
 	}
 
 	starsByAirport = new Map();
 	for (const star of dataset.stars) {
-		const arr = starsByAirport.get(star.airportId) ?? [];
+		const airportId = star.uid.split(":")[0];
+		const arr = starsByAirport.get(airportId) ?? [];
 		arr.push(star);
-		starsByAirport.set(star.airportId, arr);
+		starsByAirport.set(airportId, arr);
 	}
 
 	loadedCycle = pkg.cycle;
@@ -89,10 +83,15 @@ function stripConstraint(token: string): string {
 	return token.split("/")[0];
 }
 
-function closestCandidate<T extends { latitude: number; longitude: number }>(
-	candidates: T[],
-	near: { latitude: number; longitude: number } | null,
-): T {
+function matchesProcedureId(dbId: string, filedId: string): boolean {
+	if (dbId === filedId) return true;
+	if (filedId.length === dbId.length + 1) return dbId === filedId.slice(0, 4) + filedId.slice(5);
+	return false;
+}
+
+type FixCandidate = { uid: string; latitude: number; longitude: number };
+
+function closestCandidate(candidates: FixCandidate[], near: { latitude: number; longitude: number } | null): FixCandidate {
 	if (!near || candidates.length === 1) return candidates[0];
 
 	let best = candidates[0];
@@ -111,47 +110,43 @@ function closestCandidate<T extends { latitude: number; longitude: number }>(
 	return best;
 }
 
-function lookupFix(id: string, near: { latitude: number; longitude: number } | null): PilotRoutePoint | null {
-	const candidates: PilotRoutePoint[] = [];
+function lookupFix(id: string, near: { latitude: number; longitude: number } | null): FixCandidate | null {
+	const candidates: FixCandidate[] = [];
 
 	for (const wp of waypointsByName.get(id) ?? []) {
-		candidates.push({ id: wp.id, name: wp.name, latitude: wp.latitude, longitude: wp.longitude, type: "WP" });
-	}
-	for (const nav of navaidsByName.get(id) ?? []) {
-		candidates.push({ id: nav.id, name: nav.name, latitude: nav.latitude, longitude: nav.longitude, type: nav.type });
+		candidates.push({ uid: wp.uid, latitude: wp.latitude, longitude: wp.longitude });
 	}
 
 	if (!candidates.length) return null;
-	if (id === "SPY") console.log(candidates, near);
 	return closestCandidate(candidates, near);
 }
 
 // Return intermediate waypoints between entry and exit along an airway (exclusive of both endpoints)
-function expandAirway(airwayId: string, entryId: string, exitId: string, near: { latitude: number; longitude: number } | null): PilotRoutePoint[] {
-	const airways = airwaysByName.get(airwayId);
-	if (!airways) return [];
+function expandAirway(
+	airway: NavigraphAirway,
+	entryUid: string,
+	exitUid: string,
+	near: { latitude: number; longitude: number } | null,
+): { point: PilotRoutePoint; pos: FixCandidate }[] {
+	const entryIdx = airway.waypoints.indexOf(entryUid);
+	const exitIdx = airway.waypoints.indexOf(exitUid);
+	if (entryIdx === -1 || exitIdx === -1) return [];
 
-	for (const airway of airways) {
-		const entryIdx = airway.waypoints.indexOf(entryId);
-		const exitIdx = airway.waypoints.indexOf(exitId);
-		if (entryIdx === -1 || exitIdx === -1) continue;
+	const step = entryIdx < exitIdx ? 1 : -1;
+	const result: { point: PilotRoutePoint; pos: FixCandidate }[] = [];
+	let pos = near;
 
-		const step = entryIdx < exitIdx ? 1 : -1;
-		const result: PilotRoutePoint[] = [];
-		let pos = near;
-
-		for (let j = entryIdx + step; j !== exitIdx; j += step) {
-			const fix = lookupFix(airway.waypoints[j], pos);
-			if (fix) {
-				result.push({ ...fix, airway: airwayId });
-				pos = fix;
-			}
+	for (let j = entryIdx + step; j !== exitIdx; j += step) {
+		const wpUid = airway.waypoints[j];
+		const wpId = wpUid.split(":")[2];
+		const fix = lookupFix(wpId, pos);
+		if (fix) {
+			result.push({ point: { uid: fix.uid, airwayUid: airway.uid }, pos: fix });
+			pos = fix;
 		}
-
-		return result;
 	}
 
-	return [];
+	return result;
 }
 
 export function parseRouteString(flightplan: VatsimPilotFlightPlan): PilotParsedRoute {
@@ -163,25 +158,52 @@ export function parseRouteString(flightplan: VatsimPilotFlightPlan): PilotParsed
 	let startIdx = 0;
 	let endIdx = tokens.length - 1;
 
-	let sid: string | null = null;
+	let sid: string[] | null = null;
 	const depSids = sidsByAirport.get(flightplan.departure);
 	if (depSids) {
-		const first = stripConstraint(tokens[0]);
-		const match = depSids.find((s) => s.id === first);
-		if (match) {
-			sid = match.id;
-			startIdx = 1;
+		const first = tokens[0];
+		const slashIdx = first.indexOf("/");
+		const procName = slashIdx !== -1 ? first.slice(0, slashIdx) : stripConstraint(first);
+		const runwaySuffix = slashIdx !== -1 ? first.slice(slashIdx + 1) : null;
+
+		const matches = depSids.filter((s) => matchesProcedureId(s.id, procName));
+		if (matches.length > 0) {
+			const allMatch = matches.find((s) => s.uid.split(":")[2] === "ALL");
+			if (allMatch) {
+				startIdx = 1;
+				if (runwaySuffix) {
+					const rwId = `RW${runwaySuffix}`;
+					const transMatch = depSids.find((s) => s.id === allMatch.id && s.uid.split(":")[2] === rwId);
+					sid = transMatch ? [transMatch.uid, allMatch.uid] : [allMatch.uid];
+				} else {
+					sid = [allMatch.uid];
+				}
+			} else if (matches.length === 1) {
+				startIdx = 1;
+				sid = [matches[0].uid];
+			}
 		}
 	}
 
-	let star: string | null = null;
+	let starUid: string | null = null;
+	let starId: string | null = null;
+	let starHasMultiple = false;
+
 	const arrStars = starsByAirport.get(flightplan.arrival);
 	if (arrStars && endIdx >= startIdx) {
 		const last = stripConstraint(tokens[endIdx]);
-		const match = arrStars.find((s) => s.id === last);
-		if (match) {
-			star = match.id;
-			endIdx--;
+		const matches = arrStars.filter((s) => matchesProcedureId(s.id, last));
+
+		if (matches.length > 0) {
+			const allMatch = matches.find((s) => s.uid.split(":")[2] === "ALL");
+			const picked = allMatch ?? (matches.length === 1 ? matches[0] : null);
+
+			if (picked) {
+				starUid = picked.uid;
+				starId = picked.id;
+				starHasMultiple = !!allMatch;
+				endIdx--;
+			}
 		}
 	}
 
@@ -191,7 +213,7 @@ export function parseRouteString(flightplan: VatsimPilotFlightPlan): PilotParsed
 		: null;
 
 	const waypoints: PilotRoutePoint[] = [];
-	let lastId: string | null = null;
+	let lastUid: string | null = null;
 	let i = startIdx;
 
 	while (i <= endIdx) {
@@ -206,29 +228,37 @@ export function parseRouteString(flightplan: VatsimPilotFlightPlan): PilotParsed
 
 		const latLon = parseLatLon(fixId);
 		if (latLon) {
-			waypoints.push({ id: fixId, name: fixId, ...latLon, type: "WP" });
-			lastId = fixId;
+			waypoints.push({ uid: fixId });
+			lastUid = fixId;
 			lastPos = latLon;
 			i++;
 			continue;
 		}
 
-		if (airwaysByName.has(fixId) && lastId && i + 1 <= endIdx) {
-			const entryId = lastId;
-			const exitId = stripConstraint(tokens[i + 1]);
+		if (airwaysByName.has(fixId) && lastUid && i + 1 <= endIdx) {
+			const exitRawId = stripConstraint(tokens[i + 1]);
 
 			const airways = airwaysByName.get(fixId) ?? [];
-			const isAirway = airways.some((aw) => aw.waypoints.includes(entryId) && aw.waypoints.includes(exitId));
+			let matchingAirway: NavigraphAirway | undefined;
+			let exitUid: string | undefined;
 
-			if (isAirway) {
-				const expanded = expandAirway(fixId, lastId, exitId, lastPos);
-				waypoints.push(...expanded);
-
-				if (expanded.length > 0) {
-					const last = expanded[expanded.length - 1];
-					lastPos = { latitude: last.latitude, longitude: last.longitude };
+			for (const aw of airways) {
+				if (!aw.waypoints.includes(lastUid)) continue;
+				const found = aw.waypoints.find((uid) => uid.split(":")[2] === exitRawId);
+				if (found) {
+					matchingAirway = aw;
+					exitUid = found;
+					break;
 				}
+			}
 
+			if (matchingAirway && exitUid) {
+				const expanded = expandAirway(matchingAirway, lastUid, exitUid, lastPos);
+				for (const { point, pos } of expanded) {
+					waypoints.push(point);
+					lastPos = pos;
+				}
+				lastUid = exitUid;
 				i++;
 				continue;
 			}
@@ -236,12 +266,22 @@ export function parseRouteString(flightplan: VatsimPilotFlightPlan): PilotParsed
 
 		const fix = lookupFix(fixId, lastPos);
 		if (fix) {
-			waypoints.push(fix);
-			lastId = fix.id;
-			lastPos = { latitude: fix.latitude, longitude: fix.longitude };
+			waypoints.push({ uid: fix.uid });
+			lastUid = fix.uid;
+			lastPos = fix;
 		}
 
 		i++;
+	}
+
+	let star: string[] | null = null;
+	if (starUid && starId) {
+		star = [starUid];
+		if (starHasMultiple && lastUid && arrStars) {
+			const lastFixId = lastUid.split(":")[2];
+			const transMatch = arrStars.find((s) => s.id === starId && s.uid.split(":")[2] === lastFixId);
+			if (transMatch) star = [transMatch.uid, starUid];
+		}
 	}
 
 	return { sid, star, waypoints };

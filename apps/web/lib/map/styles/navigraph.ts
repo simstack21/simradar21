@@ -53,7 +53,7 @@ export function getNavigraphRoutePointStyle(vars?: NavigraphStyleVars) {
 	const xOffset = vars?.theme ? ICON_SIZE : 0;
 
 	return (feature: FeatureLike) => {
-		const type = feature.get("type") as "VOR" | "NDB" | "WP";
+		const type = feature.get("class") as "VOR" | "VORDME" | "NDB" | "WPT";
 		const text = feature.get("label") as string;
 		const scale = Math.round(((vars?.waypointSize || 50) / 100) * 100) / 100;
 
@@ -86,35 +86,55 @@ export function getNavigraphRoutePointStyle(vars?: NavigraphStyleVars) {
 	};
 }
 
-function getWaypointOffset(type: "VOR" | "NDB" | "WP"): number {
+function getWaypointOffset(type: "VOR" | "VORDME" | "NDB" | "WPT"): number {
 	switch (type) {
-		case "WP":
+		case "WPT":
 			return 0;
 		case "VOR":
+		case "VORDME":
 			return ICON_SIZE;
 		case "NDB":
 			return 2 * ICON_SIZE;
+		default:
+			return 0;
 	}
 }
 
 export function getNavigraphRouteTrackStyle(vars?: NavigraphStyleVars) {
-	const stroke = new Stroke({
+	const styleCache = new Map<string, Style>();
+	const defaultStroke = new Stroke({
 		color: "rgba(0, 123, 255, 0.3)",
+		width: 3,
+	});
+	const sidStroke = new Stroke({
+		color: "rgba(210, 75, 142, 0.7)",
+		width: 3,
+	});
+	const starStroke = new Stroke({
+		color: "rgba(117, 161, 89, 0.7)",
 		width: 3,
 	});
 	const fill = vars?.theme ? new Fill({ color: "rgba(255, 255, 255, 0.5)" }) : new Fill({ color: "rgba(0, 0, 0, 0.5)" });
 
 	return (feature: FeatureLike) => {
 		const text = feature.get("label") as string | undefined;
+		const type = feature.get("type") as "sid" | "star" | undefined;
 
-		return new Style({
-			stroke,
-			text: new Text({
-				font: "400 10px Ubuntu, sans-serif",
-				fill: fill,
-				text,
-				placement: "line",
-			}),
-		});
+		const cacheKey = `${type}`;
+		let style = styleCache.get(cacheKey);
+		if (!style) {
+			style = new Style({
+				stroke: type === "sid" ? sidStroke : type === "star" ? starStroke : defaultStroke,
+				text: new Text({
+					font: "400 10px Ubuntu, sans-serif",
+					fill: fill,
+					placement: "line",
+				}),
+			});
+			styleCache.set(cacheKey, style);
+		}
+
+		style.getText()?.setText(text);
+		return style;
 	};
 }
