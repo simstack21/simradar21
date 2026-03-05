@@ -258,7 +258,7 @@ function queryAirports(db: Database.Database): NavigraphAirport[] {
 
 	const airportMap = new Map<string, NavigraphAirport>();
 	for (const row of airportRows) {
-		airportMap.set(row.id, { id: row.id, latitude: row.latitude, longitude: row.longitude, gates: [], runways: [] });
+		airportMap.set(row.id, { id: row.id, latitude: row.latitude, longitude: row.longitude, gates: [], runways: [], sids: [], stars: [] });
 	}
 
 	type GateRow = { airport_identifier: string; id: string; latitude: number; longitude: number };
@@ -293,10 +293,6 @@ function queryAirports(db: Database.Database): NavigraphAirport[] {
 		}
 	}
 
-	return [...airportMap.values()];
-}
-
-function queryProcedures(db: Database.Database, table: string): NavigraphProcedure[] {
 	type ProcRow = {
 		id: string;
 		airportId: string;
@@ -305,35 +301,40 @@ function queryProcedures(db: Database.Database, table: string): NavigraphProcedu
 		waypointId: string;
 		waypointIcaoCode: string;
 		areaCode: string;
-		latitude: number;
-		longitude: number;
 	};
-	const rows = db
-		.prepare(
-			`SELECT procedure_identifier as id, airport_identifier as airportId, seqno, transition_identifier as transitionId,
-			        waypoint_identifier as waypointId, waypoint_icao_code as waypointIcaoCode, area_code as areaCode,
-			        waypoint_latitude as latitude, waypoint_longitude as longitude
-			 FROM ${table}
-			 WHERE waypoint_identifier IS NOT NULL AND waypoint_identifier != ''
-			   AND waypoint_latitude IS NOT NULL AND waypoint_longitude IS NOT NULL
-			 ORDER BY procedure_identifier, airport_identifier, seqno`,
-		)
-		.all() as ProcRow[];
 
-	const procMap = new Map<string, NavigraphProcedure>();
-	for (const row of rows) {
-		const uid = `${row.airportId}:${row.id}:${row.transitionId || "ALL"}`;
-		let entry = procMap.get(uid);
+	for (const [table, key] of [
+		["tbl_pd_sids", "sids"],
+		["tbl_pe_stars", "stars"],
+	] as const) {
+		const rows = db
+			.prepare(
+				`SELECT procedure_identifier as id, airport_identifier as airportId, seqno, transition_identifier as transitionId,
+				        waypoint_identifier as waypointId, waypoint_icao_code as waypointIcaoCode, area_code as areaCode
+				 FROM ${table}
+				 WHERE waypoint_identifier IS NOT NULL AND waypoint_identifier != ''
+				   AND waypoint_latitude IS NOT NULL AND waypoint_longitude IS NOT NULL
+				 ORDER BY procedure_identifier, airport_identifier, seqno`,
+			)
+			.all() as ProcRow[];
 
-		if (!entry) {
-			entry = { uid, id: row.id, waypoints: [] };
-			procMap.set(uid, entry);
+		const procMap = new Map<string, NavigraphProcedure>();
+		for (const row of rows) {
+			const airport = airportMap.get(row.airportId);
+			if (!airport) continue;
+
+			const uid = `${row.airportId}:${row.id}:${row.transitionId || "ALL"}`;
+			let proc = procMap.get(uid);
+			if (!proc) {
+				proc = { uid, id: row.id, waypoints: [] };
+				procMap.set(uid, proc);
+				airport[key].push(proc);
+			}
+			proc.waypoints.push(`${row.areaCode}:${row.waypointIcaoCode}:${row.waypointId}`);
 		}
-
-		entry.waypoints.push(`${row.areaCode}:${row.waypointIcaoCode}:${row.waypointId}`);
 	}
 
-	return [...procMap.values()];
+	return [...airportMap.values()];
 }
 
 export async function updateNavigraphPackages(): Promise<void> {
@@ -366,8 +367,6 @@ export async function updateNavigraphPackages(): Promise<void> {
 				waypoints: [...queryWaypoints(db), ...queryNavaids(db)],
 				airways: queryAirways(db),
 				airports: queryAirports(db),
-				sids: queryProcedures(db, "tbl_pd_sids"),
-				stars: queryProcedures(db, "tbl_pe_stars"),
 			}));
 		} catch (err) {
 			console.error(`Failed to extract/query Navigraph package ${packageId}:`, err);

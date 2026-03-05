@@ -2,8 +2,6 @@ export type NavigraphDataset = {
 	waypoints: NavigraphWaypoint[];
 	airways: NavigraphAirway[];
 	airports: NavigraphAirport[];
-	sids: NavigraphProcedure[];
-	stars: NavigraphProcedure[];
 };
 
 // VHFs and NDBs
@@ -31,6 +29,8 @@ export type NavigraphAirport = {
 	longitude: number;
 	gates: NavigraphGate[];
 	runways: NavigraphRunway[];
+	sids: NavigraphProcedure[];
+	stars: NavigraphProcedure[];
 };
 
 export type NavigraphGate = {

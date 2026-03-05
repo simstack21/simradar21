@@ -90,8 +90,8 @@ export interface PilotFlightPlan {
 }
 
 export type PilotParsedRoute = {
-	sid: PilotRouteSid | null;
-	star: PilotRouteStar | null;
+	sid: PilotRouteProcedure | null;
+	star: PilotRouteProcedure | null;
 	waypoints: PilotRoutePoint[];
 };
 
@@ -100,20 +100,15 @@ export type PilotRoutePoint = {
 	airwayUid?: string;
 };
 
-type PilotRouteProcedure = {
+export type PilotRouteProcedure = {
 	override: boolean;
 	airport: string;
-	rwy?: string;
-	rwyCon?: string;
-	proc?: string;
-	trans?: string;
+	rwy: string | null;
+	rwyCon: string | null;
+	approach: string | null;
+	proc: string | null;
+	trans: string | null;
 };
-
-export type PilotRouteSid = PilotRouteProcedure;
-
-export interface PilotRouteStar extends PilotRouteProcedure {
-	approach?: string;
-}
 
 export interface PilotTimes {
 	sched_off_block: number;

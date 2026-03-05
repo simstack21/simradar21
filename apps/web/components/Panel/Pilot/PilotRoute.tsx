@@ -102,7 +102,7 @@ export function PilotProgress({ pilot, size }: { pilot: PilotLong; size: "defaul
 	);
 
 	if (size === "sm") {
-		return <Progress value={progress} className="w-full max-w-sm" />;
+		return <Progress value={progress} className="w-full" />;
 	}
 
 	return (
@@ -114,7 +114,7 @@ export function PilotProgress({ pilot, size }: { pilot: PilotLong; size: "defaul
 					{delayStatus}
 				</Badge>
 			</div>
-			<Progress value={progress} className="w-full max-w-sm" />
+			<Progress value={progress} className="w-full" />
 			<div className="flex justify-between">
 				<span className="text-muted-foreground">{`${convertDistance(departureDistKm, distanceUnit)}, ${timeSinceDeparture}`}</span>
 				<span className="text-muted-foreground">{`${convertDistance(arrivalDistKm, distanceUnit)}, ${timeUntilArrival}`}</span>

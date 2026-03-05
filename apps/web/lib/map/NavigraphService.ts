@@ -1,4 +1,4 @@
-import type { PilotParsedRoute, PilotRouteSid, PilotRouteStar } from "@sr24/types/interface";
+import type { PilotParsedRoute, PilotRouteProcedure } from "@sr24/types/interface";
 import { Feature } from "ol";
 import type { Extent } from "ol/extent";
 import { LineString, Point } from "ol/geom";
@@ -141,6 +141,8 @@ export class NavigraphService {
 	}
 
 	public async setRouteFeatures(route: PilotParsedRoute, id: string): Promise<void> {
+		this.removeRouteFeatures(id);
+
 		const pointFeatures: Feature<Point>[] = [];
 		const waypoints = await dxGetNavigraphWaypoints(route.waypoints.map((wp) => wp.uid));
 
@@ -192,7 +194,7 @@ export class NavigraphService {
 		this.cachedRoutes.add(id);
 	}
 
-	private async setProcedureFeatures(type: "sid" | "star", id: string, proc: PilotRouteSid | PilotRouteStar | null): Promise<void> {
+	private async setProcedureFeatures(type: "sid" | "star", id: string, proc: PilotRouteProcedure | null): Promise<void> {
 		if (!proc) return;
 		console.log(proc);
 		const waypoints = type === "sid" ? await getSidPoints(proc) : await getStarPoints(proc);

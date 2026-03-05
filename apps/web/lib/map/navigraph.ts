@@ -1,6 +1,6 @@
-import type { PilotRouteSid, PilotRouteStar } from "@sr24/types/interface";
+import type { PilotRouteProcedure } from "@sr24/types/interface";
 import type { NavigraphWaypoint } from "@sr24/types/navigraph";
-import { dxGetNavigraphAirport, dxGetNavigraphProcedure, dxGetNavigraphWaypoints } from "@/storage/dexie";
+import { dxGetNavigraphAirport, dxGetNavigraphProceduresByAirport, dxGetNavigraphWaypoints } from "@/storage/dexie";
 
 // Parse 52N050W or 5230N01000W into lat/lon coordinates
 function parseLatLon(token: string): { latitude: number; longitude: number } | null {
@@ -29,7 +29,7 @@ export function getLonLatPoint(token: string): NavigraphWaypoint | undefined {
 	return { uid: token, id: token, name: token, latitude: latLon.latitude, longitude: latLon.longitude, class: "INT" };
 }
 
-export async function getSidPoints(proc: PilotRouteSid): Promise<NavigraphWaypoint[]> {
+export async function getSidPoints(proc: PilotRouteProcedure): Promise<NavigraphWaypoint[]> {
 	const waypoints: NavigraphWaypoint[] = [];
 
 	const airport = await dxGetNavigraphAirport(proc.airport);
@@ -55,10 +55,11 @@ export async function getSidPoints(proc: PilotRouteSid): Promise<NavigraphWaypoi
 		});
 	}
 
+	const procedures = await dxGetNavigraphProceduresByAirport("sids", proc.airport);
 	const uids: string[] = [];
 	for (const uid of [proc.rwyCon, proc.proc, proc.trans]) {
 		if (!uid) continue;
-		const procedure = await dxGetNavigraphProcedure("sid", uid);
+		const procedure = procedures.find((p) => p.uid === uid);
 		if (procedure) uids.push(...procedure.waypoints);
 	}
 	if (uids.length === 0) return waypoints;
@@ -68,11 +69,12 @@ export async function getSidPoints(proc: PilotRouteSid): Promise<NavigraphWaypoi
 	return waypoints;
 }
 
-export async function getStarPoints(proc: PilotRouteStar): Promise<NavigraphWaypoint[]> {
+export async function getStarPoints(proc: PilotRouteProcedure): Promise<NavigraphWaypoint[]> {
+	const procedures = await dxGetNavigraphProceduresByAirport("stars", proc.airport);
 	const uids: string[] = [];
 	for (const uid of [proc.trans, proc.proc, proc.rwyCon, proc.approach]) {
 		if (!uid) continue;
-		const procedure = await dxGetNavigraphProcedure("star", uid);
+		const procedure = procedures.find((p) => p.uid === uid);
 		if (procedure) uids.push(...procedure.waypoints);
 	}
 	if (uids.length === 0) return [];

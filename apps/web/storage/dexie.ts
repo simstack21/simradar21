@@ -33,8 +33,6 @@ const db = new Dexie("StaticDatabase") as Dexie & {
 	ngWaypoints: EntityTable<NavigraphWaypoint, "uid">;
 	ngAirways: EntityTable<NavigraphAirway, "uid">;
 	ngAirports: EntityTable<NavigraphAirport, "id">;
-	ngSids: EntityTable<NavigraphProcedure, "uid">;
-	ngStars: EntityTable<NavigraphProcedure, "uid">;
 };
 
 db.version(1).stores({
@@ -47,8 +45,6 @@ db.version(1).stores({
 	ngWaypoints: "uid",
 	ngAirways: "uid",
 	ngAirports: "id",
-	ngSids: "uid",
-	ngStars: "uid",
 });
 
 let initPromise: Promise<void> | null = null;
@@ -135,10 +131,6 @@ async function dxInitDatabases(setStatus?: StatusSetter): Promise<void> {
 		await db.ngAirways.bulkPut(dataset.airways);
 		await db.ngAirports.clear();
 		await db.ngAirports.bulkPut(dataset.airports);
-		await db.ngSids.clear();
-		await db.ngSids.bulkPut(dataset.sids);
-		await db.ngStars.clear();
-		await db.ngStars.bulkPut(dataset.stars);
 	}
 	setStatus?.((prev) => ({ ...prev, navigraph: true }));
 
@@ -235,8 +227,10 @@ export async function dxGetNavigraphWaypoints(uids: string[]): Promise<(Navigrap
 	return await db.ngWaypoints.bulkGet(uids);
 }
 
-export async function dxGetNavigraphProcedure(type: "sid" | "star", uid: string): Promise<NavigraphProcedure | undefined> {
+export async function dxGetNavigraphProceduresByAirport(type: "sids" | "stars", airportId: string): Promise<NavigraphProcedure[]> {
 	await dxEnsureInitialized();
-	const table = type === "sid" ? db.ngSids : db.ngStars;
-	return await table.get(uid);
+	return await db.ngAirports.get(airportId).then((airport) => {
+		if (!airport) return [];
+		return airport[type];
+	});
 }

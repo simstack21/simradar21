@@ -1,6 +1,6 @@
 import { rdsGetSingle } from "@sr24/db/redis";
 import type { NavigraphPackage } from "@sr24/types/db";
-import type { PilotParsedRoute, PilotRoutePoint, PilotRouteSid, PilotRouteStar } from "@sr24/types/interface";
+import type { PilotParsedRoute, PilotRoutePoint, PilotRouteProcedure } from "@sr24/types/interface";
 import type { NavigraphAirport, NavigraphAirway, NavigraphDataset, NavigraphProcedure, NavigraphWaypoint } from "@sr24/types/navigraph";
 import type { VatsimPilotFlightPlan } from "@sr24/types/vatsim";
 
@@ -35,19 +35,10 @@ export async function ensureNavigraphData(): Promise<void> {
 	}
 
 	sidsByAirport = new Map();
-	for (const sid of dataset.sids) {
-		const airportId = sid.uid.split(":")[0];
-		const arr = sidsByAirport.get(airportId) ?? [];
-		arr.push(sid);
-		sidsByAirport.set(airportId, arr);
-	}
-
 	starsByAirport = new Map();
-	for (const star of dataset.stars) {
-		const airportId = star.uid.split(":")[0];
-		const arr = starsByAirport.get(airportId) ?? [];
-		arr.push(star);
-		starsByAirport.set(airportId, arr);
+	for (const airport of dataset.airports) {
+		if (airport.sids.length) sidsByAirport.set(airport.id, airport.sids);
+		if (airport.stars.length) starsByAirport.set(airport.id, airport.stars);
 	}
 
 	loadedCycle = pkg.cycle;
@@ -238,7 +229,7 @@ function getTokens(flightplan: VatsimPilotFlightPlan): string[] {
 	return flightplan.route.trim().split(/\s+/).filter(Boolean);
 }
 
-function parseSid(flightplan: VatsimPilotFlightPlan): PilotRouteSid | null {
+function parseSid(flightplan: VatsimPilotFlightPlan): PilotRouteProcedure | null {
 	if (!flightplan?.route) return null;
 	const tokens = getTokens(flightplan);
 	if (tokens.length === 0) return null;
@@ -246,7 +237,15 @@ function parseSid(flightplan: VatsimPilotFlightPlan): PilotRouteSid | null {
 	const firstIdx = tokens.findIndex((t) => !isRestriction(t));
 	if (firstIdx === -1) return null;
 
-	const sid: PilotRouteSid = { override: false, airport: flightplan.departure };
+	const sid: PilotRouteProcedure = {
+		override: false,
+		airport: flightplan.departure,
+		rwy: null,
+		rwyCon: null,
+		approach: null,
+		proc: null,
+		trans: null,
+	};
 
 	const first = tokens[firstIdx];
 	const firstTwoIds = tokens.slice(firstIdx + 1);
@@ -306,12 +305,20 @@ function sidConnectsToFirstWaypoint(sid: NavigraphProcedure, firstWpIds: string[
 	return firstWpIds.includes(sid.waypoints[sid.waypoints.length - 1].split(":")[2]);
 }
 
-function parseStar(flightplan: VatsimPilotFlightPlan): PilotRouteStar | null {
+function parseStar(flightplan: VatsimPilotFlightPlan): PilotRouteProcedure | null {
 	if (!flightplan?.route) return null;
 	const tokens = getTokens(flightplan);
 	if (tokens.length === 0) return null;
 
-	const star: PilotRouteStar = { override: false, airport: flightplan.arrival };
+	const star: PilotRouteProcedure = {
+		override: false,
+		airport: flightplan.arrival,
+		rwy: null,
+		rwyCon: null,
+		approach: null,
+		proc: null,
+		trans: null,
+	};
 
 	const last = tokens[tokens.length - 1];
 	const lastTwoIds = tokens.slice(Math.max(0, tokens.length - 2));
