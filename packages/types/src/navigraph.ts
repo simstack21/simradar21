@@ -31,6 +31,7 @@ export type NavigraphAirport = {
 	runways: NavigraphRunway[];
 	sids: NavigraphProcedure[];
 	stars: NavigraphProcedure[];
+	approaches: NavigraphApproach[];
 };
 
 export type NavigraphGate = {
@@ -47,7 +48,21 @@ export type NavigraphRunway = {
 
 // SIDs and STARs
 export type NavigraphProcedure = {
-	uid: string; // airportId:id:transitionId
+	uid: string; // airportId:id:transitionId or airportId:id:runwayId or airportId:id:All
 	id: string;
 	waypoints: string[];
+};
+
+// https://developers.navigraph.com/docs/navigation-data/dfd-data-format-v2#route-type-of-iaps-pf
+export type NavigraphApproach = {
+	uid: string; // airportId:id:transitionId or airportId:id:FINAL or airportId:id:MISSED
+	id: string;
+	waypoints: NavigraphApproachWaypoint[];
+};
+
+export type NavigraphApproachWaypoint = {
+	uid?: string;
+	id?: string;
+	longitude?: number;
+	latitude?: number;
 };

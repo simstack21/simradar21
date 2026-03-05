@@ -3,7 +3,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { rdsGetSingle, rdsSetSingle } from "@sr24/db/redis";
 import type { NavigraphPackage } from "@sr24/types/db";
-import type { NavigraphAirport, NavigraphAirway, NavigraphDataset, NavigraphProcedure, NavigraphWaypoint } from "@sr24/types/navigraph";
+import type {
+	NavigraphAirport,
+	NavigraphAirway,
+	NavigraphApproach,
+	NavigraphDataset,
+	NavigraphProcedure,
+	NavigraphWaypoint,
+} from "@sr24/types/navigraph";
 import { path7za } from "7zip-bin";
 import Database from "better-sqlite3";
 import Seven from "node-7z";
@@ -258,7 +265,16 @@ function queryAirports(db: Database.Database): NavigraphAirport[] {
 
 	const airportMap = new Map<string, NavigraphAirport>();
 	for (const row of airportRows) {
-		airportMap.set(row.id, { id: row.id, latitude: row.latitude, longitude: row.longitude, gates: [], runways: [], sids: [], stars: [] });
+		airportMap.set(row.id, {
+			id: row.id,
+			latitude: row.latitude,
+			longitude: row.longitude,
+			gates: [],
+			runways: [],
+			sids: [],
+			stars: [],
+			approaches: [],
+		});
 	}
 
 	type GateRow = { airport_identifier: string; id: string; latitude: number; longitude: number };
@@ -331,6 +347,63 @@ function queryAirports(db: Database.Database): NavigraphAirport[] {
 				airport[key].push(proc);
 			}
 			proc.waypoints.push(`${row.areaCode}:${row.waypointIcaoCode}:${row.waypointId}`);
+		}
+	}
+
+	type IapRow = {
+		id: string;
+		airportId: string;
+		seqno: number;
+		transitionId: string | null;
+		waypointId: string | null;
+		waypointDescCode: string | null;
+		waypointIcaoCode: string | null;
+		areaCode: string;
+		recommendedNavaidLongitude: number | null;
+		recommendedNavaidLatitude: number | null;
+		recommendedNavaidId: string | null;
+	};
+
+	const iapRows = db
+		.prepare(
+			`SELECT procedure_identifier as id, airport_identifier as airportId, seqno, transition_identifier as transitionId,
+                    waypoint_identifier as waypointId, waypoint_description_code as waypointDescCode, waypoint_icao_code as waypointIcaoCode, area_code as areaCode,
+                    recommended_navaid_longitude as recommendedNavaidLongitude, recommended_navaid_latitude as recommendedNavaidLatitude, recommended_navaid as recommendedNavaidId
+             FROM tbl_pf_iaps
+             ORDER BY procedure_identifier, airport_identifier, seqno`,
+		)
+		.all() as IapRow[];
+
+	const approachMap = new Map<string, NavigraphApproach>();
+	let lastPrefix = "";
+	let isMissedSeq = false;
+	for (const row of iapRows) {
+		const airport = airportMap.get(row.airportId);
+		if (!airport) continue;
+
+		isMissedSeq = isMissedSeq || row.waypointDescCode?.[2] === "M";
+		const newPrefix = `${row.airportId}:${row.id}`;
+		if (newPrefix !== lastPrefix) {
+			isMissedSeq = false;
+			lastPrefix = newPrefix;
+		}
+		const uid = `${newPrefix}:${isMissedSeq ? "MISSED" : row.transitionId || "FINAL"}`;
+
+		let approach = approachMap.get(uid);
+		if (!approach) {
+			approach = { uid, id: row.id, waypoints: [] };
+			approachMap.set(uid, approach);
+			airport.approaches.push(approach);
+		}
+
+		if (row.waypointId) {
+			approach.waypoints.push({ uid: `${row.areaCode}:${row.waypointIcaoCode}:${row.waypointId}` });
+		} else if (row.recommendedNavaidId && row.recommendedNavaidLatitude && row.recommendedNavaidLongitude) {
+			approach.waypoints.push({
+				id: row.recommendedNavaidId,
+				latitude: row.recommendedNavaidLatitude,
+				longitude: row.recommendedNavaidLongitude,
+			});
 		}
 	}
 
