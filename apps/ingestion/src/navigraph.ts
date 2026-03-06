@@ -127,6 +127,7 @@ function expandAirway(
 	const entryIdx = airway.waypoints.indexOf(entryUid);
 	const exitIdx = airway.waypoints.indexOf(exitUid);
 	if (entryIdx === -1 || exitIdx === -1) return [];
+	if (entryIdx === exitIdx) return [];
 
 	const step = entryIdx < exitIdx ? 1 : -1;
 	const result: { point: PilotRoutePoint; pos: FixCandidate }[] = [];
@@ -242,9 +243,11 @@ function parseSid(flightplan: VatsimPilotFlightPlan): PilotRouteProcedure | null
 		airport: flightplan.departure,
 		rwy: null,
 		rwyCon: null,
-		approach: null,
 		proc: null,
 		trans: null,
+		approach: null,
+		approachTrans: null,
+		missedApproach: null,
 	};
 
 	const first = tokens[firstIdx];
@@ -313,11 +316,13 @@ function parseStar(flightplan: VatsimPilotFlightPlan): PilotRouteProcedure | nul
 	const star: PilotRouteProcedure = {
 		override: false,
 		airport: flightplan.arrival,
+		trans: null,
+		proc: null,
+		approach: null,
+		approachTrans: null,
 		rwy: null,
 		rwyCon: null,
-		approach: null,
-		proc: null,
-		trans: null,
+		missedApproach: null,
 	};
 
 	const last = tokens[tokens.length - 1];
@@ -359,7 +364,7 @@ function parseStar(flightplan: VatsimPilotFlightPlan): PilotRouteProcedure | nul
 		star.proc = matches[0].uid;
 		const rwIdFromProc = matches[0].uid.split(":")[2];
 
-		if (rwIdFromProc.includes("RW") && !rwId) {
+		if (rwIdFromProc.includes("RW") && !rwIdFromProc.endsWith("B") && !rwId) {
 			star.rwy = rwIdFromProc;
 		}
 		return star;

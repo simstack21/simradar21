@@ -115,24 +115,28 @@ export function getNavigraphRouteTrackStyle(vars?: NavigraphStyleVars) {
 		width: 3,
 	});
 	const sidStroke = new Stroke({
-		color: "rgba(210, 75, 142, 0.7)",
+		color: "rgba(220, 100, 159, 0.7)",
 		width: 3,
 	});
 	const starStroke = new Stroke({
-		color: "rgba(117, 161, 89, 0.7)",
+		color: "rgba(152, 202, 127, 0.7)",
+		width: 3,
+	});
+	const approachStroke = new Stroke({
+		color: "rgba(243, 172, 122, 0.7)",
 		width: 3,
 	});
 	const fill = vars?.theme ? new Fill({ color: "rgba(255, 255, 255, 0.5)" }) : new Fill({ color: "rgba(0, 0, 0, 0.5)" });
 
 	return (feature: FeatureLike) => {
 		const text = feature.get("label") as string | undefined;
-		const type = feature.get("type") as "sid" | "star" | undefined;
+		const type = feature.get("type") as "sid" | "star" | "approach" | undefined;
 
 		const cacheKey = `${type}`;
 		let style = styleCache.get(cacheKey);
 		if (!style) {
 			style = new Style({
-				stroke: type === "sid" ? sidStroke : type === "star" ? starStroke : defaultStroke,
+				stroke: type === "sid" ? sidStroke : type === "star" ? starStroke : type === "approach" ? approachStroke : defaultStroke,
 				text: new Text({
 					font: "400 10px Ubuntu, sans-serif",
 					fill: fill,

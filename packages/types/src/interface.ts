@@ -105,9 +105,11 @@ export type PilotRouteProcedure = {
 	airport: string;
 	rwy: string | null;
 	rwyCon: string | null;
-	approach: string | null;
 	proc: string | null;
 	trans: string | null;
+	approach: string | null;
+	approachTrans: string | null;
+	missedApproach: string | null;
 };
 
 export interface PilotTimes {

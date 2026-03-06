@@ -7,7 +7,7 @@ import { fromLonLat, transformExtent } from "ol/proj";
 import VectorSource from "ol/source/Vector";
 import RBush from "rbush";
 import { dxGetAllAirports, dxGetNavigraphAirports, dxGetNavigraphWaypoints } from "@/storage/dexie";
-import { getLonLatPoint, getSidPoints, getStarPoints } from "./navigraph";
+import { getApproachPoints, getLonLatPoint, getSidPoints, getStarPoints } from "./navigraph";
 import { getNavigraphGateStyle, getNavigraphRoutePointStyle, getNavigraphRouteTrackStyle, type NavigraphStyleVars } from "./styles/navigraph";
 
 type RBushAirport = {
@@ -190,14 +190,15 @@ export class NavigraphService {
 
 		this.setProcedureFeatures("sid", id, route.sid);
 		this.setProcedureFeatures("star", id, route.star);
+		this.setProcedureFeatures("approach", id, route.star);
 
 		this.cachedRoutes.add(id);
 	}
 
-	private async setProcedureFeatures(type: "sid" | "star", id: string, proc: PilotRouteProcedure | null): Promise<void> {
+	private async setProcedureFeatures(type: "sid" | "star" | "approach", id: string, proc: PilotRouteProcedure | null): Promise<void> {
 		if (!proc) return;
 		console.log(proc);
-		const waypoints = type === "sid" ? await getSidPoints(proc) : await getStarPoints(proc);
+		const waypoints = type === "sid" ? await getSidPoints(proc) : type === "star" ? await getStarPoints(proc) : await getApproachPoints(proc);
 		const pointFeatures: Feature<Point>[] = [];
 
 		for (const [i, point] of waypoints.entries()) {

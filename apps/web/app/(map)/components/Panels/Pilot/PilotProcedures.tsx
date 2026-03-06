@@ -1,8 +1,8 @@
 import type { StaticAirport } from "@sr24/types/db";
-import type { PilotLong } from "@sr24/types/interface";
-import type { NavigraphAirport, NavigraphProcedure } from "@sr24/types/navigraph";
+import type { PilotLong, PilotRouteProcedure } from "@sr24/types/interface";
+import type { NavigraphAirport, NavigraphApproach, NavigraphProcedure } from "@sr24/types/navigraph";
 import { PlaneLandingIcon, PlaneTakeoffIcon } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mapService } from "@/app/(map)/lib";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getCachedAirport } from "@/storage/cache";
-import { dxGetNavigraphAirport, dxGetNavigraphProceduresByAirport } from "@/storage/dexie";
+import { dxGetNavigraphAirport, dxGetNavigraphApproachesByAirport, dxGetNavigraphProceduresByAirport } from "@/storage/dexie";
 
 export default function PilotProcedures({ pilot }: { pilot: PilotLong }) {
 	return (
@@ -24,8 +24,39 @@ export default function PilotProcedures({ pilot }: { pilot: PilotLong }) {
 
 function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | "arrival" }) {
 	const [staticAirport, setStaticAirport] = useState<StaticAirport | null>(null);
-	const [procedures, setProcedures] = useState<DepartureProcedures | ArrivalProcedures | null>(null);
-	const [parsedProc, setParsedProc] = useState(type === "departure" ? pilot.flight_plan?.parsed_route?.sid : pilot.flight_plan?.parsed_route?.star);
+	const [procedures, setProcedures] = useState<Procedures | null>(null);
+	const [parsedProc, setParsedProc] = useState<PilotRouteProcedure | null>(
+		(type === "departure" ? pilot.flight_plan?.parsed_route?.sid : pilot.flight_plan?.parsed_route?.star) || null,
+	);
+
+	const filteredProcedures = useMemo(() => {
+		if (!procedures?.procedures || !parsedProc?.rwy) return procedures?.procedures;
+		const rwyBase = (s: string) => s.replace(/^RW/, "").replace(/[A-Z]$/, "");
+		const selectedBase = rwyBase(parsedProc.rwy);
+		return procedures.procedures.filter((p) => {
+			if (!p.value) return true;
+			const seg = p.value.split(":").at(-1) ?? "";
+			return seg === "ALL" || seg === parsedProc.rwy || (seg.endsWith("B") && rwyBase(seg) === selectedBase);
+		});
+	}, [procedures?.procedures, parsedProc?.rwy]);
+
+	const filteredTransitions = useMemo(() => {
+		if (!procedures?.transitions || !parsedProc?.proc) return procedures?.transitions;
+		const procPrefix = parsedProc.proc.split(":").slice(0, 2).join(":");
+		return procedures.transitions.filter((p) => !p.value || p.value.startsWith(procPrefix));
+	}, [procedures?.transitions, parsedProc?.proc]);
+
+	const filteredApproaches = useMemo(() => {
+		if (!procedures?.approaches || !parsedProc?.rwy) return procedures?.approaches;
+		const rwySuffix = parsedProc.rwy.replace("RW", "");
+		return procedures.approaches.filter((p) => !p.value || p.value.split(":")[1].includes(rwySuffix));
+	}, [procedures?.approaches, parsedProc?.rwy]);
+
+	const filteredAppTransitions = useMemo(() => {
+		if (!procedures?.appTransitions || !parsedProc?.approach) return procedures?.appTransitions;
+		const procPrefix = parsedProc.approach.split(":").slice(0, 2).join(":");
+		return procedures.appTransitions.filter((p) => !p.value || p.value.startsWith(procPrefix));
+	}, [procedures?.appTransitions, parsedProc?.approach]);
 
 	const initRef = useRef<string | null>(null);
 
@@ -43,32 +74,49 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 	}, [pilot.flight_plan, type]);
 
 	const onProcChange = useCallback(
-		(key: "rwy" | "proc" | "trans", value: string | null) => {
+		(key: "rwy" | "proc" | "trans" | "approach" | "approachTrans", value: string | null) => {
 			if (!parsedProc || !pilot.flight_plan?.parsed_route) return;
 
 			const updated: typeof parsedProc = { ...parsedProc, override: true };
 
 			// If dep rwy change, update rwy connection or swap procedure to completely different departure with same id
+			// If now procedure for new runway, clear procedure selection
 			if (type === "departure" && key === "rwy") {
-				const sidProcedures = procedures as DepartureProcedures;
 				const procPrefix = parsedProc.proc?.split(":").slice(0, -1).join(":");
-				const newRwyConn = sidProcedures.rwyConnections.find((conn) => conn.uid === `${procPrefix}:${value}`);
+
+				const newRwyConn = procedures?.rwyConnections?.find((conn) => conn.uid === `${procPrefix}:${value}`);
 				updated.rwyCon = newRwyConn?.uid || null;
+
+				const newProc =
+					procedures?.procedures.find((proc) => proc.value === `${procPrefix}:${value}`) ||
+					procedures?.procedures.find((proc) => proc.value === `${procPrefix}:ALL`);
+				updated.proc = newProc?.value || null;
+				if (!newProc) {
+					updated.trans = null;
+				}
 			}
 
 			// If proc change and runway specific, also update rwy
 			const lastPart = value?.split(":").slice(-1)[0];
-			if (type === "departure" && key === "proc" && lastPart?.startsWith("RW")) {
+			if (key === "proc" && lastPart?.startsWith("RW") && !lastPart.endsWith("B")) {
 				updated.rwy = lastPart;
 				updated.rwyCon = null;
 			}
 
 			// If proc change and not runway specific, check for runway connection or clear rwy connection
 			if (type === "departure" && key === "proc" && !lastPart?.startsWith("RW")) {
-				const sidProcedures = procedures as DepartureProcedures;
 				const procPrefix = value?.split(":").slice(0, -1).join(":");
-				const newRwyConn = sidProcedures.rwyConnections.find((conn) => conn.uid === `${procPrefix}:${updated.rwy}`);
+				const newRwyConn = procedures?.rwyConnections?.find((conn) => conn.uid === `${procPrefix}:${updated.rwy}`);
 				updated.rwyCon = newRwyConn?.uid || null;
+			}
+
+			// If arr rwy change, check if procedure is compatible with new runway, if not clear procedure. Always clear approach
+			if (type === "arrival" && key === "rwy") {
+				if (parsedProc.proc?.split(":")[2] !== "ALL" && value && !parsedProc.proc?.includes(`:${value}`)) {
+					updated.proc = null;
+				}
+				updated.approach = null;
+				updated.approachTrans = null;
 			}
 
 			updated[key] = value || null;
@@ -94,7 +142,7 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 				<CardDescription>{staticAirport?.name || "Unknown"}</CardDescription>
 			</CardHeader>
 			<CardContent className="flex flex-col gap-1">
-				{procedures?.rwys && procedures.rwys.length > 0 && (
+				{procedures?.rwys && procedures.rwys.length > 1 && (
 					<div className="flex flex-col gap-0.5">
 						<div className="flex items-center gap-2">
 							<span className="h-2 w-2 rounded-xs shrink-0 bg-[#51c9fd]" />
@@ -117,20 +165,20 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 						</Select>
 					</div>
 				)}
-				{procedures?.procedures && procedures.procedures.length > 0 && (
+				{filteredProcedures && filteredProcedures.length > 1 && (
 					<div className="flex flex-col gap-0.5">
 						<div className="flex items-center gap-2">
 							<span className={cn("h-2 w-2 rounded-xs shrink-0", type === "departure" ? "bg-[#dc649f]" : "bg-[#98ca7f]")} />
 							<span className="text-xs">{type === "departure" ? "SID" : "STAR"}</span>
 						</div>
-						<Select items={procedures.procedures} value={parsedProc?.proc} onValueChange={(value) => onProcChange("proc", value)}>
+						<Select items={filteredProcedures} value={parsedProc?.proc} onValueChange={(value) => onProcChange("proc", value)}>
 							<SelectTrigger className="w-full">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectGroup>
 									<SelectLabel>{type === "departure" ? "SID Selection" : "STAR Selection"}</SelectLabel>
-									{procedures.procedures.map((proc) => (
+									{filteredProcedures.map((proc) => (
 										<SelectItem key={proc.value} value={proc.value}>
 											{proc.label}
 										</SelectItem>
@@ -140,20 +188,20 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 						</Select>
 					</div>
 				)}
-				{procedures?.transitions && procedures.transitions.length > 0 && (
+				{filteredTransitions && filteredTransitions.length > 1 && (
 					<div className="flex flex-col gap-0.5">
 						<div className="flex items-center gap-2">
 							<span className={cn("h-2 w-2 rounded-xs shrink-0", type === "departure" ? "bg-[#dc649f]" : "bg-[#98ca7f]")} />
 							<span className="text-xs">Transition</span>
 						</div>
-						<Select items={procedures.transitions} value={parsedProc?.trans} onValueChange={(value) => onProcChange("trans", value)}>
+						<Select items={filteredTransitions} value={parsedProc?.trans} onValueChange={(value) => onProcChange("trans", value)}>
 							<SelectTrigger className="w-full">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectGroup>
 									<SelectLabel>{type === "departure" ? "SID Transition Selection" : "STAR Transition Selection"}</SelectLabel>
-									{procedures.transitions.map((proc) => (
+									{filteredTransitions.map((proc) => (
 										<SelectItem key={proc.value} value={proc.value}>
 											{proc.label}
 										</SelectItem>
@@ -163,20 +211,20 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 						</Select>
 					</div>
 				)}
-				{(procedures as ArrivalProcedures)?.approaches && (procedures as ArrivalProcedures).approaches.length > 0 && (
+				{filteredApproaches && filteredApproaches.length > 1 && (
 					<div className="flex flex-col gap-0.5">
 						<div className="flex items-center gap-2">
 							<span className="h-2 w-2 rounded-xs shrink-0 bg-[#f3ac7a]" />
 							<span className="text-xs">Approach</span>
 						</div>
-						<Select items={(procedures as ArrivalProcedures)?.approaches}>
+						<Select items={filteredApproaches} value={parsedProc?.approach} onValueChange={(value) => onProcChange("approach", value)}>
 							<SelectTrigger className="w-full">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectGroup>
 									<SelectLabel>Approach Selection</SelectLabel>
-									{(procedures as ArrivalProcedures)?.approaches.map((proc) => (
+									{filteredApproaches.map((proc) => (
 										<SelectItem key={proc.value} value={proc.value}>
 											{proc.label}
 										</SelectItem>
@@ -186,20 +234,20 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 						</Select>
 					</div>
 				)}
-				{(procedures as ArrivalProcedures)?.appTransitions && (procedures as ArrivalProcedures).appTransitions.length > 0 && (
+				{filteredAppTransitions && filteredAppTransitions.length > 1 && (
 					<div className="flex flex-col gap-0.5">
 						<div className="flex items-center gap-2">
 							<span className="h-2 w-2 rounded-xs shrink-0 bg-[#f3ac7a]" />
 							<span className="text-xs">Approach Transition</span>
 						</div>
-						<Select items={(procedures as ArrivalProcedures)?.appTransitions}>
+						<Select items={filteredAppTransitions} value={parsedProc?.approachTrans} onValueChange={(value) => onProcChange("approachTrans", value)}>
 							<SelectTrigger className="w-full">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectGroup>
 									<SelectLabel>Approach Transition Selection</SelectLabel>
-									{(procedures as ArrivalProcedures)?.appTransitions.map((proc) => (
+									{filteredAppTransitions.map((proc) => (
 										<SelectItem key={proc.value} value={proc.value}>
 											{proc.label}
 										</SelectItem>
@@ -219,23 +267,16 @@ type SelectProps = {
 	label: string;
 };
 
-type DepartureProcedures = {
+type Procedures = {
 	rwys: SelectProps[];
 	rwyConnections: NavigraphProcedure[];
-	procedures: SelectProps[];
-	transitions: SelectProps[];
-};
-
-type ArrivalProcedures = {
-	rwys: SelectProps[];
-	rwyConnections?: NavigraphProcedure[];
 	procedures: SelectProps[];
 	transitions: SelectProps[];
 	approaches: SelectProps[];
 	appTransitions: SelectProps[];
 };
 
-async function getDepartureProcedures(icao: string): Promise<DepartureProcedures> {
+async function getDepartureProcedures(icao: string): Promise<Procedures> {
 	const airport = await dxGetNavigraphAirport(icao);
 	const allProcedures = await dxGetNavigraphProceduresByAirport("sids", icao);
 
@@ -246,23 +287,26 @@ async function getDepartureProcedures(icao: string): Promise<DepartureProcedures
 		rwyConnections,
 		procedures,
 		transitions: parseTransitions(allProcedures),
+		approaches: [],
+		appTransitions: [],
 	};
 }
 
-async function getArrivalProcedures(icao: string): Promise<ArrivalProcedures> {
+async function getArrivalProcedures(icao: string): Promise<Procedures> {
 	const airport = await dxGetNavigraphAirport(icao);
 	const allProcedures = await dxGetNavigraphProceduresByAirport("stars", icao);
-	console.log(allProcedures);
+	const allApproaches = await dxGetNavigraphApproachesByAirport(icao);
 
 	const { procedures, rwyConnections } = parseProcedures(allProcedures);
+	const { approaches, appTransitions } = parseApproaches(allApproaches);
 
 	return {
 		rwys: parseRunways(airport),
 		rwyConnections,
 		procedures,
 		transitions: parseTransitions(allProcedures),
-		approaches: [],
-		appTransitions: [],
+		approaches,
+		appTransitions,
 	};
 }
 
@@ -302,11 +346,7 @@ function parseProcedures(allProcedures: NavigraphProcedure[]): {
 }
 
 function parseTransitions(allProcedures: NavigraphProcedure[]): SelectProps[] {
-	const seenTrans = new Set<string>();
-	const transProcs = allProcedures
-		.filter((proc) => !proc.uid.split(":")[2].startsWith("RW") && !proc.uid.split(":")[2].startsWith("ALL"))
-		.filter((proc) => (seenTrans.has(proc.id) ? false : seenTrans.add(proc.id)));
-
+	const transProcs = allProcedures.filter((proc) => !proc.uid.split(":")[2].startsWith("RW") && !proc.uid.split(":")[2].startsWith("ALL"));
 	const transitions: SelectProps[] = [{ value: null, label: "None" }];
 	transProcs.forEach((proc) => void transitions.push({ value: proc.uid, label: `${proc.uid.split(":")[2]} (${proc.id})` }));
 
@@ -317,4 +357,41 @@ function parseRunways(airport: NavigraphAirport | undefined): SelectProps[] {
 	const runways: SelectProps[] = [{ value: null, label: "None" }];
 	airport?.runways.forEach((rw) => void runways.push({ value: rw.id, label: rw.id }));
 	return runways;
+}
+
+function parseApproaches(allApproaches: NavigraphApproach[]): { approaches: SelectProps[]; appTransitions: SelectProps[] } {
+	const approaches: SelectProps[] = [{ value: null, label: "None" }];
+	const appTransitions: SelectProps[] = [{ value: null, label: "None" }];
+
+	for (const proc of allApproaches) {
+		if (proc.uid.split(":")[2] === "FINAL") {
+			approaches.push({ value: proc.uid, label: convertApproachId(proc.id) });
+			continue;
+		}
+		if (proc.uid.split(":")[2] !== "MISSED") {
+			appTransitions.push({ value: proc.uid, label: `${proc.uid.split(":")[2]} (${convertApproachId(proc.id)})` });
+		}
+	}
+
+	return { approaches, appTransitions };
+}
+
+const APPROACH_PREFIX: Record<string, string> = {
+	B: "LOC ",
+	L: "LOC ",
+	D: "VOR DME ",
+	F: "FMS ",
+	G: "IGS ",
+	I: "ILS ",
+	J: "GLS ",
+	M: "MLS ",
+	N: "NDB ",
+	P: "GPS ",
+	Q: "NDB DME ",
+	R: "RNAV ",
+	V: "VOR ",
+};
+
+function convertApproachId(id: string): string {
+	return id.replace(/^[A-Z]/, (ch) => APPROACH_PREFIX[ch] ?? ch).replace(/([XYZ])$/, " $1");
 }

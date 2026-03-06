@@ -1,5 +1,5 @@
 import type { FIRFeature, SimAwareTraconFeature, StaticAircraftType, StaticAirline, StaticAirport } from "@sr24/types/db";
-import type { NavigraphAirport, NavigraphAirway, NavigraphProcedure, NavigraphWaypoint } from "@sr24/types/navigraph";
+import type { NavigraphAirport, NavigraphAirway, NavigraphApproach, NavigraphProcedure, NavigraphWaypoint } from "@sr24/types/navigraph";
 import Dexie, { type EntityTable } from "dexie";
 import type { StatusSetter } from "@/hooks/useInitializer";
 import { fetchApi } from "@/lib/api";
@@ -227,10 +227,23 @@ export async function dxGetNavigraphWaypoints(uids: string[]): Promise<(Navigrap
 	return await db.ngWaypoints.bulkGet(uids);
 }
 
+export async function dxGetNavigraphWaypoint(uid: string): Promise<NavigraphWaypoint | undefined> {
+	await dxEnsureInitialized();
+	return await db.ngWaypoints.get(uid);
+}
+
 export async function dxGetNavigraphProceduresByAirport(type: "sids" | "stars", airportId: string): Promise<NavigraphProcedure[]> {
 	await dxEnsureInitialized();
 	return await db.ngAirports.get(airportId).then((airport) => {
 		if (!airport) return [];
 		return airport[type];
+	});
+}
+
+export async function dxGetNavigraphApproachesByAirport(airportId: string): Promise<NavigraphApproach[]> {
+	await dxEnsureInitialized();
+	return await db.ngAirports.get(airportId).then((airport) => {
+		if (!airport) return [];
+		return airport.approaches;
 	});
 }
