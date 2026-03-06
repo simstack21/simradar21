@@ -94,7 +94,7 @@ export async function getApproachPoints(proc: PilotRouteProcedure): Promise<Navi
 	const approaches = await dxGetNavigraphApproachesByAirport(proc.airport);
 	const waypoints: NavigraphWaypoint[] = [];
 
-	for (const uid of [proc.approachTrans, proc.approach, proc.missedApproach]) {
+	for (const uid of [proc.approachTrans, proc.approach]) {
 		if (!uid) continue;
 		const procedure = approaches.find((p) => p.uid === uid);
 		if (!procedure) continue;

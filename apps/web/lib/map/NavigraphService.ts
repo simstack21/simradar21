@@ -197,7 +197,7 @@ export class NavigraphService {
 
 	private async setProcedureFeatures(type: "sid" | "star" | "approach", id: string, proc: PilotRouteProcedure | null): Promise<void> {
 		if (!proc) return;
-		console.log(proc);
+
 		const waypoints = type === "sid" ? await getSidPoints(proc) : type === "star" ? await getStarPoints(proc) : await getApproachPoints(proc);
 		const pointFeatures: Feature<Point>[] = [];
 

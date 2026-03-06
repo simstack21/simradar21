@@ -2,7 +2,7 @@ import type { StaticAirport } from "@sr24/types/db";
 import type { PilotLong, PilotRouteProcedure } from "@sr24/types/interface";
 import type { NavigraphAirport, NavigraphApproach, NavigraphProcedure } from "@sr24/types/navigraph";
 import { PlaneLandingIcon, PlaneTakeoffIcon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { mapService } from "@/app/(map)/lib";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,6 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 
 	const filteredProcedures = useMemo(() => {
 		if (!procedures?.procedures || !parsedProc?.rwy) return procedures?.procedures;
-		const rwyBase = (s: string) => s.replace(/^RW/, "").replace(/[A-Z]$/, "");
 		const selectedBase = rwyBase(parsedProc.rwy);
 		return procedures.procedures.filter((p) => {
 			if (!p.value) return true;
@@ -58,12 +57,9 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 		return procedures.appTransitions.filter((p) => !p.value || p.value.startsWith(procPrefix));
 	}, [procedures?.appTransitions, parsedProc?.approach]);
 
-	const initRef = useRef<string | null>(null);
-
 	useEffect(() => {
 		const icao = pilot.flight_plan?.[type].icao;
-		if (!icao || initRef.current === icao) return;
-		initRef.current = icao;
+		if (!icao) return;
 
 		getCachedAirport(icao).then(setStaticAirport);
 		if (type === "departure") {
@@ -71,7 +67,7 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 		} else {
 			getArrivalProcedures(icao).then(setProcedures);
 		}
-	}, [pilot.flight_plan, type]);
+	}, [pilot.flight_plan?.[type]?.icao, type]);
 
 	const onProcChange = useCallback(
 		(key: "rwy" | "proc" | "trans" | "approach" | "approachTrans", value: string | null) => {
@@ -126,7 +122,7 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 				type === "departure" ? { ...pilot.flight_plan.parsed_route, sid: updated } : { ...pilot.flight_plan.parsed_route, star: updated };
 			mapService.setFeatures({ autoTrackId: pilot.id, route: newParsedRoute });
 		},
-		[parsedProc, procedures, pilot, type],
+		[parsedProc, procedures, pilot.id, pilot.flight_plan?.parsed_route, type],
 	);
 
 	return (
@@ -136,7 +132,7 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 					{type === "departure" ? <PlaneTakeoffIcon size={16} /> : <PlaneLandingIcon size={16} />}
 					<span>{staticAirport?.id || pilot.flight_plan?.[type].icao}</span>
 					<Badge variant={parsedProc?.override ? "secondary" : "outline"} className="ml-auto">
-						{parsedProc?.override ? "Manually Set" : "Auto Detected"}
+						{parsedProc?.override ? "Edited" : "Auto Detected"}
 					</Badge>
 				</CardTitle>
 				<CardDescription>{staticAirport?.name || "Unknown"}</CardDescription>
@@ -261,6 +257,8 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 		</Card>
 	);
 }
+
+const rwyBase = (s: string) => s.replace(/^RW/, "").replace(/[A-Z]$/, "");
 
 type SelectProps = {
 	value: string | null;
