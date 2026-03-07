@@ -26,6 +26,10 @@ export async function init(pathname: string): Promise<void> {
 
 	const handleMessage = async (msg: WsData | WsPresence) => {
 		if (msg.t === "delta") {
+			// if (lastMessageSeq && msg.s % 5 !== 0) {
+			// 	console.log(`Received WS message seq ${msg.s}:`, msg.data);
+			// 	return;
+			// }
 			if (lastMessageSeq && msg.s !== (lastMessageSeq + 1) % Number.MAX_SAFE_INTEGER) {
 				console.warn(`Missed WS messages: last seq ${lastMessageSeq}, current seq ${msg.s}. Refetching full data.`);
 				const data = await fetchApi<InitialData>("/map/init");

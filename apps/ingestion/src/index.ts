@@ -58,11 +58,13 @@ async function fetchVatsimData(): Promise<void> {
 		const dashboard = await updateDashboardData(vatsimData, controllersLong);
 		updateBookingsData();
 
+		const nowish = new Date(Date.now() - 10 * 1000);
+
 		const init: InitialData = {
 			pilots: pilotsLong.filter((p) => p.live === "live").map((p) => getPilotShort(p)),
 			airports: airportsLong.map((a) => getAirportShort(a)),
 			controllers: controllersMerged,
-			timestamp: new Date(vatsimData.general.update_timestamp),
+			timestamp: nowish,
 		};
 
 		const redisAll: RedisAll = {
@@ -78,7 +80,7 @@ async function fetchVatsimData(): Promise<void> {
 			pilots: getPilotDelta(),
 			airports: getAirportDelta(),
 			controllers: getControllerDelta(),
-			timestamp: new Date(vatsimData.general.update_timestamp),
+			timestamp: nowish,
 		};
 		rdsPub("ws:delta", delta);
 

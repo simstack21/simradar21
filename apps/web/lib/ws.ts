@@ -44,6 +44,16 @@ class WsClient {
 		};
 
 		this.connect();
+
+		if (typeof document !== "undefined") {
+			document.addEventListener("visibilitychange", () => {
+				if (document.visibilityState === "visible" && !this.isConnected() && !this.isConnecting) {
+					console.log("Page became visible, reconnecting WebSocket...");
+					this.reconnectAttempts = 0;
+					this.connect();
+				}
+			});
+		}
 	}
 
 	private connect(): void {
@@ -90,6 +100,9 @@ class WsClient {
 		console.log("WebSocket disconnected");
 		this.isConnecting = false;
 		this.stopHeartbeat();
+		if (this.config.autoReconnect) {
+			this.scheduleReconnect();
+		}
 	}
 
 	private handleMessage(event: MessageEvent) {
