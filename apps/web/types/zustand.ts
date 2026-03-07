@@ -34,6 +34,10 @@ export interface SettingValues {
 	windSpeedUnit: SpeedUnit;
 	altitudeUnit: AltitudeUnit;
 	distanceUnit: DistanceUnit;
+	navigraphData: boolean;
+	navigraphGates: boolean;
+	navigraphRoutes: boolean;
+	navigraphRoutesInMulti: boolean;
 }
 
 export type MapSettings = Pick<
@@ -51,6 +55,10 @@ export type MapSettings = Pick<
 	| "sectorOverlay"
 	| "traconColor"
 	| "firColor"
+	| "navigraphData"
+	| "navigraphGates"
+	| "navigraphRoutes"
+	| "navigraphRoutesInMulti"
 >;
 
 export type UnitSettings = Pick<
@@ -81,6 +89,10 @@ export interface SettingState extends SettingValues {
 	setWindSpeedUnit: (value: SpeedUnit) => void;
 	setAltitudeUnit: (value: AltitudeUnit) => void;
 	setDistanceUnit: (value: DistanceUnit) => void;
+	setNavigraphData: (value: boolean) => void;
+	setNavigraphGates: (value: boolean) => void;
+	setNavigraphRoutes: (value: boolean) => void;
+	setNavigraphRoutesInMulti: (value: boolean) => void;
 
 	setSettings: (settings: SettingValues) => void;
 	resetAllSettings: () => void;

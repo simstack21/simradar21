@@ -22,6 +22,10 @@ export default function OMap() {
 		sectorAreas,
 		traconColor,
 		firColor,
+		navigraphData,
+		navigraphGates,
+		navigraphRoutes,
+		navigraphRoutesInMulti,
 	} = useSettingsStore();
 	const { setPilotCount } = useFilterStatsStore();
 	const filters = useFiltersStore();
@@ -64,6 +68,10 @@ export default function OMap() {
 			traconColor,
 			firColor,
 			animatedPlaneMarkers,
+			navigraphData,
+			navigraphGates,
+			navigraphRoutes,
+			navigraphRoutesInMulti,
 		});
 	}, [
 		dayNightLayer,
@@ -76,6 +84,10 @@ export default function OMap() {
 		traconColor,
 		firColor,
 		animatedPlaneMarkers,
+		navigraphData,
+		navigraphGates,
+		navigraphRoutes,
+		navigraphRoutesInMulti,
 	]);
 
 	return <div id="map" className="absolute inset-0" />;

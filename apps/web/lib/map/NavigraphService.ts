@@ -39,6 +39,7 @@ export class NavigraphService {
 
 	private styleVars: NavigraphStyleVars = {};
 	private blockedGatesAirport = new Map<string, Set<string>>();
+	private settings = { showData: true, showGates: true, showRoutes: true, showInMulti: false, multiView: false };
 
 	public init(): VectorLayer[] {
 		this.initRBush();
@@ -89,6 +90,31 @@ export class NavigraphService {
 		this.gateLayer?.setStyle(getNavigraphGateStyle(this.styleVars));
 		this.routePointLayer?.setStyle(getNavigraphRoutePointStyle(this.styleVars));
 		this.routeTrackLayer?.setStyle(getNavigraphRouteTrackStyle(this.styleVars));
+	}
+
+	public setSettings({
+		showData,
+		showGates,
+		showRoutes,
+		showInMulti,
+		multiView,
+	}: {
+		showData?: boolean;
+		showGates?: boolean;
+		showRoutes?: boolean;
+		showInMulti?: boolean;
+		multiView?: boolean;
+	}) {
+		if (showData !== undefined) this.settings.showData = showData;
+		if (showGates !== undefined) this.settings.showGates = showGates;
+		if (showRoutes !== undefined) this.settings.showRoutes = showRoutes;
+		if (showInMulti !== undefined) this.settings.showInMulti = showInMulti;
+		if (multiView !== undefined) this.settings.multiView = multiView;
+
+		const showRoutesByView = this.settings.multiView ? this.settings.showInMulti : this.settings.showRoutes;
+		this.gateLayer?.setVisible(this.settings.showData && this.settings.showGates);
+		this.routePointLayer?.setVisible(this.settings.showData && showRoutesByView);
+		this.routeTrackLayer?.setVisible(this.settings.showData && showRoutesByView);
 	}
 
 	public setBlockedGates(icao: string, blockedGates: string[]): void {

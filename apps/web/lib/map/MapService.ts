@@ -173,6 +173,12 @@ export class MapService {
 			showAirports: settings.airportMarkers,
 			airportSize: settings.airportMarkerSize,
 		});
+		this.navigraphService.setSettings({
+			showData: settings.navigraphData,
+			showGates: settings.navigraphGates,
+			showRoutes: settings.navigraphRoutes,
+			showInMulti: settings.navigraphRoutesInMulti,
+		});
 		this.toggleAnimation(settings.animatedPlaneMarkers || false);
 
 		this.lastSettings = settings;
@@ -232,6 +238,7 @@ export class MapService {
 		if (this.multiView === undefined) {
 			this.multiView = enabled;
 			this.minimalOverlays = enabled;
+			this.navigraphService.setSettings({ showInMulti: enabled });
 			return;
 		}
 
@@ -240,6 +247,7 @@ export class MapService {
 		}
 		this.multiView = enabled;
 		this.minimalOverlays = enabled;
+		this.navigraphService.setSettings({ multiView: enabled });
 	}
 
 	public addEventListeners() {

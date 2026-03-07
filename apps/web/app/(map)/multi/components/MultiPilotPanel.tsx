@@ -37,7 +37,7 @@ export default function MultiPilotPanel({ id, removeSelected }: { id: string; re
 
 	useEffect(() => {
 		if (pilotData?.flight_plan?.parsed_route && pilotData.flight_plan.route !== routeRef.current) {
-			mapService.setFeatures({ autoTrackId: pilotData.id, route: pilotData.flight_plan.parsed_route });
+			mapService.setFeatures({ autoTrackId: pilotData.id, route: pilotData.overrides?.modifiedRoute || pilotData.flight_plan.parsed_route });
 			routeRef.current = pilotData.flight_plan.route;
 		}
 	}, [pilotData]);
