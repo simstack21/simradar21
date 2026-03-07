@@ -350,6 +350,7 @@ export class MapService {
 		if (!this.map) return;
 
 		if (this.hoverOverlay) {
+			this.hoverOverlay.get("root")?.unmount();
 			this.map.removeOverlay(this.hoverOverlay);
 			this.hoverOverlay = null;
 		}
@@ -426,6 +427,7 @@ export class MapService {
 
 		const overlay = this.clickOverlays.get(id);
 		if (overlay) {
+			overlay.get("root")?.unmount();
 			this.map?.removeOverlay(overlay);
 			this.clickOverlays.delete(id);
 		}
@@ -866,6 +868,7 @@ export class MapService {
 		this.hoverFeature = null;
 
 		if (this.hoverOverlay) {
+			this.hoverOverlay.get("root")?.unmount();
 			this.map?.removeOverlay(this.hoverOverlay);
 			this.hoverOverlay = null;
 		}

@@ -211,7 +211,7 @@ function ControllerOverlay({ controllers }: { controllers: ControllerShort[] | u
 									key={c.callsign}
 									className={cn(
 										"flex items-center gap-2 text-xs bg-muted/50 border rounded-md py-0.5 px-1 hover:bg-muted",
-										clicked === c.callsign && "bg-primary text-primary-foreground",
+										clicked === c.callsign && "bg-primary text-primary-foreground hover:text-white",
 									)}
 									onClick={() => setClicked(clicked === c.callsign ? null : c.callsign)}
 									onPointerEnter={(e) => {
