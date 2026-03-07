@@ -7,6 +7,15 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
 	title: "simradar21",
 	description: "Explore VATSIM network activities, live pilots, controllers or review past flights with our comprehensive tracking service.",
+	icons: {
+		apple: "/simstack21-apple-touch.png",
+	},
+	appleWebApp: {
+		capable: true,
+		title: "simradar21",
+		statusBarStyle: "black",
+	},
+	manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
