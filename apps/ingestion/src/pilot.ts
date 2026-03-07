@@ -83,7 +83,7 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 			pilotLong.vertical_speed = calculateVerticalSpeed(pilotLong, cachedPilot);
 			pilotLong.times = mapPilotTimes(pilotLong, cachedPilot, pilot);
 
-			if (cachedPilot) {
+			if (cachedPilot && cachedPilot.live === "live") {
 				updated.push(getPilotShort(pilotLong, cachedPilot));
 			} else {
 				added.push(getPilotShort(pilotLong));
