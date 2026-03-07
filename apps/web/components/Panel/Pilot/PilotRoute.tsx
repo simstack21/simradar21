@@ -40,7 +40,7 @@ function AirportInfo({ pilot, type, size }: { pilot: PilotLong; type: "departure
 	const [airport, setAirport] = useState<StaticAirport | null>(null);
 
 	const icao = pilot.flight_plan?.[type].icao;
-	const timeStatus = getPilotTimeStatus(pilot.times);
+	const timeStatus = getPilotTimeStatus(pilot);
 
 	useEffect(() => {
 		if (!icao) return;
@@ -100,6 +100,8 @@ export function PilotProgress({ pilot, trackPoint, size }: { pilot: PilotLong; t
 			},
 		);
 	}, [pilot]);
+
+	if (pilot.live === "pre") return null;
 
 	const [departureDistKm, arrivalDistKm, progress, timeSinceDeparture, timeUntilArrival, delayColor, delayStatus] = calculateProgressValues(
 		pilot,

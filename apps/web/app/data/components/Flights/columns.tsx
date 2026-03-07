@@ -156,20 +156,32 @@ export const columns: ColumnDef<Flight>[] = [
 					<DropdownMenuContent align="end">
 						<DropdownMenuGroup>
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
-							<ShareButton flight={flight} />
 							{flight.status === "live" && (
 								<DropdownMenuItem onClick={() => window.location.assign(`/pilot/${flight.id}`)}>
 									<LocateIcon /> Watch Live
 								</DropdownMenuItem>
 							)}
 							{flight.status === "off" && (
+								<>
+									<ShareButton flight={flight} />
+									<DropdownMenuItem
+										onClick={() => {
+											const base = pathname.replace(/\/$/, "");
+											router.push(`${base}/${flight.id}`);
+										}}
+									>
+										<VideoIcon /> Watch Replay
+									</DropdownMenuItem>
+								</>
+							)}
+							{flight.status === "pre" && (
 								<DropdownMenuItem
 									onClick={() => {
 										const base = pathname.replace(/\/$/, "");
 										router.push(`${base}/${flight.id}`);
 									}}
 								>
-									<VideoIcon /> Watch Replay
+									<LocateIcon /> View Prefile
 								</DropdownMenuItem>
 							)}
 						</DropdownMenuGroup>

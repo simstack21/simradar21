@@ -110,7 +110,7 @@ function ListItem({ pilot, direction }: { pilot: PilotLong; direction: "departur
 		router.push(`/data/flights/${pilot.callsign}/${pilot.id}`);
 	};
 
-	const timeStatus = getPilotTimeStatus(pilot.times);
+	const timeStatus = getPilotTimeStatus(pilot);
 	const targetAirport = direction === "departure" ? data.arrival : data.departure;
 
 	return (

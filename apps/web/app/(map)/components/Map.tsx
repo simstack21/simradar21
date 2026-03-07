@@ -90,5 +90,10 @@ export default function OMap() {
 		navigraphRoutesInMulti,
 	]);
 
-	return <div id="map" className="absolute inset-0" />;
+	return (
+		<div className="absolute inset-0 flex flex-col justify-end">
+			<div id="map" className="absolute inset-0" />
+			<div className="w-full h-10 z-50"></div>
+		</div>
+	);
 }
