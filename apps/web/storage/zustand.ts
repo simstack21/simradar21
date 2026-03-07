@@ -36,7 +36,7 @@ const defaultMapSettings: MapSettings = {
 };
 
 const defaultUnitSettings: UnitSettings = {
-	theme: "system",
+	theme: "dark",
 	timeZone: "utc",
 	timeFormat: "24h",
 	temperatureUnit: "celsius",
