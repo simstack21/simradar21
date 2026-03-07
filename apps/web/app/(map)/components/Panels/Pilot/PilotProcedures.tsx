@@ -1,7 +1,7 @@
 import type { StaticAirport } from "@sr24/types/db";
 import type { PilotLong, PilotParsedRoute, PilotRouteProcedure } from "@sr24/types/interface";
 import type { NavigraphAirport, NavigraphApproach, NavigraphProcedure } from "@sr24/types/navigraph";
-import { PlaneLandingIcon, PlaneTakeoffIcon, RotateCcwIcon } from "lucide-react";
+import { InfoIcon, PlaneLandingIcon, PlaneTakeoffIcon, RotateCcwIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { mapService } from "@/app/(map)/lib";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +12,29 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { cn } from "@/lib/utils";
 import { getCachedAirport } from "@/storage/cache";
 import { dxGetNavigraphAirport, dxGetNavigraphApproachesByAirport, dxGetNavigraphProceduresByAirport } from "@/storage/dexie";
+import { useSession } from "next-auth/react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function PilotProcedures({ pilot }: { pilot: PilotLong }) {
+	const { data: session } = useSession();
 	const [modifiedRoute, setModifiedRoute] = useState<PilotParsedRoute | null>(
 		pilot.overrides?.modifiedRoute || pilot.flight_plan?.parsed_route || null,
 	);
+
+	if (!session?.vatsim?.cid || session.vatsim.cid.toString() !== pilot.cid) {
+		return (
+			<div className="p-2">
+				<Alert>
+					<InfoIcon />
+					<AlertTitle>Access Denied</AlertTitle>
+					<AlertDescription>
+						Only the owner of this flight can view and edit these procedures. Please log in to view and edit your flight procedures.
+					</AlertDescription>
+				</Alert>
+			</div>
+		);
+	}
+
 	return (
 		<ScrollArea className="max-h-full overflow-hidden flex flex-col">
 			{pilot.flight_plan?.departure.icao && (
