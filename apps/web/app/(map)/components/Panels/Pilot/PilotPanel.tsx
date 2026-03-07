@@ -23,7 +23,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchApi } from "@/lib/api";
 import { decodeTrackPoints } from "@/lib/map/tracks";
 import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
-import { usePilotPanelStore } from "@/storage/zustand";
+import { useMinimizedPanelsStore, usePilotPanelStore } from "@/storage/zustand";
 import PilotProcedures from "./PilotProcedures";
 
 let lastMessageSeq: number | null = null;
@@ -38,7 +38,7 @@ export default function PilotPanel({ id }: { id: string }) {
 	});
 
 	const { panel, setPanel } = usePilotPanelStore();
-	const [minimized, setMinimized] = useState(false);
+	const { minimized, setMinimized } = useMinimizedPanelsStore();
 	const [tab, setTab] = useState("overview");
 	const [trackPoints, setTrackPoints] = useState<TrackPoint[]>([]);
 	const isMobile = useMediaQuery("(max-width: 1024px)");

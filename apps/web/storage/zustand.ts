@@ -36,7 +36,7 @@ const defaultMapSettings: MapSettings = {
 };
 
 const defaultUnitSettings: UnitSettings = {
-	theme: "system",
+	theme: "dark",
 	timeZone: "utc",
 	timeFormat: "24h",
 	temperatureUnit: "celsius",
@@ -261,6 +261,18 @@ export const useMapVisibilityStore = create<{ isHidden: boolean; setHidden: (val
 		}),
 		{
 			name: "simradar21-map-visibility",
+		},
+	),
+);
+
+export const useMinimizedPanelsStore = create<{ minimized: boolean; setMinimized: (value: boolean) => void }>()(
+	persist(
+		(set) => ({
+			minimized: false,
+			setMinimized: (value: boolean) => set({ minimized: value }),
+		}),
+		{
+			name: "simradar21-all-panels-minimized",
 		},
 	),
 );

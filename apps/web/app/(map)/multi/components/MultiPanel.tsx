@@ -5,6 +5,7 @@ import { Suspense, useCallback } from "react";
 import LoadingPanel from "@/components/Panel/Loading";
 import { MotionPanel } from "@/components/Panel/PanelGrid";
 import DashboardPanel from "../../components/Panels/Dashboard/DashboardPanel";
+import { mapService } from "../../lib";
 import MultiAirportPanel from "./MultiAirportPanel";
 import MultiPilotPanel from "./MultiPilotPanel";
 import MultiSectorPanel from "./MultiSectorPanel";
@@ -32,6 +33,8 @@ export default function MultiPanel() {
 			}
 
 			router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+			const [type, featureId] = id.split(/_(.+)/);
+			mapService.removeClickFeature(type, featureId);
 		},
 		[searchParams, router, pathname],
 	);

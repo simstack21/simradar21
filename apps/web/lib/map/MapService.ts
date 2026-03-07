@@ -238,7 +238,7 @@ export class MapService {
 		if (this.multiView === undefined) {
 			this.multiView = enabled;
 			this.minimalOverlays = enabled;
-			this.navigraphService.setSettings({ showInMulti: enabled });
+			this.navigraphService.setSettings({ multiView: enabled });
 			return;
 		}
 
@@ -255,11 +255,7 @@ export class MapService {
 
 		this.map?.on("moveend", this.onMoveEnd);
 
-		const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-
-		if (!isTouch) {
-			this.map?.on("pointermove", this.onPointerMove);
-		}
+		this.map?.on("pointermove", this.onPointerMove);
 
 		this.clickSelect = new Select({
 			condition: click,
@@ -297,6 +293,7 @@ export class MapService {
 	};
 
 	private onPointerMove = async (e: MapBrowserEvent) => {
+		if ((e.originalEvent as PointerEvent).pointerType === "touch") return;
 		if (this.hovering) return;
 		this.hovering = true;
 
@@ -353,6 +350,7 @@ export class MapService {
 		if (!this.map) return;
 
 		if (this.hoverOverlay) {
+			this.hoverOverlay.get("root")?.unmount();
 			this.map.removeOverlay(this.hoverOverlay);
 			this.hoverOverlay = null;
 		}
@@ -429,6 +427,7 @@ export class MapService {
 
 		const overlay = this.clickOverlays.get(id);
 		if (overlay) {
+			overlay.get("root")?.unmount();
 			this.map?.removeOverlay(overlay);
 			this.clickOverlays.delete(id);
 		}
@@ -802,7 +801,8 @@ export class MapService {
 	public addClickFeature(type?: string, id?: string, init?: boolean): void {
 		if (!id || !type) return;
 
-		const view = this.options?.disableCenterOnPageLoad || this.multiView === true || !init ? undefined : this.map?.getView();
+		const isAlreadyClicked = this.clickFeatures?.has(`${type}_${id}`);
+		const view = this.options?.disableCenterOnPageLoad || this.multiView === true || (!init && isAlreadyClicked) ? undefined : this.map?.getView();
 		let clickFeature: Feature<Point> | null = null;
 
 		if (type === "pilot") {
@@ -815,7 +815,7 @@ export class MapService {
 			clickFeature = this.controllerService.moveToFeature(id, view);
 		}
 
-		if (!clickFeature || this.clickFeatures?.get(`${type}_${id}`)) return;
+		if (!clickFeature || isAlreadyClicked) return;
 
 		const isSelected = this.clickSelect?.selectFeature(clickFeature);
 		if (isSelected) return;
@@ -868,6 +868,7 @@ export class MapService {
 		this.hoverFeature = null;
 
 		if (this.hoverOverlay) {
+			this.hoverOverlay.get("root")?.unmount();
 			this.map?.removeOverlay(this.hoverOverlay);
 			this.hoverOverlay = null;
 		}

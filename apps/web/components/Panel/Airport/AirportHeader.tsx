@@ -16,7 +16,7 @@ export function AirportHeader({
 	icao: string;
 	onClose?: () => void;
 	minimized: boolean;
-	setMinimized: React.Dispatch<React.SetStateAction<boolean>>;
+	setMinimized: (value: boolean) => void;
 }) {
 	const [airport, setAirport] = useState<StaticAirport | null>(null);
 
@@ -33,7 +33,7 @@ export function AirportHeader({
 					{airport?.iata || "N/A"} | {airport?.name || "Unknown"}
 				</span>
 			</div>
-			<Button variant="outline" onClick={() => setMinimized((prev) => !prev)} className="ml-auto">
+			<Button variant="outline" onClick={() => setMinimized(!minimized)} className="ml-auto">
 				{minimized ? "Show" : "Hide"}
 			</Button>
 			{onClose && (

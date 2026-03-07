@@ -65,7 +65,17 @@ export async function getPilotsByAirport(icao: string, direction?: string, limit
 }
 
 async function searchPilots(where: Prisma.PilotWhereInput) {
-	const [livePilots, offlinePilots] = await Promise.all([
+	const offlineSelect = {
+		id: true,
+		cid: true,
+		name: true,
+		callsign: true,
+		flight_plan: true,
+		aircraft: true,
+		live: true,
+	} as const;
+
+	const [livePilots, prePilots, offPilots] = await Promise.all([
 		prisma.pilot.findMany({
 			where: {
 				...where,
@@ -87,32 +97,25 @@ async function searchPilots(where: Prisma.PilotWhereInput) {
 		}),
 
 		prisma.pilot.findMany({
-			where: {
-				...where,
-				live: {
-					in: ["off", "pre"],
-				},
-			},
-			orderBy: {
-				callsign: "asc",
-			},
+			where: { ...where, live: "pre" },
+			orderBy: { callsign: "asc" },
 			distinct: ["callsign"],
-			select: {
-				id: true,
-				cid: true,
-				name: true,
-				callsign: true,
-				flight_plan: true,
-				aircraft: true,
-				live: true,
-			},
+			select: offlineSelect,
+			take: 10,
+		}),
+
+		prisma.pilot.findMany({
+			where: { ...where, live: "off" },
+			orderBy: { callsign: "asc" },
+			distinct: ["callsign"],
+			select: offlineSelect,
 			take: 10,
 		}),
 	]);
 
 	return {
 		live: livePilots,
-		offline: offlinePilots,
+		offline: [...prePilots, ...offPilots].slice(0, 10),
 	};
 }
 
@@ -151,7 +154,7 @@ export async function getFlightsByCallsign(callsign: string, limit?: string, pag
 	const [flights, totalCount] = await Promise.all([
 		prisma.pilot.findMany({
 			where: {
-				callsign: { startsWith: callsign.toUpperCase() },
+				callsign: callsign.toUpperCase(),
 			},
 			orderBy: {
 				sched_off_block: "desc",

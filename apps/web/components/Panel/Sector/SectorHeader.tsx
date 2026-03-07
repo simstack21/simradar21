@@ -16,7 +16,7 @@ export function SectorHeader({
 	callsign: string;
 	onClose?: () => void;
 	minimized?: boolean;
-	setMinimized?: React.Dispatch<React.SetStateAction<boolean>>;
+	setMinimized?: (value: boolean) => void;
 }) {
 	const [sector, setSector] = useState<SectorPanelData | null>(null);
 
@@ -41,7 +41,7 @@ export function SectorHeader({
 				</span>
 			</div>
 			{setMinimized && (
-				<Button variant="outline" onClick={() => setMinimized((prev) => !prev)}>
+				<Button variant="outline" onClick={() => setMinimized(!minimized)}>
 					{minimized ? "Show" : "Hide"}
 				</Button>
 			)}

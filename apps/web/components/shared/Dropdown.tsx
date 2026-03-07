@@ -149,13 +149,13 @@ const communityListItems: ListItem[] = [
 		src: `${SHADCN_ICONS_BASE_URL}/github-icon.png?width=40&height=40&format=auto`,
 		property: "GitHub",
 		description: "GitHub Repository",
-		href: "https://github.com/sebastiankrll/simradar21",
+		href: "https://github.com/simstack21/simradar21",
 	},
 	{
 		src: `${SHADCN_ICONS_BASE_URL}/discord-icon.png?width=40&height=40&format=auto`,
 		property: "Discord",
 		description: "Discord Community",
-		href: "https://discord.gg/eVvKBfUr",
+		href: "https://discord.gg/7sS4kUcP53",
 	},
 ];
 

@@ -13,6 +13,7 @@ import NotFoundPanel from "@/components/Panel/NotFound";
 import { MotionPanel } from "@/components/Panel/PanelGrid";
 import { fetchApi } from "@/lib/api";
 import { getCachedAirport } from "@/storage/cache";
+import { useMinimizedPanelsStore } from "@/storage/zustand";
 
 export default function AirportLayout({ icao, children }: { icao: string; children?: React.ReactNode }) {
 	const { isLoading } = useSWR<AirportLong>(`/map/airport/${icao}`, fetchApi, {
@@ -21,7 +22,7 @@ export default function AirportLayout({ icao, children }: { icao: string; childr
 	});
 
 	const [staticAirport, setStaticAirport] = useState<StaticAirport | null | undefined>();
-	const [minimized, setMinimized] = useState(false);
+	const { minimized, setMinimized } = useMinimizedPanelsStore();
 
 	useEffect(() => {
 		getCachedAirport(icao).then(setStaticAirport);

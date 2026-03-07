@@ -1,11 +1,11 @@
 import type { PilotLong, TrackPoint } from "@sr24/types/interface";
 import { RadioIcon } from "lucide-react";
-import type { Coordinate } from "ol/coordinate";
 import { toLonLat } from "ol/proj";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export function PilotMisc({ pilot, trackPoint }: { pilot: PilotLong; trackPoint?: TrackPoint }) {
-	const coordinates: Coordinate = trackPoint ? toLonLat(trackPoint.coordinates) : [pilot.latitude, pilot.longitude];
+	const [lon, lat] = trackPoint ? toLonLat(trackPoint.coordinates) : [pilot.longitude, pilot.latitude];
+	const coordinates: [number, number] = [lat, lon];
 
 	return (
 		<AccordionItem value="misc" className="overflow-hidden flex flex-col">

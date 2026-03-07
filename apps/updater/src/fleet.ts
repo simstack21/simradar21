@@ -6,8 +6,8 @@ import StreamJson from "stream-json";
 import StreamArray from "stream-json/streamers/StreamArray.js";
 import { fetch } from "undici";
 
-const RELEASE_URL = "https://api.github.com/repos/sebastiankrll/simradar21-data/releases/latest";
-const BASE_DATA_URL = "https://github.com/sebastiankrll/simradar21-data/releases/download/";
+const RELEASE_URL = "https://api.github.com/repos/simstack21/simstack21-data/releases/latest";
+const BASE_DATA_URL = "https://github.com/simstack21/simstack21-data/releases/download/";
 
 let version: string | null = null;
 let release: string | null = null;
