@@ -255,11 +255,7 @@ export class MapService {
 
 		this.map?.on("moveend", this.onMoveEnd);
 
-		const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-
-		if (!isTouch) {
-			this.map?.on("pointermove", this.onPointerMove);
-		}
+		this.map?.on("pointermove", this.onPointerMove);
 
 		this.clickSelect = new Select({
 			condition: click,
@@ -297,6 +293,7 @@ export class MapService {
 	};
 
 	private onPointerMove = async (e: MapBrowserEvent) => {
+		if ((e.originalEvent as PointerEvent).pointerType === "touch") return;
 		if (this.hovering) return;
 		this.hovering = true;
 
