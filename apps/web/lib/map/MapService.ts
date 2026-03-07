@@ -799,7 +799,8 @@ export class MapService {
 	public addClickFeature(type?: string, id?: string, init?: boolean): void {
 		if (!id || !type) return;
 
-		const view = this.options?.disableCenterOnPageLoad || this.multiView === true || !init ? undefined : this.map?.getView();
+		const isAlreadyClicked = this.clickFeatures?.has(`${type}_${id}`);
+		const view = this.options?.disableCenterOnPageLoad || this.multiView === true || (!init && isAlreadyClicked) ? undefined : this.map?.getView();
 		let clickFeature: Feature<Point> | null = null;
 
 		if (type === "pilot") {
@@ -812,7 +813,7 @@ export class MapService {
 			clickFeature = this.controllerService.moveToFeature(id, view);
 		}
 
-		if (!clickFeature || this.clickFeatures?.get(`${type}_${id}`)) return;
+		if (!clickFeature || isAlreadyClicked) return;
 
 		const isSelected = this.clickSelect?.selectFeature(clickFeature);
 		if (isSelected) return;
