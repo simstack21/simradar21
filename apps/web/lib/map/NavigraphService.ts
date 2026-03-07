@@ -35,6 +35,7 @@ export class NavigraphService {
 	private rbush = new RBush<RBushAirport>();
 	private cachedAirports = new Set<string>();
 	private cachedRoutes = new Set<string>();
+	private cachedProcedureKeys = new Map<string, { sid: string; star: string; approach: string }>();
 
 	private styleVars: NavigraphStyleVars = {};
 	private blockedGatesAirport = new Map<string, Set<string>>();
@@ -141,58 +142,73 @@ export class NavigraphService {
 	}
 
 	public async setRouteFeatures(route: PilotParsedRoute, id: string): Promise<void> {
-		this.removeRouteFeatures(id);
-		console.log(route);
+		const procKeys = this.cachedProcedureKeys.get(id);
 
-		const pointFeatures: Feature<Point>[] = [];
-		const waypoints = await dxGetNavigraphWaypoints(route.waypoints.map((wp) => wp.uid));
+		if (!this.cachedRoutes.has(id)) {
+			const pointFeatures: Feature<Point>[] = [];
+			const waypoints = await dxGetNavigraphWaypoints(route.waypoints.map((wp) => wp.uid));
 
-		for (const [i, point] of route.waypoints.entries()) {
-			let wp = waypoints.find((w) => w?.uid === point.uid);
-			if (!wp) {
-				wp = getLonLatPoint(point.uid);
+			for (const [i, point] of route.waypoints.entries()) {
+				let wp = waypoints.find((w) => w?.uid === point.uid);
+				if (!wp) {
+					wp = getLonLatPoint(point.uid);
+				}
+				if (!wp) continue;
+
+				const feature = new Feature({
+					geometry: new Point(fromLonLat([wp.longitude, wp.latitude])),
+					label: wp.id,
+					class: wp.class,
+				});
+				feature.setId(`navigraph_route_point_${id}_${i}`);
+				pointFeatures.push(feature);
 			}
-			if (!wp) continue;
+			this.routePointSource.addFeatures(pointFeatures);
 
-			const feature = new Feature({
-				geometry: new Point(fromLonLat([wp.longitude, wp.latitude])),
-				label: wp.id,
-				class: wp.class,
-			});
-			feature.setId(`navigraph_route_point_${id}_${i}`);
-			pointFeatures.push(feature);
+			const trackFeatures: Feature<LineString>[] = [];
+			for (let i = 0; i < route.waypoints.length - 1; i++) {
+				let start = waypoints.find((w) => w?.uid === route.waypoints[i].uid);
+				if (!start) {
+					start = getLonLatPoint(route.waypoints[i].uid);
+				}
+				let end = waypoints.find((w) => w?.uid === route.waypoints[i + 1].uid);
+				if (!end) {
+					end = getLonLatPoint(route.waypoints[i + 1].uid);
+				}
+				if (!start || !end) continue;
+
+				const trackFeature = new Feature({
+					geometry: new LineString([fromLonLat([start.longitude, start.latitude]), fromLonLat([end.longitude, end.latitude])]),
+					type: "navigraph_route_track",
+				});
+				const airway = route.waypoints[i].airwayUid || route.waypoints[i + 1].airwayUid;
+				const airwayParts = airway?.split(":") || [];
+				if (airway) trackFeature.set("label", airwayParts[3]);
+
+				trackFeature.setId(`navigraph_route_track_${id}_${i}`);
+				trackFeatures.push(trackFeature);
+			}
+			this.routeTrackSource.addFeatures(trackFeatures);
 		}
-		this.routePointSource.addFeatures(pointFeatures);
 
-		const trackFeatures: Feature<LineString>[] = [];
-		for (let i = 0; i < route.waypoints.length - 1; i++) {
-			let start = waypoints.find((w) => w?.uid === route.waypoints[i].uid);
-			if (!start) {
-				start = getLonLatPoint(route.waypoints[i].uid);
-			}
-			let end = waypoints.find((w) => w?.uid === route.waypoints[i + 1].uid);
-			if (!end) {
-				end = getLonLatPoint(route.waypoints[i + 1].uid);
-			}
-			if (!start || !end) continue;
+		const sidKey = JSON.stringify(route.sid);
+		const starKey = JSON.stringify({ proc: route.star?.proc, rwy: route.star?.rwy, rwyCon: route.star?.rwyCon, trans: route.star?.trans });
+		const approachKey = JSON.stringify({ approach: route.star?.approach, approachTrans: route.star?.approachTrans });
 
-			const trackFeature = new Feature({
-				geometry: new LineString([fromLonLat([start.longitude, start.latitude]), fromLonLat([end.longitude, end.latitude])]),
-				type: "navigraph_route_track",
-			});
-			const airway = route.waypoints[i].airwayUid || route.waypoints[i + 1].airwayUid;
-			const airwayParts = airway?.split(":") || [];
-			if (airway) trackFeature.set("label", airwayParts[3]);
-
-			trackFeature.setId(`navigraph_route_track_${id}_${i}`);
-			trackFeatures.push(trackFeature);
+		if (!procKeys || procKeys.sid !== sidKey) {
+			this.removeProcedureFeatures("sid", id);
+			await this.setProcedureFeatures("sid", id, route.sid);
 		}
-		this.routeTrackSource.addFeatures(trackFeatures);
+		if (!procKeys || procKeys.star !== starKey) {
+			this.removeProcedureFeatures("star", id);
+			await this.setProcedureFeatures("star", id, route.star);
+		}
+		if (!procKeys || procKeys.approach !== approachKey) {
+			this.removeProcedureFeatures("approach", id);
+			await this.setProcedureFeatures("approach", id, route.star);
+		}
 
-		this.setProcedureFeatures("sid", id, route.sid);
-		this.setProcedureFeatures("star", id, route.star);
-		this.setProcedureFeatures("approach", id, route.star);
-
+		this.cachedProcedureKeys.set(id, { sid: sidKey, star: starKey, approach: approachKey });
 		this.cachedRoutes.add(id);
 	}
 
@@ -233,6 +249,26 @@ export class NavigraphService {
 		this.routeTrackSource.addFeatures(trackFeatures);
 	}
 
+	private removeProcedureFeatures(type: "sid" | "star" | "approach", id: string): void {
+		const prefix = `navigraph_route_point_${id}_`;
+		const suffix = `_${type}`;
+		this.routePointSource
+			.getFeatures()
+			.filter((f) => {
+				const fid = String(f.getId());
+				return fid.startsWith(prefix) && fid.endsWith(suffix);
+			})
+			.forEach((f) => void this.routePointSource.removeFeature(f));
+		const trackPrefix = `navigraph_route_track_${id}_`;
+		this.routeTrackSource
+			.getFeatures()
+			.filter((f) => {
+				const fid = String(f.getId());
+				return fid.startsWith(trackPrefix) && fid.endsWith(suffix);
+			})
+			.forEach((f) => void this.routeTrackSource.removeFeature(f));
+	}
+
 	public removeRouteFeatures(id: string): void {
 		this.routePointSource
 			.getFeatures()
@@ -245,11 +281,13 @@ export class NavigraphService {
 			.forEach((f) => void this.routeTrackSource.removeFeature(f));
 
 		this.cachedRoutes.delete(id);
+		this.cachedProcedureKeys.delete(id);
 	}
 
 	public clearFeatures(): void {
 		this.routePointSource.clear();
 		this.routeTrackSource.clear();
 		this.cachedRoutes.clear();
+		this.cachedProcedureKeys.clear();
 	}
 }
