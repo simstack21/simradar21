@@ -151,7 +151,7 @@ export async function getFlightsByCallsign(callsign: string, limit?: string, pag
 	const [flights, totalCount] = await Promise.all([
 		prisma.pilot.findMany({
 			where: {
-				callsign: { startsWith: callsign.toUpperCase() },
+				callsign: callsign.toUpperCase(),
 			},
 			orderBy: {
 				sched_off_block: "desc",
