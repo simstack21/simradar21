@@ -10,6 +10,7 @@ import { convertDistance, convertTime, haversineDistance } from "@/lib/helpers";
 import { getDelayColorFromDates, getPilotTimeStatus, pilotAirportTimeMapping } from "@/lib/panels";
 import { getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
+import Link from "next/link";
 
 export default function PilotRoute({ size, pilot, trackPoint }: { size?: "default" | "sm"; pilot: PilotLong; trackPoint?: TrackPoint }) {
 	if (size === "sm") {
@@ -51,7 +52,9 @@ function AirportInfo({ pilot, type, size }: { pilot: PilotLong; type: "departure
 			<div className="flex gap-2 items-center text-xs overflow-hidden">
 				<AvatarCountry country={airport?.country || ""} size="sm" />
 				<div className="flex flex-col overflow-hidden">
-					<span className="text-sm font-bold">{airport?.id || icao || "N/A"}</span>
+					<Link href={`/airport/${airport?.id || icao || "XXXX"}`} className="text-sm font-bold">
+						{airport?.id || icao || "N/A"}
+					</Link>
 					<span>{convertTime(pilot.times?.[pilotAirportTimeMapping[type][1]], timeFormat, timeZone, true, airport?.timezone)}</span>
 				</div>
 			</div>
@@ -62,7 +65,9 @@ function AirportInfo({ pilot, type, size }: { pilot: PilotLong; type: "departure
 		<div className="flex gap-2 items-center text-xs overflow-hidden">
 			<AvatarCountry country={airport?.country || ""} size="sm" />
 			<div className="flex flex-col overflow-hidden">
-				<span className="text-sm font-bold">{airport?.id || icao || "N/A"}</span>
+				<Link href={`/airport/${airport?.id || icao || "XXXX"}`} className="text-sm font-bold">
+					{airport?.id || icao || "N/A"}
+				</Link>
 				<span className="text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">{airport?.name || "Unknown"}</span>
 			</div>
 			<div className="flex flex-col ml-auto mt-auto shrink-0">
