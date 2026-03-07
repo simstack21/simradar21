@@ -2,8 +2,10 @@ import type { StaticAirport } from "@sr24/types/db";
 import type { PilotLong, PilotParsedRoute, PilotRouteProcedure } from "@sr24/types/interface";
 import type { NavigraphAirport, NavigraphApproach, NavigraphProcedure } from "@sr24/types/navigraph";
 import { InfoIcon, PlaneLandingIcon, PlaneTakeoffIcon, RotateCcwIcon } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { mapService } from "@/app/(map)/lib";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +14,6 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { cn } from "@/lib/utils";
 import { getCachedAirport } from "@/storage/cache";
 import { dxGetNavigraphAirport, dxGetNavigraphApproachesByAirport, dxGetNavigraphProceduresByAirport } from "@/storage/dexie";
-import { useSession } from "next-auth/react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function PilotProcedures({ pilot }: { pilot: PilotLong }) {
 	const { data: session } = useSession();

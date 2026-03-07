@@ -65,7 +65,7 @@ export default function ReplayPanel({
 				<PilotHeader pilot={pilot} onClose={onClose} minimized={minimized} setMinimized={setMinimized} />
 				{!minimized && (
 					<>
-						<PilotRoute pilot={pilot} />
+						<PilotRoute pilot={pilot} trackPoint={trackPoints[index]} />
 						<ScrollArea className="max-h-full overflow-hidden flex flex-col">
 							<Accordion multiple={!isMobile} className="rounded-none border-none" value={panel} onValueChange={setPanel}>
 								<PilotFlightplan pilot={pilot} />
@@ -73,7 +73,7 @@ export default function ReplayPanel({
 								<PilotChart trackPoints={trackPoints} />
 								<PilotTelemetry pilot={pilot} trackPoint={trackPoints[index]} />
 								<PilotUser pilot={pilot} />
-								<PilotMisc pilot={pilot} />
+								<PilotMisc pilot={pilot} trackPoint={trackPoints[index]} />
 							</Accordion>
 							<ScrollBar />
 						</ScrollArea>

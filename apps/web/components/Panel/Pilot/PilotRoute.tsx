@@ -1,6 +1,7 @@
 import type { StaticAirport } from "@sr24/types/db";
-import type { PilotLong, PilotTimes } from "@sr24/types/interface";
+import type { PilotLong, PilotTimes, TrackPoint } from "@sr24/types/interface";
 import { ArrowDownToLineIcon, MoveDownIcon, MoveDownRightIcon, MoveRightIcon, MoveUpRightIcon } from "lucide-react";
+import { toLonLat } from "ol/proj";
 import { useEffect, useState } from "react";
 import { AvatarCountry } from "@/components/shared/Avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,7 @@ import { getDelayColorFromDates, getPilotTimeStatus, pilotAirportTimeMapping } f
 import { getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
 
-export default function PilotRoute({ size, pilot }: { size?: "default" | "sm"; pilot: PilotLong }) {
+export default function PilotRoute({ size, pilot, trackPoint }: { size?: "default" | "sm"; pilot: PilotLong; trackPoint?: TrackPoint }) {
 	if (size === "sm") {
 		return (
 			<div className="flex items-center gap-1">
@@ -28,7 +29,7 @@ export default function PilotRoute({ size, pilot }: { size?: "default" | "sm"; p
 				<MoveDownIcon size={16} className="w-6" />
 				<AirportInfo pilot={pilot} type="arrival" size="default" />
 			</div>
-			<PilotProgress pilot={pilot} size="default" />
+			<PilotProgress pilot={pilot} trackPoint={trackPoint} size="default" />
 		</div>
 	);
 }
@@ -82,7 +83,7 @@ function AirportInfo({ pilot, type, size }: { pilot: PilotLong; type: "departure
 	);
 }
 
-export function PilotProgress({ pilot, size }: { pilot: PilotLong; size: "default" | "sm" }) {
+export function PilotProgress({ pilot, trackPoint, size }: { pilot: PilotLong; trackPoint?: TrackPoint; size: "default" | "sm" }) {
 	const { distanceUnit } = useSettingsStore();
 	const [airports, setAirports] = useState<{ departure: StaticAirport | null; arrival: StaticAirport | null }>({ departure: null, arrival: null });
 
@@ -99,6 +100,7 @@ export function PilotProgress({ pilot, size }: { pilot: PilotLong; size: "defaul
 		pilot,
 		airports.departure,
 		airports.arrival,
+		trackPoint,
 	);
 
 	if (size === "sm") {
@@ -108,7 +110,7 @@ export function PilotProgress({ pilot, size }: { pilot: PilotLong; size: "defaul
 	return (
 		<div className="flex flex-col text-xs gap-1">
 			<div className="flex justify-between">
-				<div className="flex gap-1.5">{getProgressLabel(pilot.times?.state)}</div>
+				{trackPoint ? <div className="flex gap-1.5">Replay</div> : <div className="flex gap-1.5">{getProgressLabel(pilot.times?.state)}</div>}
 				<Badge variant="outline">
 					<span style={{ backgroundColor: `var(--${delayColor})` }} className="size-1.5 rounded-full" aria-hidden="true" />
 					{delayStatus}
@@ -127,9 +129,13 @@ function calculateProgressValues(
 	pilot: PilotLong,
 	departure: StaticAirport | null,
 	arrival: StaticAirport | null,
+	trackPoint?: TrackPoint,
 ): [number, number, number, string, string, "green" | "yellow" | "red" | null, "On Time" | "Delayed" | "Unknown"] {
-	const departureDistKm = departure ? haversineDistance([departure.latitude, departure.longitude], [pilot.latitude, pilot.longitude]) : 0;
-	const arrivalDistKm = arrival ? haversineDistance([arrival.latitude, arrival.longitude], [pilot.latitude, pilot.longitude]) : 0;
+	const [lon, lat] = trackPoint ? toLonLat(trackPoint.coordinates) : [pilot.longitude, pilot.latitude];
+	const pilotCoords: [number, number] = [lat, lon];
+
+	const departureDistKm = departure ? haversineDistance([departure.latitude, departure.longitude], pilotCoords) : 0;
+	const arrivalDistKm = arrival ? haversineDistance([arrival.latitude, arrival.longitude], pilotCoords) : 0;
 	const totalDistKm = departureDistKm + arrivalDistKm;
 
 	const progress = totalDistKm > 0 ? Math.round((departureDistKm / totalDistKm) * 100) : 0;

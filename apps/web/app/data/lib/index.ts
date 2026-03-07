@@ -15,12 +15,13 @@ export async function init(pilot: PilotLong, trackPoints: Required<TrackPoint>[]
 	mapService.resetMap();
 
 	airports = await initAirports(pilot);
+	const firstTrackPoint = trackPoints.length > 0 ? trackPoints[0] : undefined;
 	await mapService.setFeatures({
 		airports,
 		trackPoints,
-		route: pilot.flight_plan?.parsed_route,
-		pilots: [getPilotShort(pilot, trackPoints[0])],
-		sunTime: new Date(trackPoints[0].timestamp),
+		route: pilot.overrides?.modifiedRoute || pilot.flight_plan?.parsed_route,
+		pilots: [getPilotShort(pilot, firstTrackPoint)],
+		sunTime: new Date(firstTrackPoint?.timestamp || Date.now()),
 		autoTrackId: pilot.id,
 	});
 
