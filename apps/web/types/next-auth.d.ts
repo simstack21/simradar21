@@ -6,11 +6,7 @@ declare module "next-auth" {
 			cid: number;
 			name: string;
 		};
-		navigraph?: {
-			accessToken?: string;
-			refreshToken?: string;
-			expiresAt?: number;
-		};
+		hasNavigraph?: boolean;
 	}
 
 	interface Profile {
@@ -31,10 +27,6 @@ declare module "next-auth/jwt" {
 			cid: number;
 			name: string;
 		};
-		navigraph?: {
-			accessToken?: string;
-			refreshToken?: string;
-			expiresAt?: number;
-		};
+		hasNavigraph?: boolean;
 	}
 }

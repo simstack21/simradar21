@@ -76,14 +76,14 @@ async function pgUpsertPilotsBatch(pilots: PilotLong[]): Promise<void> {
 			continue;
 		}
 
-		const baseIdx = idx * 29;
+		const baseIdx = idx * 30;
 		values.push(`(
 			$${baseIdx + 1}, $${baseIdx + 2}, $${baseIdx + 3}, $${baseIdx + 4}, $${baseIdx + 5},
 			$${baseIdx + 6}, $${baseIdx + 7}, $${baseIdx + 8}, $${baseIdx + 9}, $${baseIdx + 10},
 			$${baseIdx + 11}, $${baseIdx + 12}, $${baseIdx + 13}, $${baseIdx + 14}, $${baseIdx + 15},
 			$${baseIdx + 16}, $${baseIdx + 17}, $${baseIdx + 18}, $${baseIdx + 19}, $${baseIdx + 20},
 			$${baseIdx + 21}, $${baseIdx + 22}, $${baseIdx + 23}, $${baseIdx + 24}, $${baseIdx + 25}, $${baseIdx + 26},
-			$${baseIdx + 27}, $${baseIdx + 28}, $${baseIdx + 29}
+			$${baseIdx + 27}, $${baseIdx + 28}, $${baseIdx + 29}, $${baseIdx + 30}
 		)`);
 
 		params.push(
@@ -108,6 +108,7 @@ async function pgUpsertPilotsBatch(pilots: PilotLong[]): Promise<void> {
 			p.qnh_mb,
 			JSON.stringify(p.flight_plan),
 			JSON.stringify(p.times),
+			JSON.stringify(p.overrides),
 			p.logon_time,
 			p.last_update,
 			p.live,
@@ -132,7 +133,7 @@ async function pgUpsertPilotsBatch(pilots: PilotLong[]): Promise<void> {
 			altitude_ms, groundspeed, vertical_speed, heading, aircraft,
 			transponder, frequency,
 			name, server, pilot_rating, military_rating, qnh_i_hg,
-			qnh_mb, flight_plan, times, logon_time, last_update, live,
+			qnh_mb, flight_plan, times, overrides, logon_time, last_update, live,
 			sched_off_block, sched_on_block, dep_icao, arr_icao, ac_reg
 		)
 		VALUES ${values.join(",")}
@@ -157,6 +158,7 @@ async function pgUpsertPilotsBatch(pilots: PilotLong[]): Promise<void> {
 			qnh_mb = EXCLUDED.qnh_mb,
 			flight_plan = EXCLUDED.flight_plan,
 			times = EXCLUDED.times,
+            overrides = EXCLUDED.overrides,
 			logon_time = EXCLUDED.logon_time,
 			last_update = EXCLUDED.last_update,
 			live = EXCLUDED.live,

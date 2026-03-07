@@ -35,6 +35,7 @@ model Pilot {
     qnh_mb          Float
     flight_plan     Json?
     times           Json?
+    overrides       Json?
     logon_time      DateTime
     last_update     DateTime        @default(now())
     live            PilotLiveStatus @default(off)
@@ -63,13 +64,14 @@ model Trackpoint {
 }
 
 model User {
-    id             String    @id
-    hasNavigraph   Boolean   @default(false)
-    navigraphToken Json?
-    settings       Json?
-    filters        Json?
-    bookmarks      Json?
-    createdAt      DateTime  @default(now())
-    updatedAt      DateTime  @updatedAt
-    lastLogin      DateTime?
+    id                    String    @id
+    hasNavigraph          Boolean   @default(false)
+    navigraphToken        Json?
+    navigraphSubscription Json?
+    settings              Json?
+    filters               Json?
+    bookmarks             Json?
+    createdAt             DateTime  @default(now())
+    updatedAt             DateTime  @updatedAt
+    lastLogin             DateTime?
 }

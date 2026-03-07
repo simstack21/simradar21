@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { AvatarUser } from "./Avatar";
-import { BadgeComingSoon } from "./Badge";
 import { AlertDialogDeleteAccount } from "./Dialog";
 
 type ListItem = {
@@ -73,22 +72,36 @@ export const DropdownUser = () => {
 							<DropdownMenuSeparator />
 						</>
 					)}
-					<DropdownMenuItem onClick={() => signIn("vatsim")} disabled={!!session?.vatsim}>
+					<DropdownMenuItem
+						onClick={() => {
+							localStorage.removeItem("simradar21-db");
+							signIn("vatsim");
+						}}
+						disabled={!!session?.vatsim}
+					>
 						<UserIcon />
 						<span>{session?.vatsim ? "VATSIM Connected" : "Connect VATSIM"}</span>
 						{session?.vatsim && <CheckIcon className="ml-auto text-green" />}
 					</DropdownMenuItem>
-					<DropdownMenuItem onClick={() => signIn("navigraph")} disabled={true}>
+					<DropdownMenuItem
+						onClick={() => {
+							localStorage.removeItem("simradar21-db");
+							window.location.href = "/auth/navigraph";
+						}}
+						disabled={!!session?.hasNavigraph || !session?.vatsim}
+					>
 						<NavigationIcon />
-						<span>
-							{session?.navigraph ? "Navigraph Connected" : "Connect Navigraph"}
-							<BadgeComingSoon />
-						</span>
-						{/* {session?.navigraph && <CheckIcon className="ml-auto text-green" />} */}
+						<span>{session?.hasNavigraph ? "Navigraph Connected" : "Connect Navigraph"}</span>
+						{session?.hasNavigraph && <CheckIcon className="ml-auto text-green" />}
 					</DropdownMenuItem>
 					{session && (
 						<>
-							<DropdownMenuItem onClick={() => signOut()}>
+							<DropdownMenuItem
+								onClick={() => {
+									localStorage.removeItem("simradar21-db");
+									signOut();
+								}}
+							>
 								<LogOutIcon />
 								<span>Sign Out</span>
 							</DropdownMenuItem>

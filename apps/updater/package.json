@@ -11,6 +11,8 @@
 	},
 	"devDependencies": {
 		"@sr24/typescript-config": "*",
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/node-7z": "^2.1.11",
 		"@types/stream-json": "^1.7.8",
 		"tsx": "^4.20.6",
 		"typescript": "^5.9.3"
@@ -19,11 +21,14 @@
 		"@aws-sdk/client-s3": "^3.980.0",
 		"@sr24/db": "*",
 		"@sr24/types": "*",
+		"7zip-bin": "^5.2.0",
 		"axios": "^1.13.2",
+		"better-sqlite3": "^12.6.2",
 		"cron": "^4.3.4",
 		"csv-parser": "^3.2.0",
 		"dotenv": "^17.2.3",
 		"geo-tz": "^8.1.4",
+		"node-7z": "^3.0.0",
 		"stream-json": "^1.9.1",
 		"undici": "^7.16.0"
 	}

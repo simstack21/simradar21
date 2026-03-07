@@ -19,7 +19,7 @@ export function mapTrackPoints(pilots: PilotLong[]): Map<string, Buffer> {
 			vertical_speed: roundAltitude(pilot.vertical_speed),
 			heading: pilot.heading,
 			color: getTrackPointColor(pilot.altitude_agl, pilot.altitude_ms),
-			timestamp: pilot.last_update.getTime(),
+			timestamp: new Date(pilot.last_update).getTime(),
 		};
 		newCached.set(pilot.id, trackPoint);
 

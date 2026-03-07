@@ -4,14 +4,14 @@ import Stroke from "ol/style/Stroke";
 export function getStroke(start: TrackPoint, end: TrackPoint): Stroke {
 	if (end.timestamp - start.timestamp > 60000) {
 		return new Stroke({
-			color: "#989cb2cc",
+			color: "#989cb2",
 			width: 3,
 			lineDash: [5, 8],
 			lineCap: "square",
 		});
 	}
 	return new Stroke({
-		color: `${start.color}90`,
+		color: start.color,
 		width: 3,
 	});
 }

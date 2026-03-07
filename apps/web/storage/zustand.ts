@@ -29,6 +29,10 @@ const defaultMapSettings: MapSettings = {
 	sectorOverlay: "full",
 	traconColor: { r: 222, g: 89, b: 234, a: 0.1 },
 	firColor: { r: 77, g: 95, b: 131, a: 0.15 },
+	navigraphData: true,
+	navigraphGates: true,
+	navigraphRoutes: true,
+	navigraphRoutesInMulti: false,
 };
 
 const defaultUnitSettings: UnitSettings = {
@@ -73,6 +77,10 @@ function getSettingValues(): SettingValues {
 		windSpeedUnit: s.windSpeedUnit,
 		altitudeUnit: s.altitudeUnit,
 		distanceUnit: s.distanceUnit,
+		navigraphData: s.navigraphData,
+		navigraphGates: s.navigraphGates,
+		navigraphRoutes: s.navigraphRoutes,
+		navigraphRoutesInMulti: s.navigraphRoutesInMulti,
 	};
 }
 
@@ -129,6 +137,10 @@ export const useSettingsStore = create<SettingState>()(
 			setWindSpeedUnit: (value) => set({ windSpeedUnit: value }),
 			setAltitudeUnit: (value) => set({ altitudeUnit: value }),
 			setDistanceUnit: (value) => set({ distanceUnit: value }),
+			setNavigraphData: (value) => set({ navigraphData: value }),
+			setNavigraphGates: (value) => set({ navigraphGates: value }),
+			setNavigraphRoutes: (value) => set({ navigraphRoutes: value }),
+			setNavigraphRoutesInMulti: (value) => set({ navigraphRoutesInMulti: value }),
 
 			setSettings: (settings) => set({ ...settings }),
 			resetAllSettings: () => set({ ...defaultSettings }),

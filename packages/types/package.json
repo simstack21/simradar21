@@ -5,7 +5,8 @@
 	"exports": {
 		"./db": "./src/db.ts",
 		"./vatsim": "./src/vatsim.ts",
-		"./interface": "./src/interface.ts"
+		"./interface": "./src/interface.ts",
+		"./navigraph": "./src/navigraph.ts"
 	},
 	"devDependencies": {
 		"@sr24/typescript-config": "*",

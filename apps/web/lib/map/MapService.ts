@@ -1,6 +1,15 @@
 import { MapLibreLayer } from "@geoblocks/ol-maplibre-layer";
 import type { StaticAirport } from "@sr24/types/db";
-import type { AirportDelta, AirportShort, ControllerDelta, ControllerMerged, PilotDelta, PilotShort, TrackPoint } from "@sr24/types/interface";
+import type {
+	AirportDelta,
+	AirportShort,
+	ControllerDelta,
+	ControllerMerged,
+	PilotDelta,
+	PilotParsedRoute,
+	PilotShort,
+	TrackPoint,
+} from "@sr24/types/interface";
 import type { StyleSpecification } from "maplibre-gl";
 import { type Feature, type MapBrowserEvent, Map as OlMap, type Overlay, View } from "ol";
 import { click } from "ol/events/condition";
@@ -13,6 +22,7 @@ import { fromLonLat, toLonLat, transformExtent } from "ol/proj";
 import type { FilterValues, SettingValues } from "@/types/zustand";
 import { AirportService } from "./AirportService";
 import { ControllerService } from "./ControllerService";
+import { NavigraphService } from "./NavigraphService";
 import { createOverlay, updateOverlay } from "./overlays";
 import { PilotService } from "./PilotService";
 import styleDark from "./positron_dark.json";
@@ -52,6 +62,7 @@ export class MapService {
 	private airportService = new AirportService();
 	private controllerService = new ControllerService();
 	private trackService = new TrackService();
+	private navigraphService = new NavigraphService();
 
 	private multiView: boolean | undefined;
 	private minimalOverlays = false;
@@ -121,10 +132,11 @@ export class MapService {
 		const airportLayer = this.airportService.init();
 		const controllerLayers = this.controllerService.init();
 		const trackLayer = this.trackService.init();
+		const navigraphLayers = this.navigraphService.init();
 
 		this.map = new OlMap({
 			target: "map",
-			layers: [this.baseLayer, sunLayer, ...pilotLayers, airportLayer, ...controllerLayers, trackLayer],
+			layers: [this.baseLayer, sunLayer, ...pilotLayers, airportLayer, ...controllerLayers, trackLayer, ...navigraphLayers],
 			view: new View({
 				center: fromLonLat(center),
 				zoom,
@@ -147,6 +159,7 @@ export class MapService {
 		this.sunService.setTheme(isDark);
 		this.pilotService.setTheme(isDark);
 		this.controllerService.setTheme(isDark);
+		this.navigraphService.setTheme(isDark);
 	}
 
 	public setSettings(settings: Partial<SettingValues>): void {
@@ -159,6 +172,12 @@ export class MapService {
 			traconColor: settings.traconColor,
 			showAirports: settings.airportMarkers,
 			airportSize: settings.airportMarkerSize,
+		});
+		this.navigraphService.setSettings({
+			showData: settings.navigraphData,
+			showGates: settings.navigraphGates,
+			showRoutes: settings.navigraphRoutes,
+			showInMulti: settings.navigraphRoutesInMulti,
 		});
 		this.toggleAnimation(settings.animatedPlaneMarkers || false);
 
@@ -219,6 +238,7 @@ export class MapService {
 		if (this.multiView === undefined) {
 			this.multiView = enabled;
 			this.minimalOverlays = enabled;
+			this.navigraphService.setSettings({ showInMulti: enabled });
 			return;
 		}
 
@@ -227,6 +247,7 @@ export class MapService {
 		}
 		this.multiView = enabled;
 		this.minimalOverlays = enabled;
+		this.navigraphService.setSettings({ multiView: enabled });
 	}
 
 	public addEventListeners() {
@@ -424,6 +445,7 @@ export class MapService {
 			this.navigate(strippedId, "pilot", isManual, "delete");
 			this.pilotService.removeHighlighted(strippedId);
 			this.trackService.removeFeatures(strippedId);
+			this.navigraphService.removeRouteFeatures(strippedId);
 		}
 
 		if (type === "airport" && id) {
@@ -473,6 +495,7 @@ export class MapService {
 
 	public clearMap(): void {
 		this.trackService.clearFeatures();
+		this.navigraphService.clearFeatures();
 	}
 
 	public resetMap(nav: boolean = true): void {
@@ -513,6 +536,7 @@ export class MapService {
 		trackPoints,
 		autoTrackId,
 		sunTime,
+		route,
 	}: {
 		pilots?: Required<PilotShort>[];
 		airports?: StaticAirport[];
@@ -520,6 +544,7 @@ export class MapService {
 		trackPoints?: TrackPoint[];
 		autoTrackId?: string;
 		sunTime?: Date;
+		route?: PilotParsedRoute;
 	}): Promise<void> {
 		if (pilots) {
 			this.pilotService.setFeatures(pilots);
@@ -535,6 +560,9 @@ export class MapService {
 		}
 		if (sunTime) {
 			this.sunService.setFeatures(sunTime);
+		}
+		if (route && autoTrackId) {
+			this.navigraphService.setRouteFeatures(route, autoTrackId);
 		}
 
 		await new Promise(requestAnimationFrame);
@@ -650,6 +678,9 @@ export class MapService {
 		if (airports) {
 			for (const airport of airports) {
 				this.storedAirports.set(airport.icao, airport);
+				if (airport.blocked_gates) {
+					this.navigraphService.setBlockedGates(airport.icao, airport.blocked_gates);
+				}
 			}
 		}
 		if (controllers) {
@@ -665,6 +696,7 @@ export class MapService {
 
 			for (const airport of airports.added) {
 				nextAirports.set(airport.icao, airport);
+				this.navigraphService.setBlockedGates(airport.icao, airport.blocked_gates ?? []);
 			}
 
 			for (const a of airports.updated) {
@@ -674,6 +706,9 @@ export class MapService {
 					...existing,
 					...a,
 				});
+				if (a.blocked_gates !== undefined) {
+					this.navigraphService.setBlockedGates(a.icao, a.blocked_gates);
+				}
 			}
 			this.storedAirports = nextAirports;
 		}
@@ -710,6 +745,7 @@ export class MapService {
 
 		this.pilotService.renderFeatures(extent, resolution);
 		this.airportService.renderFeatures(extent, resolution);
+		this.navigraphService.renderFeatures(extent, resolution);
 
 		this.emit();
 	}

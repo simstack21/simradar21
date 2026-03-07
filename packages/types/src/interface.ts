@@ -71,6 +71,7 @@ export interface PilotLong {
 	logon_time: Date;
 	last_update: Date;
 	live: "pre" | "live" | "off";
+	overrides: PilotOverrides | null;
 }
 
 export interface PilotFlightPlan {
@@ -85,8 +86,32 @@ export interface PilotFlightPlan {
 	fuel_time: number;
 	remarks: string;
 	route: string;
+	parsed_route: PilotParsedRoute;
 	revision_id: number;
 }
+
+export type PilotParsedRoute = {
+	sid: PilotRouteProcedure | null;
+	star: PilotRouteProcedure | null;
+	waypoints: PilotRoutePoint[];
+};
+
+export type PilotRoutePoint = {
+	uid: string;
+	airwayUid?: string;
+};
+
+export type PilotRouteProcedure = {
+	override: boolean;
+	airport: string;
+	rwy: string | null;
+	rwyCon: string | null;
+	proc: string | null;
+	trans: string | null;
+	approach: string | null;
+	approachTrans: string | null;
+	missedApproach: string | null;
+};
 
 export interface PilotTimes {
 	sched_off_block: number;
@@ -104,6 +129,11 @@ interface PilotAirport {
 	latitude?: number;
 	longitude?: number;
 }
+
+export type PilotOverrides = {
+	modifiedRoute?: PilotParsedRoute;
+	diversionAirport?: string;
+};
 
 export interface ControllerShort {
 	callsign: string;
@@ -144,6 +174,7 @@ export interface AirportShort {
 	icao: string;
 	dep_traffic?: AirportTraffic;
 	arr_traffic?: AirportTraffic;
+	blocked_gates?: string[];
 }
 
 export interface AirportLong extends Required<AirportShort> {

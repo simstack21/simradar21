@@ -2,7 +2,7 @@
 
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { DeltaTrackPoint, PilotLong, TrackPoint } from "@sr24/types/interface";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 import { mapService } from "@/app/(map)/lib";
 import LoadingPanel from "@/components/Panel/Loading";
@@ -19,10 +19,12 @@ import { PilotTelemetry } from "@/components/Panel/Pilot/PilotTelemetry";
 import { PilotUser } from "@/components/Panel/Pilot/PilotUser";
 import { Accordion } from "@/components/ui/accordion";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchApi } from "@/lib/api";
 import { decodeTrackPoints } from "@/lib/map/tracks";
 import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
 import { usePilotPanelStore } from "@/storage/zustand";
+import PilotProcedures from "./PilotProcedures";
 
 let lastMessageSeq: number | null = null;
 
@@ -34,8 +36,10 @@ export default function PilotPanel({ id }: { id: string }) {
 	} = useSWR<PilotLong>(`/map/pilot/${id}`, fetchApi, {
 		refreshInterval: 60_000,
 	});
+
 	const { panel, setPanel } = usePilotPanelStore();
 	const [minimized, setMinimized] = useState(false);
+	const [tab, setTab] = useState("overview");
 	const [trackPoints, setTrackPoints] = useState<TrackPoint[]>([]);
 	const isMobile = useMediaQuery("(max-width: 1024px)");
 
@@ -47,6 +51,15 @@ export default function PilotPanel({ id }: { id: string }) {
 		});
 		lastMessageSeq = null;
 	}, [id]);
+
+	const routeRef = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (pilotData?.flight_plan?.parsed_route && pilotData.flight_plan.route !== routeRef.current) {
+			mapService.setFeatures({ autoTrackId: pilotData.id, route: pilotData.overrides?.modifiedRoute || pilotData.flight_plan.parsed_route });
+			routeRef.current = pilotData.flight_plan.route;
+		}
+	}, [pilotData]);
 
 	useEffect(() => {
 		const handleMessage = (msg: WsData | WsPresence) => {
@@ -108,18 +121,28 @@ export default function PilotPanel({ id }: { id: string }) {
 			<PilotHeader pilot={pilotData} onClose={() => mapService.resetMap()} minimized={minimized} setMinimized={setMinimized} />
 			{!minimized && (
 				<>
+					<Tabs value={tab} onValueChange={setTab}>
+						<TabsList variant="line" className="w-full">
+							<TabsTrigger value="overview">Overview</TabsTrigger>
+							<TabsTrigger value="procedures">Procedures</TabsTrigger>
+						</TabsList>
+					</Tabs>
 					<PilotRoute pilot={pilotData} />
-					<ScrollArea className="max-h-full overflow-hidden flex flex-col">
-						<Accordion multiple={!isMobile} className="rounded-none border-none" value={panel} onValueChange={setPanel}>
-							<PilotFlightplan pilot={pilotData} />
-							<PilotAircraft pilot={pilotData} />
-							<PilotChart trackPoints={trackPoints} />
-							<PilotTelemetry pilot={pilotData} />
-							<PilotUser pilot={pilotData} />
-							<PilotMisc pilot={pilotData} />
-						</Accordion>
-						<ScrollBar />
-					</ScrollArea>
+					{tab === "overview" ? (
+						<ScrollArea className="max-h-full overflow-hidden flex flex-col">
+							<Accordion multiple={!isMobile} className="rounded-none border-none" value={panel} onValueChange={setPanel}>
+								<PilotFlightplan pilot={pilotData} />
+								<PilotAircraft pilot={pilotData} />
+								<PilotChart trackPoints={trackPoints} />
+								<PilotTelemetry pilot={pilotData} />
+								<PilotUser pilot={pilotData} />
+								<PilotMisc pilot={pilotData} />
+							</Accordion>
+							<ScrollBar />
+						</ScrollArea>
+					) : (
+						<PilotProcedures pilot={pilotData} />
+					)}
 				</>
 			)}
 			<PilotFooter pilot={pilotData} mapService={mapService} />

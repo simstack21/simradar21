@@ -49,7 +49,7 @@ export class PilotService {
 				type: "pilot_main",
 			},
 			declutter: true,
-			zIndex: 5,
+			zIndex: 7,
 		});
 		this.shadowLayer = new VectorLayer({
 			source: this.source,
@@ -57,7 +57,7 @@ export class PilotService {
 			properties: {
 				type: "pilot_shadow",
 			},
-			zIndex: 4,
+			zIndex: 6,
 		});
 
 		return [this.mainLayer, this.shadowLayer];

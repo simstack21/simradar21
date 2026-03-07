@@ -7,7 +7,7 @@ let currentTraconsVersion: string | null = null;
 const firPrefixes: Map<string, string> = new Map();
 const traconPrefixes: Map<string, string> = new Map();
 
-export async function updateSectorPrefixes(): Promise<void> {
+export async function ensureSectorPrefixes(): Promise<void> {
 	const firsVersion = await rdsGetSingle("static_firs:version");
 	const traconsVersion = await rdsGetSingle("static_tracons:version");
 

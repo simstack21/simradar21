@@ -1,20 +1,25 @@
 import type { FIRFeature, SimAwareTraconFeature, StaticAircraftType, StaticAirline, StaticAirport } from "@sr24/types/db";
+import type { NavigraphAirport, NavigraphAirway, NavigraphApproach, NavigraphProcedure, NavigraphWaypoint } from "@sr24/types/navigraph";
 import Dexie, { type EntityTable } from "dexie";
+import type { StatusSetter } from "@/hooks/useInitializer";
 import { fetchApi } from "@/lib/api";
-import type { StatusSetter } from "@/types/initializer";
+import { ensureNavigraphData } from "./navigraph";
 
-interface StaticVersions {
+interface DatabaseVersions {
 	airportsVersion: string;
 	traconsVersion: string;
 	firsVersion: string;
 	airlinesVersion: string;
 	aircraftsVersion: string;
+	navigraphCycle?: string;
 }
+
 interface DexieFeature {
 	id: string;
 	feature: FIRFeature | SimAwareTraconFeature;
 }
-type Manifest = { key: string; versions: StaticVersions };
+
+type Manifest = { key: string; versions: DatabaseVersions };
 
 const R2_BUCKET_URL = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_R2_BUCKET_URL_DEV : process.env.NEXT_PUBLIC_R2_BUCKET_URL;
 
@@ -25,6 +30,9 @@ const db = new Dexie("StaticDatabase") as Dexie & {
 	airlines: EntityTable<StaticAirline, "id">;
 	aircrafts: EntityTable<StaticAircraftType, "icao">;
 	manifest: EntityTable<Manifest, "key">;
+	ngWaypoints: EntityTable<NavigraphWaypoint, "uid">;
+	ngAirways: EntityTable<NavigraphAirway, "uid">;
+	ngAirports: EntityTable<NavigraphAirport, "id">;
 };
 
 db.version(1).stores({
@@ -34,6 +42,9 @@ db.version(1).stores({
 	airlines: "id",
 	aircrafts: "icao",
 	manifest: "key",
+	ngWaypoints: "uid",
+	ngAirways: "uid",
+	ngAirports: "id",
 });
 
 let initPromise: Promise<void> | null = null;
@@ -58,7 +69,7 @@ export function dxDatabaseIsStale(): boolean {
 }
 
 async function dxInitDatabases(setStatus?: StatusSetter): Promise<void> {
-	const latestManifest = await fetchApi<StaticVersions>("/data/static/versions");
+	const latestManifest = await fetchApi<DatabaseVersions>("/data/static/versions");
 	const storedManifest = (await db.manifest.get("databaseVersions")) as Manifest | undefined;
 
 	if (latestManifest.airportsVersion !== storedManifest?.versions.airportsVersion) {
@@ -111,7 +122,22 @@ async function dxInitDatabases(setStatus?: StatusSetter): Promise<void> {
 	}
 	setStatus?.((prev) => ({ ...prev, aircrafts: true }));
 
-	await db.manifest.put({ key: "databaseVersions", versions: latestManifest });
+	const ngData = await ensureNavigraphData(storedManifest?.versions.navigraphCycle);
+	if (ngData) {
+		const { dataset } = ngData;
+		await db.ngWaypoints.clear();
+		await db.ngWaypoints.bulkPut(dataset.waypoints);
+		await db.ngAirways.clear();
+		await db.ngAirways.bulkPut(dataset.airways);
+		await db.ngAirports.clear();
+		await db.ngAirports.bulkPut(dataset.airports);
+	}
+	setStatus?.((prev) => ({ ...prev, navigraph: true }));
+
+	await db.manifest.put({
+		key: "databaseVersions",
+		versions: { ...latestManifest, navigraphCycle: ngData?.cycle ?? storedManifest?.versions.navigraphCycle },
+	});
 	localStorage.setItem("simradar21-db", Date.now().toString());
 }
 
@@ -184,4 +210,40 @@ export async function dxGetTracons(ids: string[]): Promise<(DexieFeature | undef
 export async function dxGetFirs(ids: string[]): Promise<(DexieFeature | undefined)[]> {
 	await dxEnsureInitialized();
 	return await db.firs.bulkGet(ids);
+}
+
+export async function dxGetNavigraphAirports(ids: string[]): Promise<(NavigraphAirport | undefined)[]> {
+	await dxEnsureInitialized();
+	return await db.ngAirports.bulkGet(ids);
+}
+
+export async function dxGetNavigraphAirport(id: string): Promise<NavigraphAirport | undefined> {
+	await dxEnsureInitialized();
+	return await db.ngAirports.get(id);
+}
+
+export async function dxGetNavigraphWaypoints(uids: string[]): Promise<(NavigraphWaypoint | undefined)[]> {
+	await dxEnsureInitialized();
+	return await db.ngWaypoints.bulkGet(uids);
+}
+
+export async function dxGetNavigraphWaypoint(uid: string): Promise<NavigraphWaypoint | undefined> {
+	await dxEnsureInitialized();
+	return await db.ngWaypoints.get(uid);
+}
+
+export async function dxGetNavigraphProceduresByAirport(type: "sids" | "stars", airportId: string): Promise<NavigraphProcedure[]> {
+	await dxEnsureInitialized();
+	return await db.ngAirports.get(airportId).then((airport) => {
+		if (!airport) return [];
+		return airport[type];
+	});
+}
+
+export async function dxGetNavigraphApproachesByAirport(airportId: string): Promise<NavigraphApproach[]> {
+	await dxEnsureInitialized();
+	return await db.ngAirports.get(airportId).then((airport) => {
+		if (!airport) return [];
+		return airport.approaches;
+	});
 }

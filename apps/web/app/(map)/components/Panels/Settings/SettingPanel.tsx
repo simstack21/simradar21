@@ -1,6 +1,6 @@
 "use client";
 
-import { FlaskConicalIcon, PaletteIcon, PlaneIcon, RadioTowerIcon, SunriseIcon, TowerControlIcon, XIcon } from "lucide-react";
+import { FlaskConicalIcon, NavigationIcon, PaletteIcon, PlaneIcon, RadioTowerIcon, SunriseIcon, TowerControlIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { type RgbaColor, RgbaColorPicker } from "react-colorful";
 import { MotionPanel } from "@/components/Panel/PanelGrid";
@@ -30,6 +30,7 @@ export default function SettingPanel() {
 						<AirportSettings />
 						<PlaneSettings />
 						<SectorSettings />
+						<NavigraphSettings />
 					</div>
 					<ScrollBar />
 				</ScrollArea>
@@ -234,4 +235,43 @@ function getContrastColor(rgba: RgbaColor) {
 	const { r, g, b } = rgba;
 	const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 	return luminance > 0.5 ? "text-black" : "text-white";
+}
+
+function NavigraphSettings() {
+	const {
+		navigraphData,
+		setNavigraphData,
+		navigraphGates,
+		setNavigraphGates,
+		navigraphRoutes,
+		setNavigraphRoutes,
+		navigraphRoutesInMulti,
+		setNavigraphRoutesInMulti,
+	} = useSettingsStore();
+
+	return (
+		<Field orientation="horizontal" className={cn("border rounded-md p-2 bg-muted/50", !navigraphData && "bg-transparent")}>
+			<FieldContent className={cn("flex flex-col gap-2", !navigraphData && "opacity-50 pointer-events-none")}>
+				<FieldTitle>
+					<NavigationIcon size={16} />
+					Navigraph Data
+				</FieldTitle>
+				<div className="flex flex-col gap-4">
+					<div className="flex justify-between">
+						<span className="text-xs">Airport Gates</span>
+						<Switch checked={navigraphGates} onCheckedChange={(checked) => setNavigraphGates(checked)} />
+					</div>
+					<div className="flex justify-between">
+						<span className="text-xs">Routes in Single View</span>
+						<Switch checked={navigraphRoutes} onCheckedChange={(checked) => setNavigraphRoutes(checked)} />
+					</div>
+					<div className="flex justify-between">
+						<span className="text-xs">Routes in Multi View</span>
+						<Switch checked={navigraphRoutesInMulti} onCheckedChange={(checked) => setNavigraphRoutesInMulti(checked)} />
+					</div>
+				</div>
+			</FieldContent>
+			<Switch checked={navigraphData} onCheckedChange={(checked) => setNavigraphData(checked)} />
+		</Field>
+	);
 }

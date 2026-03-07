@@ -1,5 +1,14 @@
-import { rdsSub } from "@sr24/db/redis";
-import type { AirportLong, ControllerLong, ControllerMerged, DashboardData, InitialData, PilotLong, RedisAll } from "@sr24/types/interface";
+import { rdsSetSingle, rdsSub } from "@sr24/db/redis";
+import type {
+	AirportLong,
+	ControllerLong,
+	ControllerMerged,
+	DashboardData,
+	InitialData,
+	PilotLong,
+	PilotParsedRoute,
+	RedisAll,
+} from "@sr24/types/interface";
 
 class MapStore {
 	init: InitialData | null = null;
@@ -62,6 +71,16 @@ class MapStore {
 			.sort((a, b) => (a.times?.on_block ?? 0) - (b.times?.on_block ?? 0))
 			.map((pilot) => pilot.id);
 		return limit ? pilots.slice(0, limit) : pilots;
+	}
+
+	async setPilotModifiedRoute(id: string, modifiedRoute: PilotParsedRoute) {
+		const pilot = this.pilots.get(id);
+		if (!pilot || !pilot.flight_plan) return;
+
+		pilot.overrides = pilot.overrides || {};
+		pilot.overrides.modifiedRoute = modifiedRoute;
+
+		await rdsSetSingle(`pilot:${id}`, pilot, 12 * 60 * 60);
 	}
 }
 

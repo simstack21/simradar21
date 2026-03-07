@@ -122,3 +122,8 @@ Thumbs.db
 .now/
 .netlify/
 .firebase/
+
+# ───────────────────────────────
+# Ignore Claude's internal files
+# ───────────────────────────────
+.claude/

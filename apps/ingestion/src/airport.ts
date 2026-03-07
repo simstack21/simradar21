@@ -1,4 +1,9 @@
 import type { AirportDelta, AirportLong, AirportShort, PilotLong } from "@sr24/types/interface";
+import { getAirportGates } from "./navigraph.js";
+import { distanceMeters } from "./utils/helpers.js";
+
+const GATE_BLOCK_RADIUS_M = 50;
+const GATE_BLOCK_MAX_GS = 5;
 
 let cached: AirportLong[] = [];
 let updated: AirportShort[] = [];
@@ -101,6 +106,45 @@ export async function mapAirports(pilotsLong: PilotLong[]): Promise<AirportLong[
 		};
 	}
 
+	const pilotsByAirport = new Map<string, PilotLong[]>();
+	for (const pilot of pilotsLong) {
+		if (pilot.live !== "live" || pilot.groundspeed > GATE_BLOCK_MAX_GS) continue;
+
+		for (const icao of [pilot.flight_plan?.departure.icao, pilot.flight_plan?.arrival.icao]) {
+			if (!icao) continue;
+
+			let bucket = pilotsByAirport.get(icao);
+			if (!bucket) {
+				bucket = [];
+				pilotsByAirport.set(icao, bucket);
+			}
+			bucket.push(pilot);
+		}
+	}
+
+	for (const [icao, airport] of Object.entries(airportRecord)) {
+		const ngAirport = getAirportGates(icao);
+		if (!ngAirport) continue;
+
+		const pilots = pilotsByAirport.get(icao) ?? [];
+		const blocked = new Set<string>();
+
+		for (const pilot of pilots) {
+			let nearestId: string | null = null;
+			let nearestDist = GATE_BLOCK_RADIUS_M;
+
+			for (const gate of ngAirport.gates) {
+				const dist = distanceMeters(pilot.latitude, pilot.longitude, gate.latitude, gate.longitude);
+				if (dist < nearestDist) {
+					nearestDist = dist;
+					nearestId = gate.id;
+				}
+			}
+			if (nearestId) blocked.add(nearestId);
+		}
+		airport.blocked_gates = [...blocked];
+	}
+
 	const airportsLong = Object.values(airportRecord);
 	setAirportDelta(airportsLong);
 
@@ -133,12 +177,14 @@ export function getAirportShort(a: AirportLong, c?: AirportLong): AirportShort {
 			icao: a.icao,
 			dep_traffic: a.dep_traffic,
 			arr_traffic: a.arr_traffic,
+			blocked_gates: a.blocked_gates,
 		};
 	} else {
 		const airportShort: AirportShort = { icao: a.icao };
 
 		if (JSON.stringify(a.dep_traffic) !== JSON.stringify(c.dep_traffic)) airportShort.dep_traffic = a.dep_traffic;
 		if (JSON.stringify(a.arr_traffic) !== JSON.stringify(c.arr_traffic)) airportShort.arr_traffic = a.arr_traffic;
+		if (JSON.stringify(a.blocked_gates) !== JSON.stringify(c.blocked_gates)) airportShort.blocked_gates = a.blocked_gates;
 
 		return airportShort;
 	}
@@ -159,6 +205,7 @@ function initAirportRecord(icao: string): AirportLong {
 		busiest: { departure: ["", ""], arrival: ["", ""] },
 		unique: { departures: 0, arrivals: 0 },
 		expected: { departure: [], arrival: [] },
+		blocked_gates: [],
 	};
 }
 

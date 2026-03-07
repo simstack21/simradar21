@@ -3,9 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { dxDatabaseIsStale, dxEnsureInitialized } from "@/storage/dexie";
-import type { StatusMap } from "@/types/initializer";
 import { Progress, ProgressLabel, ProgressValue } from "../components/ui/progress";
 import { Spinner } from "../components/ui/spinner";
+
+type StatusMap = {
+	airports?: boolean;
+	firs?: boolean;
+	tracons?: boolean;
+	airlines?: boolean;
+	aircrafts?: boolean;
+	navigraph?: boolean;
+};
+
+export type StatusSetter = (status: Partial<StatusMap> | ((prev: Partial<StatusMap>) => Partial<StatusMap>)) => void;
 
 function getInitializerText(status: StatusMap): string {
 	if (!status.airports) {
@@ -18,6 +28,8 @@ function getInitializerText(status: StatusMap): string {
 		return "Downloading airline data";
 	} else if (!status.aircrafts) {
 		return "Downloading aircraft data";
+	} else if (!status.navigraph) {
+		return "Downloading Navigraph data";
 	} else {
 		return "Initialization complete!";
 	}
@@ -50,7 +62,7 @@ export default function useInitializer() {
 
 	useEffect(() => {
 		if (toastIdRef.current) {
-			if (Object.keys(status).length === 5) {
+			if (Object.keys(status).length === 6) {
 				toast.dismiss(toastIdRef.current);
 				return;
 			}
@@ -62,7 +74,7 @@ export default function useInitializer() {
 							<Spinner />
 							<span>Updating Local Databases</span>
 						</div>
-						<Progress value={Math.round((Object.keys(status).length / 5) * 100)} className="w-full max-w-sm">
+						<Progress value={Math.round((Object.keys(status).length / 6) * 100)} className="w-full max-w-sm">
 							<ProgressLabel>{getInitializerText(status)}</ProgressLabel>
 							<ProgressValue />
 						</Progress>

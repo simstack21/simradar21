@@ -1,6 +1,7 @@
 import { rdsGetSingle } from "@sr24/db/redis";
 import type { FastifyPluginAsync } from "fastify";
-import { getFlightsByCallsign, getFlightsByRegistration, getPilotReplay } from "../services/db.js";
+import { ensureUser, getFlightsByCallsign, getFlightsByRegistration, getPilotReplay } from "../services/db.js";
+import { getNavigraphPackage } from "../services/navigraph.js";
 import { bookingsStore } from "../stores/bookings.js";
 import { getDataVersions } from "../stores/static.js";
 
@@ -105,6 +106,20 @@ const dataRoutes: FastifyPluginAsync = async (app) => {
 
 	app.get("/bookings", async () => {
 		return bookingsStore.bookings;
+	});
+
+	app.get("/navigraph/packages", { preHandler: app.authenticate }, async (request) => {
+		const cid = request.user?.cid;
+		const user = await ensureUser(cid);
+
+		const subs = (user.navigraphSubscription ?? []) as string[];
+		const status = subs.includes("fmsdata") ? "current" : "outdated";
+
+		return await getNavigraphPackage(status);
+	});
+
+	app.get("/navigraph/packages/public", async () => {
+		return await getNavigraphPackage("outdated");
 	});
 };
 
