@@ -2,6 +2,7 @@ import type { StaticAirline } from "@sr24/types/db";
 import type { PilotLong } from "@sr24/types/interface";
 import { useEffect, useState } from "react";
 import { AvatarAirline } from "@/components/shared/Avatar";
+import { BadgePilotStatus } from "@/components/shared/Badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getCachedAirline } from "@/storage/cache";
@@ -30,7 +31,10 @@ export function PilotHeader({
 		<div className={cn("flex gap-2 items-center", size === "sm" ? "px-1.5 py-1" : "p-2")}>
 			<AvatarAirline airline={airline} size={size === "sm" ? "default" : "lg"} />
 			<div className={cn("flex flex-col overflow-hidden", size === "default" && "gap-1")}>
-				<span className={cn("font-bold", size === "sm" ? "text-sm" : "text-lg leading-none")}>{pilot.callsign}</span>
+				<div className={cn("flex items-center", size === "sm" ? "gap-1" : "gap-2")}>
+					<span className={cn("font-bold", size === "sm" ? "text-sm" : "text-lg leading-none")}>{pilot.callsign}</span>
+					<BadgePilotStatus status={pilot.live} />
+				</div>
 				<span className="text-xs text-muted-foreground overflow-hidden whitespace-nowrap text-ellipsis">
 					{pilot.aircraft} | {airline?.name || "Unknown Airline"}
 				</span>

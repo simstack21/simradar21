@@ -52,18 +52,21 @@ export const pilotAirportTimeMapping = {
 	arrival: ["sched_on_block", "on_block"] as const,
 };
 
-export function getPilotTimeStatus(times: PilotLong["times"]): { departure: boolean; arrival: boolean } {
-	if (!times) {
+export function getPilotTimeStatus(pilot: PilotLong): { departure: boolean; arrival: boolean } {
+	if (pilot.live === "pre") {
+		return { departure: false, arrival: false };
+	}
+	if (!pilot.times) {
 		return { departure: false, arrival: false };
 	}
 	let departure = false;
 	let arrival = false;
 
 	const now = new Date();
-	if (new Date(times.off_block) < now) {
+	if (new Date(pilot.times.off_block) < now) {
 		departure = true;
 	}
-	if (new Date(times.on_block) < now) {
+	if (new Date(pilot.times.on_block) < now) {
 		arrival = true;
 	}
 	return { departure, arrival };
