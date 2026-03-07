@@ -238,7 +238,7 @@ export class MapService {
 		if (this.multiView === undefined) {
 			this.multiView = enabled;
 			this.minimalOverlays = enabled;
-			this.navigraphService.setSettings({ showInMulti: enabled });
+			this.navigraphService.setSettings({ multiView: enabled });
 			return;
 		}
 

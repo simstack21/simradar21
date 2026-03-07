@@ -46,8 +46,6 @@ export async function init(pathname: string): Promise<void> {
 	initialized = true;
 }
 
-let lastIds: string[] = [];
-
 function setClickedFromPath(pathname: string): void {
 	if (pathname.startsWith("/multi")) {
 		const selected = new URLSearchParams(window.location.search).get("selected");
@@ -58,16 +56,6 @@ function setClickedFromPath(pathname: string): void {
 			if (!type || !id) continue;
 			mapService.addClickFeature(type, id, !initialized);
 		}
-
-		for (const fullId of lastIds) {
-			if (!ids.includes(fullId)) {
-				const [type, id] = fullId.split(/_(.+)/);
-				if (!type || !id) continue;
-				mapService.removeClickFeature(type, id);
-			}
-		}
-
-		lastIds = ids;
 	} else {
 		const [type, id] = pathname.split("/").slice(1, 3);
 		mapService.addClickFeature(type, id, !initialized);

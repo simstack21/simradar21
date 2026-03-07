@@ -8,6 +8,7 @@ import DashboardPanel from "../../components/Panels/Dashboard/DashboardPanel";
 import MultiAirportPanel from "./MultiAirportPanel";
 import MultiPilotPanel from "./MultiPilotPanel";
 import MultiSectorPanel from "./MultiSectorPanel";
+import { mapService } from "../../lib";
 
 export default function MultiPanel() {
 	const searchParams = useSearchParams();
@@ -32,6 +33,8 @@ export default function MultiPanel() {
 			}
 
 			router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+			const [type, featureId] = id.split(/_(.+)/);
+			mapService.removeClickFeature(type, featureId);
 		},
 		[searchParams, router, pathname],
 	);
