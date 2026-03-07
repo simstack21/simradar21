@@ -9,6 +9,7 @@ import LoadingPanel from "@/components/Panel/Loading";
 import NotFoundPanel from "@/components/Panel/NotFound";
 import { fetchApi } from "@/lib/api";
 import { getCachedAirport } from "@/storage/cache";
+import { useMinimizedPanelsStore } from "@/storage/zustand";
 
 export default function MultiAirportPanel({ icao, removeSelected }: { icao: string; removeSelected: (id: string) => void }) {
 	const { isLoading } = useSWR<AirportLong>(`/map/airport/${icao}`, fetchApi, {
@@ -16,7 +17,7 @@ export default function MultiAirportPanel({ icao, removeSelected }: { icao: stri
 		shouldRetryOnError: false,
 	});
 
-	const [minimized, setMinimized] = useState(false);
+	const { minimized, setMinimized } = useMinimizedPanelsStore();
 	const [staticAirport, setStaticAirport] = useState<StaticAirport | null | undefined>();
 
 	useEffect(() => {

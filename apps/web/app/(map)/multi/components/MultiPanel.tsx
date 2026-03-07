@@ -5,10 +5,10 @@ import { Suspense, useCallback } from "react";
 import LoadingPanel from "@/components/Panel/Loading";
 import { MotionPanel } from "@/components/Panel/PanelGrid";
 import DashboardPanel from "../../components/Panels/Dashboard/DashboardPanel";
+import { mapService } from "../../lib";
 import MultiAirportPanel from "./MultiAirportPanel";
 import MultiPilotPanel from "./MultiPilotPanel";
 import MultiSectorPanel from "./MultiSectorPanel";
-import { mapService } from "../../lib";
 
 export default function MultiPanel() {
 	const searchParams = useSearchParams();

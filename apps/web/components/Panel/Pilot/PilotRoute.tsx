@@ -1,6 +1,7 @@
 import type { StaticAirport } from "@sr24/types/db";
 import type { PilotLong, PilotTimes, TrackPoint } from "@sr24/types/interface";
 import { ArrowDownToLineIcon, MoveDownIcon, MoveDownRightIcon, MoveRightIcon, MoveUpRightIcon } from "lucide-react";
+import Link from "next/link";
 import { toLonLat } from "ol/proj";
 import { useEffect, useState } from "react";
 import { AvatarCountry } from "@/components/shared/Avatar";
@@ -10,7 +11,6 @@ import { convertDistance, convertTime, haversineDistance } from "@/lib/helpers";
 import { getDelayColorFromDates, getPilotTimeStatus, pilotAirportTimeMapping } from "@/lib/panels";
 import { getCachedAirport } from "@/storage/cache";
 import { useSettingsStore } from "@/storage/zustand";
-import Link from "next/link";
 
 export default function PilotRoute({ size, pilot, trackPoint }: { size?: "default" | "sm"; pilot: PilotLong; trackPoint?: TrackPoint }) {
 	if (size === "sm") {

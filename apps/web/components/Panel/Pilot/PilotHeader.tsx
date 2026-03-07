@@ -17,7 +17,7 @@ export function PilotHeader({
 	pilot: PilotLong;
 	onClose?: () => void;
 	minimized: boolean;
-	setMinimized: React.Dispatch<React.SetStateAction<boolean>>;
+	setMinimized: (value: boolean) => void;
 }) {
 	const [airline, setAirline] = useState<StaticAirline | null>(null);
 
@@ -35,7 +35,7 @@ export function PilotHeader({
 					{pilot.aircraft} | {airline?.name || "Unknown Airline"}
 				</span>
 			</div>
-			<Button variant="outline" onClick={() => setMinimized((prev) => !prev)} className="ml-auto">
+			<Button variant="outline" onClick={() => setMinimized(!minimized)} className="ml-auto">
 				{minimized ? "Show" : "Hide"}
 			</Button>
 			{onClose && (

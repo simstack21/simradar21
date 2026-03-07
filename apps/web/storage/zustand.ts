@@ -265,6 +265,18 @@ export const useMapVisibilityStore = create<{ isHidden: boolean; setHidden: (val
 	),
 );
 
+export const useMinimizedPanelsStore = create<{ minimized: boolean; setMinimized: (value: boolean) => void }>()(
+	persist(
+		(set) => ({
+			minimized: false,
+			setMinimized: (value: boolean) => set({ minimized: value }),
+		}),
+		{
+			name: "simradar21-all-panels-minimized",
+		},
+	),
+);
+
 export const useDashboardPanelStore = create<DashboardPanelState>()(
 	persist(
 		(set) => ({

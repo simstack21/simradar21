@@ -15,7 +15,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { fetchApi } from "@/lib/api";
 import { getSectorFeature } from "@/lib/panels";
-import { useSectorPanelStore } from "@/storage/zustand";
+import { useMinimizedPanelsStore, useSectorPanelStore } from "@/storage/zustand";
 import type { SectorPanelData } from "@/types/panels";
 
 export default function SectorPanel({ callsign }: { callsign: string }) {
@@ -25,7 +25,7 @@ export default function SectorPanel({ callsign }: { callsign: string }) {
 	});
 
 	const { panel, setPanel } = useSectorPanelStore();
-	const [minimized, setMinimized] = useState(false);
+	const { minimized, setMinimized } = useMinimizedPanelsStore();
 	const isMobile = useMediaQuery("(max-width: 1024px)");
 
 	const [sector, setSector] = useState<SectorPanelData | null | undefined>();

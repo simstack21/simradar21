@@ -1,7 +1,7 @@
 "use client";
 
 import type { DeltaTrackPoint, PilotLong, TrackPoint } from "@sr24/types/interface";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import useSWR from "swr";
 import LoadingPanel from "@/components/Panel/Loading";
 import NotFoundPanel from "@/components/Panel/NotFound";
@@ -11,6 +11,7 @@ import { PilotTelemetry } from "@/components/Panel/Pilot/PilotTelemetry";
 import { fetchApi } from "@/lib/api";
 import { decodeTrackPoints } from "@/lib/map/tracks";
 import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
+import { useMinimizedPanelsStore } from "@/storage/zustand";
 import { mapService } from "../../lib";
 
 export default function MultiPilotPanel({ id, removeSelected }: { id: string; removeSelected: (id: string) => void }) {
@@ -22,7 +23,7 @@ export default function MultiPilotPanel({ id, removeSelected }: { id: string; re
 		refreshInterval: 60_000,
 	});
 
-	const [minimized, setMinimized] = useState(false);
+	const { minimized, setMinimized } = useMinimizedPanelsStore();
 	const lastMessageSeqRef = useRef<number | null>(null);
 
 	useEffect(() => {

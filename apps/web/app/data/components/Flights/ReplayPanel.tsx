@@ -1,7 +1,6 @@
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { PilotLong, TrackPoint } from "@sr24/types/interface";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import LoadingPanel from "@/components/Panel/Loading";
 import NotFoundPanel from "@/components/Panel/NotFound";
 import { PanelGrid } from "@/components/Panel/PanelGrid";
@@ -16,7 +15,7 @@ import { PilotTelemetry } from "@/components/Panel/Pilot/PilotTelemetry";
 import { PilotUser } from "@/components/Panel/Pilot/PilotUser";
 import { Accordion } from "@/components/ui/accordion";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { usePilotPanelStore } from "@/storage/zustand";
+import { useMinimizedPanelsStore, usePilotPanelStore } from "@/storage/zustand";
 import { mapService } from "../../lib";
 
 export default function ReplayPanel({
@@ -30,7 +29,7 @@ export default function ReplayPanel({
 	trackPoints: Required<TrackPoint>[];
 	index: number;
 }) {
-	const [minimized, setMinimized] = useState(false);
+	const { minimized, setMinimized } = useMinimizedPanelsStore();
 	const isMobile = useMediaQuery("(max-width: 1024px)");
 	const { panel, setPanel } = usePilotPanelStore();
 	const router = useRouter();
