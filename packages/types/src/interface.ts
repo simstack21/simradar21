@@ -71,6 +71,7 @@ export interface PilotLong {
 	logon_time: Date;
 	last_update: Date;
 	live: "pre" | "live" | "off";
+	overrides: PilotOverrides | null;
 }
 
 export interface PilotFlightPlan {
@@ -128,6 +129,11 @@ interface PilotAirport {
 	latitude?: number;
 	longitude?: number;
 }
+
+export type PilotOverrides = {
+	modifiedRoute?: PilotParsedRoute;
+	diversionAirport?: string;
+};
 
 export interface ControllerShort {
 	callsign: string;

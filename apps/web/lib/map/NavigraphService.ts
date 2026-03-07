@@ -142,6 +142,7 @@ export class NavigraphService {
 
 	public async setRouteFeatures(route: PilotParsedRoute, id: string): Promise<void> {
 		this.removeRouteFeatures(id);
+		console.log(route);
 
 		const pointFeatures: Feature<Point>[] = [];
 		const waypoints = await dxGetNavigraphWaypoints(route.waypoints.map((wp) => wp.uid));

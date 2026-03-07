@@ -1,6 +1,8 @@
+import type { PilotParsedRoute } from "@sr24/types/interface";
 import type { FastifyPluginAsync } from "fastify";
 import { deleteUser, ensureUser, patchUser } from "../services/db.js";
 import { refreshNavigraphToken, verifyNavigraphToken } from "../services/navigraph.js";
+import { mapStore } from "../stores/vatsim.js";
 
 const userRoutes: FastifyPluginAsync = async (app) => {
 	app.get("/", { preHandler: app.authenticate }, async (request) => {
@@ -30,6 +32,13 @@ const userRoutes: FastifyPluginAsync = async (app) => {
 		const cid = request.user?.cid;
 		const user = await ensureUser(cid);
 		return { settings: user.settings, filters: user.filters, bookmarks: user.bookmarks };
+	});
+
+	app.patch("/pilot", { preHandler: app.authenticate }, async (request) => {
+		const { modifiedRoute, id } = request.body as { modifiedRoute: PilotParsedRoute; id: string };
+
+		mapStore.setPilotModifiedRoute(id, modifiedRoute);
+		return { ok: true };
 	});
 
 	app.get("/navigraph", { preHandler: app.authenticate }, async (request) => {

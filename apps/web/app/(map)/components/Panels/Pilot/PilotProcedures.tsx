@@ -1,10 +1,11 @@
 import type { StaticAirport } from "@sr24/types/db";
-import type { PilotLong, PilotRouteProcedure } from "@sr24/types/interface";
+import type { PilotLong, PilotParsedRoute, PilotRouteProcedure } from "@sr24/types/interface";
 import type { NavigraphAirport, NavigraphApproach, NavigraphProcedure } from "@sr24/types/navigraph";
-import { PlaneLandingIcon, PlaneTakeoffIcon } from "lucide-react";
+import { PlaneLandingIcon, PlaneTakeoffIcon, RotateCcwIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { mapService } from "@/app/(map)/lib";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,20 +14,37 @@ import { getCachedAirport } from "@/storage/cache";
 import { dxGetNavigraphAirport, dxGetNavigraphApproachesByAirport, dxGetNavigraphProceduresByAirport } from "@/storage/dexie";
 
 export default function PilotProcedures({ pilot }: { pilot: PilotLong }) {
+	const [modifiedRoute, setModifiedRoute] = useState<PilotParsedRoute | null>(
+		pilot.overrides?.modifiedRoute || pilot.flight_plan?.parsed_route || null,
+	);
 	return (
 		<ScrollArea className="max-h-full overflow-hidden flex flex-col">
-			{pilot.flight_plan?.departure.icao && <ProcedureCard pilot={pilot} type="departure" />}
-			{pilot.flight_plan?.arrival.icao && <ProcedureCard pilot={pilot} type="arrival" />}
+			{pilot.flight_plan?.departure.icao && (
+				<ProcedureCard pilot={pilot} type="departure" modifiedRoute={modifiedRoute} setModifiedRoute={setModifiedRoute} />
+			)}
+			{pilot.flight_plan?.arrival.icao && (
+				<ProcedureCard pilot={pilot} type="arrival" modifiedRoute={modifiedRoute} setModifiedRoute={setModifiedRoute} />
+			)}
 			<ScrollBar />
 		</ScrollArea>
 	);
 }
 
-function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | "arrival" }) {
+function ProcedureCard({
+	pilot,
+	type,
+	modifiedRoute,
+	setModifiedRoute,
+}: {
+	pilot: PilotLong;
+	type: "departure" | "arrival";
+	modifiedRoute: PilotParsedRoute | null;
+	setModifiedRoute: React.Dispatch<React.SetStateAction<PilotParsedRoute | null>>;
+}) {
 	const [staticAirport, setStaticAirport] = useState<StaticAirport | null>(null);
 	const [procedures, setProcedures] = useState<Procedures | null>(null);
 	const [parsedProc, setParsedProc] = useState<PilotRouteProcedure | null>(
-		(type === "departure" ? pilot.flight_plan?.parsed_route?.sid : pilot.flight_plan?.parsed_route?.star) || null,
+		type === "departure" ? modifiedRoute?.sid || null : modifiedRoute?.star || null,
 	);
 
 	const filteredProcedures = useMemo(() => {
@@ -71,7 +89,7 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 
 	const onProcChange = useCallback(
 		(key: "rwy" | "proc" | "trans" | "approach" | "approachTrans", value: string | null) => {
-			if (!parsedProc || !pilot.flight_plan?.parsed_route) return;
+			if (!parsedProc || !modifiedRoute) return;
 
 			const updated: typeof parsedProc = { ...parsedProc, override: true };
 
@@ -118,12 +136,29 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 			updated[key] = value || null;
 			setParsedProc(updated);
 
-			const newParsedRoute =
-				type === "departure" ? { ...pilot.flight_plan.parsed_route, sid: updated } : { ...pilot.flight_plan.parsed_route, star: updated };
-			mapService.setFeatures({ autoTrackId: pilot.id, route: newParsedRoute });
+			const newModifiedRoute = type === "departure" ? { ...modifiedRoute, sid: updated } : { ...modifiedRoute, star: updated };
+			setModifiedRoute(newModifiedRoute);
+			mapService.setFeatures({ autoTrackId: pilot.id, route: newModifiedRoute });
+
+			fetch("/user/pilot", {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ modifiedRoute: newModifiedRoute, id: pilot.id }),
+			});
 		},
-		[parsedProc, procedures, pilot.id, pilot.flight_plan?.parsed_route, type],
+		[parsedProc, procedures, pilot.id, modifiedRoute, setModifiedRoute, type],
 	);
+
+	const onProcReset = useCallback(() => {
+		mapService.setFeatures({ autoTrackId: pilot.id, route: pilot.flight_plan?.parsed_route });
+		setParsedProc(type === "departure" ? pilot.flight_plan?.parsed_route?.sid || null : pilot.flight_plan?.parsed_route?.star || null);
+
+		fetch("/user/pilot", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ modifiedRoute: pilot.flight_plan?.parsed_route, id: pilot.id }),
+		});
+	}, [pilot.id, pilot.flight_plan?.parsed_route, type]);
 
 	return (
 		<Card size="sm" className="m-2 bg-muted/50">
@@ -131,9 +166,14 @@ function ProcedureCard({ pilot, type }: { pilot: PilotLong; type: "departure" | 
 				<CardTitle className="flex items-center gap-2">
 					{type === "departure" ? <PlaneTakeoffIcon size={16} /> : <PlaneLandingIcon size={16} />}
 					<span>{staticAirport?.id || pilot.flight_plan?.[type].icao}</span>
-					<Badge variant={parsedProc?.override ? "secondary" : "outline"} className="ml-auto">
+					<Badge variant={parsedProc?.override ? "secondary" : "outline"} className="ml-auto leading-0">
 						{parsedProc?.override ? "Edited" : "Auto Detected"}
 					</Badge>
+					{parsedProc?.override && (
+						<Button variant="outline" size="icon" onClick={onProcReset}>
+							<RotateCcwIcon />
+						</Button>
+					)}
 				</CardTitle>
 				<CardDescription>{staticAirport?.name || "Unknown"}</CardDescription>
 			</CardHeader>

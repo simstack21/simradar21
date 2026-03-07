@@ -55,8 +55,9 @@ export default function PilotPanel({ id }: { id: string }) {
 	const routeRef = useRef<string | null>(null);
 
 	useEffect(() => {
+		console.log(pilotData);
 		if (pilotData?.flight_plan?.parsed_route && pilotData.flight_plan.route !== routeRef.current) {
-			mapService.setFeatures({ autoTrackId: pilotData.id, route: pilotData.flight_plan.parsed_route });
+			mapService.setFeatures({ autoTrackId: pilotData.id, route: pilotData.overrides?.modifiedRoute || pilotData.flight_plan.parsed_route });
 			routeRef.current = pilotData.flight_plan.route;
 		}
 	}, [pilotData]);
