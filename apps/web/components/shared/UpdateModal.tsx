@@ -34,24 +34,27 @@ function WelcomeContent({ dismiss }: { dismiss: () => void }) {
 						Welcome to
 						<span className="text-green">simradar21</span>!
 					</div>
-					<div className="flex flex-col gap-2 text-sm">
-						<p>
-							This is yet another VATSIM network monitoring project. It builds on the ideas and inspiration from several already existing and
-							fantastic tools in the community. The goal here is not to reinvent the wheel — those solutions already do an amazing job — but rather to
-							experiment, learn, and create something enjoyable and useful in its own way.
-						</p>
-						<p>
-							This project started simply as a fun side project at the end of last year. I don't have a professional programming background;
-							everything you see here is self-taught and built step by step out of curiosity and passion for both aviation and technology.
-						</p>
-						<p>
-							What you're seeing now is an early <span className="text-green">BETA version</span>, but it's already packed with loads of features.
-							Even more exciting ideas are currently in development, with many new features and improvements planned for the future.
-						</p>
-						<p>
-							Thanks for stopping by, exploring the project, and being part of the journey. Enjoy the site and happy flying on the VATSIM network!
-						</p>
-					</div>
+					<ScrollArea className="flex flex-col p-1 gap-4 overflow-hidden">
+						<div className="flex flex-col gap-2 text-sm">
+							<p>
+								This is yet another VATSIM network monitoring project. It builds on the ideas and inspiration from several already existing and
+								fantastic tools in the community. The goal here is not to reinvent the wheel — those solutions already do an amazing job — but rather
+								to experiment, learn, and create something enjoyable and useful in its own way.
+							</p>
+							<p>
+								This project started simply as a fun side project at the end of last year. I don't have a professional programming background;
+								everything you see here is self-taught and built step by step out of curiosity and passion for both aviation and technology.
+							</p>
+							<p>
+								What you're seeing now is an early <span className="text-green">BETA version</span>, but it's already packed with loads of features.
+								Even more exciting ideas are currently in development, with many new features and improvements planned for the future.
+							</p>
+							<p>
+								Thanks for stopping by, exploring the project, and being part of the journey. Enjoy the site and happy flying on the VATSIM network!
+							</p>
+						</div>
+						<ScrollBar />
+					</ScrollArea>
 				</>
 			)}
 			<div className="flex gap-4 justify-between">
