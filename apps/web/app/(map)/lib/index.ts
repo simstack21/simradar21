@@ -26,12 +26,13 @@ export async function init(pathname: string): Promise<void> {
 
 	const handleMessage = async (msg: WsData | WsPresence) => {
 		if (msg.t === "delta") {
-			// if (lastMessageSeq && msg.s % 5 !== 0) {
-			// 	console.log(`Received WS message seq ${msg.s}:`, msg.data);
-			// 	return;
-			// }
-			if (lastMessageSeq && msg.s !== (lastMessageSeq + 1) % Number.MAX_SAFE_INTEGER) {
-				console.warn(`Missed WS messages: last seq ${lastMessageSeq}, current seq ${msg.s}. Refetching full data.`);
+			// Capture and update seq before any await so concurrent handlers
+			// don't all see the same stale lastMessageSeq and trigger false gaps.
+			const prevSeq = lastMessageSeq;
+			lastMessageSeq = msg.s;
+
+			if (prevSeq !== null && msg.s !== (prevSeq + 1) % Number.MAX_SAFE_INTEGER) {
+				console.warn(`Missed WS messages: last seq ${prevSeq}, current seq ${msg.s}. Refetching full data.`);
 				const data = await fetchApi<InitialData>("/map/init");
 
 				mapService.setStore({ airports: data.airports, controllers: data.controllers });
@@ -40,7 +41,6 @@ export async function init(pathname: string): Promise<void> {
 				mapService.updateStore({ airports: msg.data.airports, controllers: msg.data.controllers });
 				await mapService.updateFeatures({ pilots: msg.data.pilots, controllers: msg.data.controllers });
 			}
-			lastMessageSeq = msg.s;
 		}
 	};
 	wsClient.addListener(handleMessage);

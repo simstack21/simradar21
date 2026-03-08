@@ -24,7 +24,7 @@ export default function SettingPanel() {
 		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
 			<SettingHeader minimized={minimized} setMinimized={setMinimized} />
 			{!minimized && (
-				<ScrollArea className="max-h-full overflow-hidden flex flex-col bg-muted/50">
+				<ScrollArea className="max-h-full overflow-hidden flex flex-col">
 					<div className="p-2 flex flex-col gap-2">
 						<DayNightSettings />
 						<AirportSettings />

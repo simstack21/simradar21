@@ -15,7 +15,7 @@ export default function FilterPanel() {
 		<MotionPanel className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
 			<FilterHeader minimized={minimized} setMinimized={setMinimized} />
 			{!minimized && (
-				<ScrollArea className="max-h-full overflow-hidden flex flex-col bg-muted/50">
+				<ScrollArea className="max-h-full overflow-hidden flex flex-col">
 					<FilterSelection />
 					<FilterInput />
 					<ScrollBar />

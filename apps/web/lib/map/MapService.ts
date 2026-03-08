@@ -579,13 +579,13 @@ export class MapService {
 		controllers?: ControllerMerged[];
 	}): Promise<void> {
 		if (pilots) {
-			this.pilotService.updateFeatures({ added: pilots, updated: pilots });
+			this.pilotService.setFeatures(pilots);
 		}
 		if (airports) {
 			// this.airportService.setFeatures(airports);
 		}
 		if (controllers) {
-			await this.controllerService.updateFeatures({ added: controllers, updated: controllers });
+			await this.controllerService.setFeatures(controllers);
 		}
 
 		this.updateRelatives();

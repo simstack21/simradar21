@@ -149,6 +149,9 @@ export class PilotService {
 	public setFeatures(pilots: PilotShort[]) {
 		this.rbush.clear();
 		this.map.clear();
+		this.source.clear();
+		this.rendered.clear();
+		this.moving.clear();
 
 		for (const p of pilots) {
 			if (!p.coordinates) continue;
