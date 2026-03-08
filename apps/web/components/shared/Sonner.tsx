@@ -13,6 +13,15 @@ export const reloadOnErrorSonner = () =>
 		action: {
 			label: "Reload",
 			onClick: async () => {
+				const repeat = localStorage.getItem("simradar21-reload-on-error");
+				const repatCount = repeat ? Number(repeat) + 1 : 0;
+				localStorage.setItem("simradar21-reload-on-error", repatCount.toString());
+
+				if (repatCount < 2) {
+					window.location.reload();
+					return;
+				}
+
 				await dxClearDatabase();
 				localStorage.clear();
 				window.location.reload();
