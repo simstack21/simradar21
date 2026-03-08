@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "Pilot" ALTER COLUMN "live" SET DEFAULT 'off',
-ALTER COLUMN "live" SET DATA TYPE TEXT;
