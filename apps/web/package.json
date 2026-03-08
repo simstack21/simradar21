@@ -23,6 +23,7 @@
 		"clsx": "^2.1.1",
 		"cmdk": "^1.1.1",
 		"dexie": "^4.2.1",
+		"embla-carousel-react": "^8.6.0",
 		"jsonwebtoken": "^9.0.3",
 		"lucide-react": "^0.563.0",
 		"maplibre-gl": "^5.13.0",
