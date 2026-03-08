@@ -157,6 +157,11 @@ async function storeData<T, K extends keyof T>(data: T[], db: EntityTable<T, K>)
 		});
 }
 
+export async function dxClearDatabase(): Promise<void> {
+	await db.delete();
+	localStorage.removeItem("simradar21-db");
+}
+
 export async function dxGetAllAirports(): Promise<StaticAirport[]> {
 	await dxEnsureInitialized();
 	return await db.airports.toArray();

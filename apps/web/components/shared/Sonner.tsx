@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { dxClearDatabase } from "@/storage/dexie";
 
 export const reloadOnErrorSonner = () =>
 	toast.error("Oops! Something went wrong.", {
@@ -11,7 +12,11 @@ export const reloadOnErrorSonner = () =>
 		} as React.CSSProperties,
 		action: {
 			label: "Reload",
-			onClick: () => window.location.reload(),
+			onClick: async () => {
+				await dxClearDatabase();
+				localStorage.clear();
+				window.location.reload();
+			},
 		},
 		duration: Infinity,
 	});
