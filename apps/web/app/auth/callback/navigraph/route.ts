@@ -6,6 +6,7 @@ import { NAVIGRAPH_AUTH_URL } from "@/app/auth/[...nextauth]/route";
 const API_URL = process.env.API_URL ?? "http://localhost:3001";
 const JWT_SECRET = process.env.NEXTAUTH_SECRET ?? "";
 const NEXTAUTH_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000/auth";
+const BASE_URL = new URL(NEXTAUTH_URL).origin;
 
 function getSessionCookieName() {
 	return process.env.NODE_ENV === "production" ? "__Secure-next-auth.session-token" : "next-auth.session-token";
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
 
 	const fail = (reason: string) => {
 		console.error("Navigraph callback failed:", reason);
-		const res = NextResponse.redirect(new URL("/", req.url));
+		const res = NextResponse.redirect(new URL("/", BASE_URL));
 		clearPkceCookies(res);
 		return res;
 	};
@@ -95,11 +96,12 @@ export async function GET(req: NextRequest) {
 		token: newToken,
 	});
 
-	const response = NextResponse.redirect(new URL("/", req.url));
+	const response = NextResponse.redirect(new URL("/", BASE_URL));
 	response.cookies.set(getSessionCookieName(), encodedToken, {
 		httpOnly: true,
 		sameSite: "lax",
 		path: "/",
+		secure: process.env.NODE_ENV === "production",
 	});
 	clearPkceCookies(response);
 

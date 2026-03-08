@@ -14,7 +14,7 @@ import type {
 import { path7za } from "7zip-bin";
 import Database from "better-sqlite3";
 import Seven from "node-7z";
-import { uploadToR2 } from "./s3.js";
+import { uploadJsonToR2 } from "./s3.js";
 
 const NAVIGRAPH_TOKEN_URL = "https://identity.api.navigraph.com/connect/token";
 const NAVIGRAPH_PACKAGES_URL = "https://api.navigraph.com/v1/navdata/packages";
@@ -447,7 +447,7 @@ export async function updateNavigraphPackages(): Promise<void> {
 		}
 
 		const r2Key = `navigraph/${cycle}/package.json`;
-		await uploadToR2(r2Key, JSON.stringify(dataset));
+		await uploadJsonToR2(r2Key, dataset);
 
 		const stored: NavigraphPackage = {
 			id: packageId,

@@ -1,5 +1,9 @@
+import { promisify } from "node:util";
+import { gzip } from "node:zlib";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { rdsGetMultiple } from "@sr24/db/redis";
+
+const gzipAsync = promisify(gzip);
 
 const accountId = process.env.CF_ACCOUNT_ID || "";
 const accessKeyId = process.env.R2_ACCESS_KEY_ID || "";
@@ -37,12 +41,25 @@ export async function updateR2Storage(): Promise<void> {
 		"static_airlines:all",
 		"static_aircrafts:all",
 	]);
-	await uploadToR2(`airports_${manifest.airportsVersion}.json`, JSON.stringify(datas[0]));
-	await uploadToR2(`firs_${manifest.firsVersion}.json`, JSON.stringify(datas[1]));
-	await uploadToR2(`tracons_${manifest.traconsVersion}.json`, JSON.stringify(datas[2]));
-	await uploadToR2(`airlines_${manifest.airlinesVersion}.json`, JSON.stringify(datas[3]));
-	await uploadToR2(`aircrafts_${manifest.aircraftsVersion}.json`, JSON.stringify(datas[4]));
+	await uploadJsonToR2(`airports_${manifest.airportsVersion}.json`, datas[0]);
+	await uploadJsonToR2(`firs_${manifest.firsVersion}.json`, datas[1]);
+	await uploadJsonToR2(`tracons_${manifest.traconsVersion}.json`, datas[2]);
+	await uploadJsonToR2(`airlines_${manifest.airlinesVersion}.json`, datas[3]);
+	await uploadJsonToR2(`aircrafts_${manifest.aircraftsVersion}.json`, datas[4]);
 	console.log("✅ R2 storage update completed!");
+}
+
+export async function uploadJsonToR2(key: string, data: unknown) {
+	const compressed = await gzipAsync(JSON.stringify(data));
+	return await r2.send(
+		new PutObjectCommand({
+			Bucket: bucket,
+			Key: key,
+			Body: compressed,
+			ContentEncoding: "gzip",
+			ContentType: "application/json",
+		}),
+	);
 }
 
 export async function uploadToR2(key: string, body: Buffer | Uint8Array | Blob | string, contentLength?: number) {

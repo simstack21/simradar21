@@ -107,6 +107,10 @@ services:
       API_HOST: ${HOST}
       API_PORT: ${API_PORT}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      CF_ACCOUNT_ID: ${CF_ACCOUNT_ID}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_BUCKET_NAME: ${R2_BUCKET_NAME}
       TRUST_PROXY: "true"
     depends_on:
       postgres:
