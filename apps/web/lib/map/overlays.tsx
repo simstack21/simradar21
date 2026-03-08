@@ -107,23 +107,24 @@ export async function updateOverlay(
 	const coords = geom?.getCoordinates();
 	overlay.setPosition(coords);
 
-	const root = overlay.get("root") as Root | undefined;
 	const type = feature.get("type") as string | undefined;
+	if (!type) return;
 
-	if (!root || !type) return;
+	const getRoot = () => overlay.get("root") as Root | undefined;
+	if (!getRoot()) return;
 
 	if (type === "pilot") {
 		const node = await getPilotOverlay(feature, mini);
-		root.render(node);
+		getRoot()?.render(node);
 	}
 
 	if (type === "airport") {
 		const node = await getAirportOverlay(feature, airport, controller, mini);
-		root.render(node);
+		getRoot()?.render(node);
 	}
 
 	if (type === "fir" || type === "tracon") {
 		const node = await getSectorOverlay(feature, controller, mini);
-		root.render(node);
+		getRoot()?.render(node);
 	}
 }
