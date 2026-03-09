@@ -1,4 +1,5 @@
 import {
+	BellRingIcon,
 	CalendarClockIcon,
 	CheckIcon,
 	DatabaseIcon,
@@ -172,7 +173,12 @@ export const DropdownNavigation = () => {
 			></DropdownMenuTrigger>
 			<DropdownMenuContent className="w-56">
 				<DropdownMenuGroup>
-					<DropdownMenuLabel>Navigation</DropdownMenuLabel>
+					<DropdownMenuLabel className="relative">
+						Navigation
+						<Button variant="outline" size="icon-sm" className="absolute right-1 top-1">
+							<BellRingIcon />
+						</Button>
+					</DropdownMenuLabel>
 					{navListItems.map((item) => (
 						<DropdownMenuItemFromList key={item.property} item={item} />
 					))}
@@ -182,7 +188,7 @@ export const DropdownNavigation = () => {
 						<DropdownMenuItemFromList key={item.property} item={item} />
 					))}
 					<DropdownMenuSeparator />
-					<DropdownMenuLabel className="text-right text-xs">{process.env.NEXT_PUBLIC_APP_RELEASE || "dev"}</DropdownMenuLabel>
+					<DropdownMenuLabel className="text-xs text-right py-0">{process.env.NEXT_PUBLIC_APP_RELEASE || "dev"}</DropdownMenuLabel>
 				</DropdownMenuGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>
