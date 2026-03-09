@@ -2,6 +2,7 @@
 
 import {
 	ArrowRightIcon,
+	BugIcon,
 	CircleAlertIcon,
 	CloudUploadIcon,
 	FlameIcon,
@@ -13,12 +14,16 @@ import {
 	SquareStackIcon,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import Simradar21Logo from "@/assets/images/logos/simradar21_icon.svg";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
+
+const VERSION_KEY = "simradar21-changelog";
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_RELEASE ?? "dev";
 
 function WelcomeContent({ dismiss }: { dismiss: () => void }) {
 	const [showFeatures, setShowFeatures] = useState(false);
@@ -140,7 +145,18 @@ function FeatureList() {
 						<FeatureItem key={index} icon={<item.icon size={20} />} title={item.title} description={item.description} className={item.className} />
 					))}
 				</div>
-				<div className="my-4 text-center">And some more lovely details and features here and there.</div>
+				<div className="my-4 text-center">
+					And some more lovely details and features here and there. <br />
+					You can view planned features and milestones{" "}
+					<Link
+						href="https://github.com/simstack21/simradar21/milestones"
+						rel="noopener noreferrer"
+						target="_blank"
+						className="text-primary underline"
+					>
+						here
+					</Link>
+				</div>
 				<div className="flex flex-col gap-2 mt-4 text-muted-foreground">
 					<div className="flex gap-2">
 						<CircleAlertIcon size={20} className="stroke-red shrink-0" />
@@ -179,15 +195,45 @@ function FeatureItem({ icon, title, description, className }: { icon: React.Reac
 
 function ChangelogContent() {
 	return (
-		<>
-			<DialogHeader>
-				<DialogTitle>What's new in {process.env.NEXT_PUBLIC_APP_RELEASE ?? "this update"}</DialogTitle>
-				<DialogDescription>Here's what changed since your last visit.</DialogDescription>
-			</DialogHeader>
-			<ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-				<li>Various bug fixes and improvements</li>
-			</ul>
-		</>
+		<div className="flex flex-col gap-6 overflow-hidden">
+			<div className="flex items-center gap-2 text-xl sm:text-3xl lg:text-4xl font-bold">
+				<Image src={Simradar21Logo} alt="simradar21 icon" width={40} height={40} priority className="rounded-full mr-2" />
+				Changelog<span className="text-muted-foreground font-normal">{APP_VERSION}</span>
+			</div>
+			<ScrollArea className="flex flex-col p-2 overflow-hidden">
+				<div className="flex flex-col gap-4">
+					<div className="flex flex-col gap-2">
+						<span className="flex items-center gap-2 text-lg font-bold">
+							<CircleAlertIcon size={20} className="stroke-red shrink-0" />
+							Known Issues
+						</span>
+						<ul className="list-disc list-outside pl-7 text-muted-foreground text-sm">
+							<li>Some pilot markers might not be updated correctly after long idle sessions. Simply reload the page for a temporary fix.</li>
+						</ul>
+					</div>
+					{/* <div className="flex flex-col gap-2">
+						<span className="flex items-center gap-2 text-lg font-bold">
+							<FlameIcon size={20} className="stroke-yellow" />
+							New Features
+						</span>
+						<ul className="list-disc list-outside pl-7 text-muted-foreground text-sm">
+							<li>Some pilot markers might not be updated correctly after long idle sessions. Simply reload the page for a temporary fix.</li>
+						</ul>
+					</div> */}
+					<div className="flex flex-col gap-2">
+						<span className="flex items-center gap-2 text-lg font-bold">
+							<BugIcon size={20} className="stroke-green" />
+							Improvements & Fixes
+						</span>
+						<ul className="list-disc list-outside pl-7 text-muted-foreground text-sm">
+							<li>Fix pilot route highlighting</li>
+							<li>Add link to Github milestones</li>
+						</ul>
+					</div>
+				</div>
+				<ScrollBar />
+			</ScrollArea>
+		</div>
 	);
 }
 
@@ -205,9 +251,6 @@ function UpdateModalInner({ modal, dismiss }: { modal: NonNullable<UpdateModalTy
 }
 
 type UpdateModalType = "welcome" | "changelog" | null;
-
-const VERSION_KEY = "simradar21-changelog";
-const APP_VERSION = process.env.NEXT_PUBLIC_APP_RELEASE ?? "dev";
 
 export function UpdateModal() {
 	const [modal, setModal] = useState<UpdateModalType>(null);

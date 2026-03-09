@@ -182,7 +182,7 @@ export const DropdownNavigation = () => {
 						<DropdownMenuItemFromList key={item.property} item={item} />
 					))}
 					<DropdownMenuSeparator />
-					<DropdownMenuLabel className="text-right text-xs">Version: {process.env.NEXT_PUBLIC_APP_RELEASE || "dev"}</DropdownMenuLabel>
+					<DropdownMenuLabel className="text-right text-xs">{process.env.NEXT_PUBLIC_APP_RELEASE || "dev"}</DropdownMenuLabel>
 				</DropdownMenuGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>
