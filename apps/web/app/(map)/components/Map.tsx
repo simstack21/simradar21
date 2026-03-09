@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
-import { useFilterStatsStore, useFiltersStore, useSettingsStore } from "@/storage/zustand";
+import { useFiltersStore, useSettingsStore } from "@/storage/zustand";
 import { init, mapService } from "../lib";
 
 export default function OMap() {
@@ -27,22 +27,18 @@ export default function OMap() {
 		navigraphRoutes,
 		navigraphRoutesInMulti,
 	} = useSettingsStore();
-	const { setPilotCount } = useFilterStatsStore();
 	const filters = useFiltersStore();
 
 	useEffect(() => {
 		const map = mapService.init({ onNavigate: (href) => router.push(href), autoTrackPoints: true });
 
 		mapService.addEventListeners();
-		mapService.subscribe((stats) => {
-			setPilotCount([stats.pilots.rendered, stats.pilots.total]);
-		});
 
 		return () => {
 			mapService.removeEventListeners();
 			map.setTarget(undefined);
 		};
-	}, [router, setPilotCount]);
+	}, [router]);
 
 	useEffect(() => {
 		init(pathname);

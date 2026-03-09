@@ -158,11 +158,6 @@ export interface FilterState extends FilterValues {
 	applyPreset: (id: string) => void;
 }
 
-export interface FilterStats {
-	pilotCount: [number, number];
-	setPilotCount: (count: [number, number]) => void;
-}
-
 type DashboardPanel = "history" | "stats" | "events";
 
 interface DashboardPanelValues {

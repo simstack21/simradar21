@@ -5,7 +5,6 @@ import type {
 	DashboardPanelState,
 	FilterKey,
 	FilterState,
-	FilterStats,
 	FilterValues,
 	MapSettings,
 	PilotPanelState,
@@ -247,11 +246,6 @@ export const useFiltersStore = create<FilterState>()(
 		},
 	),
 );
-
-export const useFilterStatsStore = create<FilterStats>((set) => ({
-	pilotCount: [0, 0],
-	setPilotCount: (count) => set({ pilotCount: count }),
-}));
 
 export const useMapVisibilityStore = create<{ isHidden: boolean; setHidden: (value: boolean) => void }>()(
 	persist(
