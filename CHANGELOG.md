@@ -2,13 +2,10 @@
 
 # [0.9.0-beta]
 
-Known Issues:
-- Some pilot markers might not be updated correctly after long idle sessions. Simply reload the page for temporary fix.
-
-## New Features
+## Known Issues
+- Some pilot markers might not be updated correctly after longer idle sessions. A potential fix has been introduced. If the bug persist, simply reload the page for a temporary fix.
 
 ## Improvements and Fixes
 - Fix pilot route highlighting
-
-## Misc
+- Potential fix for missing pilot markers after long idle sessions
 - Add link to Github milestones

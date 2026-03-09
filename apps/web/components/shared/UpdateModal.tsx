@@ -208,7 +208,10 @@ function ChangelogContent() {
 							Known Issues
 						</span>
 						<ul className="list-disc list-outside pl-7 text-muted-foreground text-sm">
-							<li>Some pilot markers might not be updated correctly after long idle sessions. Simply reload the page for a temporary fix.</li>
+							<li>
+								Some pilot markers might not be updated correctly after longer idle sessions. A potential fix has been introduced. If the bug
+								persists, simply reload the page for a temporary fix.
+							</li>
 						</ul>
 					</div>
 					{/* <div className="flex flex-col gap-2">
@@ -227,6 +230,7 @@ function ChangelogContent() {
 						</span>
 						<ul className="list-disc list-outside pl-7 text-muted-foreground text-sm">
 							<li>Fix pilot route highlighting</li>
+							<li>Potential fix for missing pilot markers after long idle sessions</li>
 							<li>Add link to Github milestones</li>
 						</ul>
 					</div>
