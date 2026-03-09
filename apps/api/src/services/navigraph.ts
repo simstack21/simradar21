@@ -125,7 +125,7 @@ const r2 = new S3Client({
 		secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? "",
 	},
 });
-const r2Bucket = process.env.R2_BUCKET_NAME ?? "";
+const r2Bucket = process.env.R2_PRIVATE_BUCKET_NAME ?? "";
 
 export async function getNavigraphPackage(status: "current" | "outdated") {
 	const pkg = (await rdsGetSingle(`navigraph:package:${status}`)) as NavigraphPackage | null;

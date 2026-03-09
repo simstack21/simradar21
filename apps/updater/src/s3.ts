@@ -9,6 +9,7 @@ const accountId = process.env.CF_ACCOUNT_ID || "";
 const accessKeyId = process.env.R2_ACCESS_KEY_ID || "";
 const secret = process.env.R2_SECRET_ACCESS_KEY || "";
 const bucket = process.env.R2_BUCKET_NAME || "";
+const privateBucket = process.env.R2_PRIVATE_BUCKET_NAME || "";
 
 const r2 = new S3Client({
 	region: "auto",
@@ -69,6 +70,19 @@ export async function uploadToR2(key: string, body: Buffer | Uint8Array | Blob |
 			Key: key,
 			Body: body,
 			ContentLength: contentLength,
+		}),
+	);
+}
+
+export async function uploadJsonToPrivateR2(key: string, data: unknown) {
+	const compressed = await gzipAsync(JSON.stringify(data));
+	return await r2.send(
+		new PutObjectCommand({
+			Bucket: privateBucket,
+			Key: key,
+			Body: compressed,
+			ContentEncoding: "gzip",
+			ContentType: "application/json",
 		}),
 	);
 }
