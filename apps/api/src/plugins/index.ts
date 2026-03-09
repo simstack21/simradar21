@@ -8,7 +8,12 @@ import { authPlugin } from "./auth.js";
 export default fastifyPlugin(async (app) => {
 	app.register(fastifyHelmet);
 	app.register(fastifyCors);
-	app.register(fastifyRateLimit);
+	app.register(fastifyRateLimit, {
+		keyGenerator: (req) => {
+			const cfIp = req.headers["cf-connecting-ip"];
+			return (Array.isArray(cfIp) ? cfIp[0] : cfIp) ?? req.ip;
+		},
+	});
 	app.register(fastifySensible);
 	app.register(authPlugin);
 });

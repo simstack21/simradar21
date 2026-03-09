@@ -7,7 +7,7 @@ import routes from "./routes/index.js";
 
 await rdsConnectBufferClient();
 
-const app = fastify({ logger: true });
+const app = fastify({ logger: true, trustProxy: process.env.TRUST_PROXY === "true" });
 
 await app.register(plugins);
 await app.register(routes);

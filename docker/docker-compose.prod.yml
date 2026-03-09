@@ -111,7 +111,7 @@ services:
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
       R2_BUCKET_NAME: ${R2_BUCKET_NAME}
-      TRUST_PROXY: "true"
+      TRUST_PROXY: true
     depends_on:
       postgres:
         condition: service_healthy
@@ -146,7 +146,7 @@ services:
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DB: ${REDIS_DB}
-      TRUST_PROXY: "true"
+      TRUST_PROXY: true
     depends_on:
       postgres:
         condition: service_healthy
