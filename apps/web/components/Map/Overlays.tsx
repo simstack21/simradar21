@@ -40,7 +40,7 @@ export function PilotOverlay({ feature, airline, mini }: { feature: Feature<Poin
 	}
 
 	return (
-		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden">
+		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden" onPointerMove={(e) => e.stopPropagation()}>
 			{planeOverlay === "full" && !mini && (
 				<div className="grid grid-cols-2 gap-x-2 text-xs p-0.5 pt-0">
 					<div className="flex gap-2 justify-between">
@@ -106,7 +106,7 @@ export function AirportOverlay({
 	const sortedControllers = controllers?.sort((a, b) => b.facility - a.facility);
 
 	return (
-		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden">
+		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden" onPointerMove={(e) => e.stopPropagation()}>
 			{airportOverlay === "full" && !mini && <ControllerOverlay controllers={sortedControllers} />}
 			{airportOverlay !== "callsign" && !mini && (
 				<div className="flex items-center gap-x-1 bg-red text-white px-1 py-0.5">
@@ -147,7 +147,7 @@ export function SectorOverlay({
 	const controllers = merged?.controllers as ControllerShort[] | undefined;
 
 	return (
-		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden">
+		<div className="flex flex-col glass-panel rounded-md border outline overflow-hidden" onPointerMove={(e) => e.stopPropagation()}>
 			{sectorOverlay === "full" && !mini && <ControllerOverlay controllers={controllers} />}
 			{sectorOverlay !== "callsign" && !mini && (
 				<div className="flex items-center gap-x-1 bg-red text-white px-1 py-0.5">

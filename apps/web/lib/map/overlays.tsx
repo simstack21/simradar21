@@ -86,10 +86,10 @@ export async function createOverlay(
 	const overlay = new Overlay({
 		element,
 		id: feature.getId(),
+		stopEvent: true,
 		position: feature.getGeometry()?.getCoordinates(),
 		positioning: "bottom-center",
 		offset: [0, -25],
-		insertFirst: false,
 	});
 	overlay.set("root", root);
 
