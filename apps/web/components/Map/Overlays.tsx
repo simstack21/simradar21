@@ -17,7 +17,7 @@ import {
 import type { Feature } from "ol";
 import type { Point } from "ol/geom";
 import { useState } from "react";
-import { convertAltitude, convertSpeed, convertTime, convertVerticalSpeed, getOnlineTime } from "@/lib/helpers";
+import { convertAltitude, convertSpeed, convertTime, convertVerticalSpeed, getOnlineTime, roundAltitude } from "@/lib/helpers";
 import { getControllerColor } from "@/lib/panels";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/storage/zustand";
@@ -45,7 +45,7 @@ export function PilotOverlay({ feature, airline, mini }: { feature: Feature<Poin
 				<div className="grid grid-cols-2 gap-x-2 text-xs p-0.5 pt-0">
 					<div className="flex gap-2 justify-between">
 						<span className="text-muted-foreground">ALT</span>
-						<span className="font-mono">{data.altitude_ms && convertAltitude(Math.round(data.altitude_ms / 250) * 250, altitudeUnit)}</span>
+						<span className="font-mono">{data.altitude_ms && convertAltitude(roundAltitude(data.altitude_ms), altitudeUnit)}</span>
 					</div>
 					<div className="flex gap-2 justify-between">
 						<span className="text-muted-foreground">FPM</span>

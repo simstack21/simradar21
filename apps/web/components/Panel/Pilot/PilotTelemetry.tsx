@@ -1,7 +1,7 @@
 import type { PilotLong, TrackPoint } from "@sr24/types/interface";
 import { GaugeIcon } from "lucide-react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { convertAltitude, convertSpeed, convertVerticalSpeed } from "@/lib/helpers";
+import { convertAltitude, convertSpeed, convertVerticalSpeed, roundAltitude } from "@/lib/helpers";
 import { useSettingsStore } from "@/storage/zustand";
 
 export function PilotTelemetry({ pilot, trackPoint, size }: { pilot: PilotLong; trackPoint?: TrackPoint; size?: "default" | "sm" }) {
@@ -20,7 +20,7 @@ export function PilotTelemetry({ pilot, trackPoint, size }: { pilot: PilotLong; 
 			<div className="grid grid-cols-2 gap-y-1 gap-x-2 text-xs">
 				<div className="flex gap-1 justify-between">
 					<span className="text-muted-foreground">ALT</span>
-					<span>{convertAltitude(Math.round((trackPoint?.altitude_ms ?? pilot.altitude_ms) / 250) * 250, altitudeUnit)}</span>
+					<span>{convertAltitude(roundAltitude(trackPoint?.altitude_ms ?? pilot.altitude_ms), altitudeUnit)}</span>
 				</div>
 				<div className="flex gap-1 justify-between">
 					<span className="text-muted-foreground">SPD</span>
@@ -49,11 +49,11 @@ export function PilotTelemetry({ pilot, trackPoint, size }: { pilot: PilotLong; 
 			<AccordionContent className="py-1 grid grid-cols-2 gap-1">
 				<div className="flex flex-col">
 					<span className="text-muted-foreground">Barometric Altitude</span>
-					<span>{convertAltitude(Math.round((trackPoint?.altitude_ms ?? pilot.altitude_ms) / 250) * 250, altitudeUnit, true)}</span>
+					<span>{convertAltitude(roundAltitude(trackPoint?.altitude_ms ?? pilot.altitude_ms), altitudeUnit, true)}</span>
 				</div>
 				<div className="flex flex-col">
 					<span className="text-muted-foreground">Radar Altitude</span>
-					<span>{convertAltitude(Math.round((trackPoint?.altitude_agl ?? pilot.altitude_agl) / 250) * 250, altitudeUnit, true)}</span>
+					<span>{convertAltitude(roundAltitude(trackPoint?.altitude_agl ?? pilot.altitude_agl), altitudeUnit, true)}</span>
 				</div>
 				<div className="flex flex-col">
 					<span className="text-muted-foreground">Ground Speed</span>

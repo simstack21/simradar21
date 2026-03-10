@@ -148,3 +148,11 @@ export function getOnlineTime(logonTime: number): string {
 	const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 	return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
+
+export function roundAltitude(altitude: number): number {
+	if (altitude < 24000) {
+		return Math.round(altitude / 250) * 250;
+	} else {
+		return Math.round(altitude / 500) * 500;
+	}
+}
