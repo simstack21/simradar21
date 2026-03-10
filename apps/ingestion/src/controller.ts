@@ -180,7 +180,7 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 
 		const levels = reduceCallsign(c.callsign);
 
-		if (c.facility === 6) {
+		if (c.facility === 6 || c.facility === 1) {
 			// FIR
 			id = findPrefixMatch(levels, 6);
 			facility = "fir";
