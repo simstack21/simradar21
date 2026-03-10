@@ -20,7 +20,7 @@
 	"types": "./dist/index.d.ts",
 	"scripts": {
 		"dev": "tsc --watch",
-		"build": "tsc && shx cp -r src/generated dist/generated",
+		"build": "tsc && shx cp -r src/generated dist/",
 		"typecheck": "tsc --noEmit",
 		"prebuild": "prisma generate",
 		"biome": "biome check .",

@@ -1,7 +1,6 @@
 "use client";
 
 import type { DeltaTrackPoint, PilotLong, TrackPoint } from "@sr24/types/interface";
-import { SnailIcon } from "lucide-react";
 import { toLonLat } from "ol/proj";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
@@ -68,23 +67,16 @@ export function Replay({ id }: { id: string }) {
 			<ReplayMap />
 			<ReplayPanel pilot={data?.pilot} isLoading={isLoading} trackPoints={trackPoints} index={progress} />
 			{data && (
-				<footer className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2 py-1 px-2 rounded-xl overflow-hidden glass-panel">
-					<ReplayControls
-						progress={progress}
-						setProgress={setProgress}
-						setSpeedIndex={setSpeedIndex}
-						setPlaying={setPlaying}
-						playing={playing}
-						onDownload={() => downloadTrackpointsCSV(trackPoints, `${data.pilot.callsign}_${id}_track.csv`)}
-						max={trackPoints.length - 1}
-					/>
-					<div className="flex items-center justify-center gap-4 text-xs">
-						<div className="flex gap-1">
-							<SnailIcon className="size-4" aria-hidden="true" />
-							<span>{REPLAY_SPEEDS[speedIndex]} x</span>
-						</div>
-					</div>
-				</footer>
+				<ReplayControls
+					progress={progress}
+					setProgress={setProgress}
+					setSpeedIndex={setSpeedIndex}
+					setPlaying={setPlaying}
+					playing={playing}
+					onDownload={() => downloadTrackpointsCSV(trackPoints, `${data.pilot.callsign}_${id}_track.csv`)}
+					speedIndex={speedIndex}
+					max={trackPoints.length - 1}
+				/>
 			)}
 		</div>
 	);

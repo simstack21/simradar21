@@ -15,6 +15,7 @@ import { PilotTelemetry } from "@/components/Panel/Pilot/PilotTelemetry";
 import { PilotUser } from "@/components/Panel/Pilot/PilotUser";
 import { Accordion } from "@/components/ui/accordion";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import { useMinimizedPanelsStore, usePilotPanelStore } from "@/storage/zustand";
 import { mapService } from "../../lib";
 
@@ -60,7 +61,7 @@ export default function ReplayPanel({
 
 	return (
 		<PanelGrid>
-			<div className="max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col">
+			<div className={cn("max-h-full glass-panel rounded-md pointer-events-auto overflow-hidden flex flex-col", isMobile && "mb-18 mt-14")}>
 				<PilotHeader pilot={pilot} onClose={onClose} minimized={minimized} setMinimized={setMinimized} />
 				{!minimized && (
 					<>
