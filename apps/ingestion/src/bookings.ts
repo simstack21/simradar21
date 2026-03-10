@@ -58,8 +58,8 @@ function parseBookings(bookings: VatsimBooking[]): Booking[] {
 			facility,
 			callsign: booking.callsign,
 			type: booking.type,
-			start: booking.start,
-			end: booking.end,
+			start: booking.start.endsWith("Z") ? booking.start : `${booking.start}Z`,
+			end: booking.end.endsWith("Z") ? booking.end : `${booking.end}Z`,
 		};
 		parsed.push(bookingEntry);
 	}

@@ -8,6 +8,8 @@
 ## Improvements and Fixes
 - Fix missing flight service stations (e.g., NAT_FSS)
 - Fix cruise altitude rounding to display exact thousands
+- Fix replay page layout on mobile devices
+- Fix booking page to show correct times
 
 # [0.9.0-beta]
 
