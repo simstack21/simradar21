@@ -1,138 +1,37 @@
-export const PILOT_RATINGS = [
-	{
-		id: 0,
-		short_name: "NEW",
-		long_name: "Basic Member",
-	},
-	{
-		id: 1,
-		short_name: "PPL",
-		long_name: "Private Pilot License",
-	},
-	{
-		id: 3,
-		short_name: "IR",
-		long_name: "Instrument Rating",
-	},
-	{
-		id: 7,
-		short_name: "CMEL",
-		long_name: "Commercial Multi-Engine License",
-	},
-	{
-		id: 15,
-		short_name: "ATPL",
-		long_name: "Airline Transport Pilot License",
-	},
-	{
-		id: 31,
-		short_name: "FI",
-		long_name: "Flight Instructor",
-	},
-	{
-		id: 63,
-		short_name: "FE",
-		long_name: "Flight Examiner",
-	},
-];
+import type { UserRatings } from "@sr24/types/interface";
+import type { VatsimMemberDetails, VatsimMemberHours } from "@sr24/types/vatsim";
+import axios from "axios";
 
-export const MILITARY_RATINGS = [
-	{
-		id: 0,
-		short_name: "M0",
-		long_name: "No Military Rating",
-	},
-	{
-		id: 1,
-		short_name: "M1",
-		long_name: "Military Pilot License",
-	},
-	{
-		id: 3,
-		short_name: "M2",
-		long_name: "Military Instrument Rating",
-	},
-	{
-		id: 7,
-		short_name: "M3",
-		long_name: "Military Multi-Engine Rating",
-	},
-	{
-		id: 15,
-		short_name: "M4",
-		long_name: "Military Mission Ready Pilot",
-	},
-];
+const BATCH_SIZE = 5;
+const BATCH_DELAY_MS = 2000;
 
-export const CONTROLLER_RATINGS = [
-	{
-		id: -1,
-		short_name: "INAC",
-		long_name: "Inactive",
-	},
-	{
-		id: 0,
-		short_name: "SUS",
-		long_name: "Suspended",
-	},
-	{
-		id: 1,
-		short_name: "OBS",
-		long_name: "Observer",
-	},
-	{
-		id: 2,
-		short_name: "S1",
-		long_name: "Tower Trainee",
-	},
-	{
-		id: 3,
-		short_name: "S2",
-		long_name: "Tower Controller",
-	},
-	{
-		id: 4,
-		short_name: "S3",
-		long_name: "Senior Student",
-	},
-	{
-		id: 5,
-		short_name: "C1",
-		long_name: "Enroute Controller",
-	},
-	{
-		id: 6,
-		short_name: "C2",
-		long_name: "Controller 2 (not in use)",
-	},
-	{
-		id: 7,
-		short_name: "C3",
-		long_name: "Senior Controller",
-	},
-	{
-		id: 8,
-		short_name: "I1",
-		long_name: "Instructor",
-	},
-	{
-		id: 9,
-		short_name: "I2",
-		long_name: "Instructor 2 (not in use)",
-	},
-	{
-		id: 10,
-		short_name: "I3",
-		long_name: "Senior Instructor",
-	},
-	{
-		id: 11,
-		short_name: "SUP",
-		long_name: "Supervisor",
-	},
-	{
-		id: 12,
-		short_name: "ADM",
-		long_name: "Administrator",
-	},
-];
+export async function getUserRatings(cids: string[]): Promise<Record<string, UserRatings>> {
+	const ratings: Record<string, UserRatings> = {};
+	for (let i = 0; i < cids.length; i += BATCH_SIZE) {
+		const batch = cids.slice(i, i + BATCH_SIZE);
+		await Promise.all(
+			batch.map(async (cid) => {
+				ratings[cid] = await getUserRatingByCid(cid);
+			}),
+		);
+		if (i + BATCH_SIZE < cids.length) {
+			await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
+		}
+	}
+	return ratings;
+}
+
+async function getUserRatingByCid(cid: string): Promise<UserRatings> {
+	const [hours, details] = await Promise.all([
+		axios.get<VatsimMemberHours>(`https://api.vatsim.net/v2/members/${cid}/stats`).then((res) => res.data),
+		axios.get<VatsimMemberDetails>(`https://api.vatsim.net/v2/members/${cid}`).then((res) => res.data),
+	]);
+
+	return {
+		pilot_rating: details.pilotrating,
+		military_rating: details.militaryrating,
+		controller_rating: details.rating,
+		pilot_hours: hours.pilot,
+		controller_hours: hours.atc,
+	};
+}

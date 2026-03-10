@@ -1,7 +1,6 @@
 import type { ControllerDelta, ControllerLong, ControllerMerged, ControllerShort, PilotLong } from "@sr24/types/interface";
 import type { VatsimData } from "@sr24/types/vatsim";
 import { haversineDistance } from "./utils/helpers.js";
-import { CONTROLLER_RATINGS } from "./utils/ratings.js";
 import { findPrefixMatch, reduceCallsign } from "./utils/sectors.js";
 
 let cached: ControllerMerged[] = [];
@@ -19,11 +18,11 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 				facility: controller.facility,
 				atis: controller.text_atis,
 				connections: 0,
-				cid: controller.cid,
+				cid: String(controller.cid),
 				name: controller.name,
-				rating: CONTROLLER_RATINGS.find((r) => r.id === controller.rating)?.short_name || "INAC",
 				server: controller.server,
 				visual_range: controller.visual_range,
+				user_ratings: null,
 				logon_time: new Date(controller.logon_time).getTime(),
 				timestamp: new Date(controller.last_updated).getTime(),
 			};
@@ -32,6 +31,14 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 
 	getConnectionsCount(vatsimData, controllersLong, pilotsLong);
 
+	// const userRatings = await getUserRatings(controllersLong.filter((c) => c.user_ratings === null).map((c) => c.cid));
+	// for (const controller of controllersLong) {
+	// 	const ratings = userRatings[controller.cid];
+	// 	if (ratings) {
+	// 		controller.user_ratings = ratings;
+	// 	}
+	// }
+
 	vatsimData.atis.forEach((atis) => {
 		controllersLong.push({
 			callsign: atis.callsign,
@@ -39,11 +46,11 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 			facility: -1,
 			atis: atis.text_atis,
 			connections: 0,
-			cid: atis.cid,
+			cid: String(atis.cid),
 			name: atis.name,
-			rating: CONTROLLER_RATINGS.find((r) => r.id === atis.rating)?.short_name || "INAC",
 			server: atis.server,
 			visual_range: atis.visual_range,
+			user_ratings: null,
 			logon_time: new Date(atis.logon_time).getTime(),
 			timestamp: new Date(atis.last_updated).getTime(),
 		});

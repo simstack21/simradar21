@@ -76,14 +76,14 @@ async function pgUpsertPilotsBatch(pilots: PilotLong[]): Promise<void> {
 			continue;
 		}
 
-		const baseIdx = idx * 30;
+		const baseIdx = idx * 29;
 		values.push(`(
 			$${baseIdx + 1}, $${baseIdx + 2}, $${baseIdx + 3}, $${baseIdx + 4}, $${baseIdx + 5},
 			$${baseIdx + 6}, $${baseIdx + 7}, $${baseIdx + 8}, $${baseIdx + 9}, $${baseIdx + 10},
 			$${baseIdx + 11}, $${baseIdx + 12}, $${baseIdx + 13}, $${baseIdx + 14}, $${baseIdx + 15},
 			$${baseIdx + 16}, $${baseIdx + 17}, $${baseIdx + 18}, $${baseIdx + 19}, $${baseIdx + 20},
 			$${baseIdx + 21}, $${baseIdx + 22}, $${baseIdx + 23}, $${baseIdx + 24}, $${baseIdx + 25}, $${baseIdx + 26},
-			$${baseIdx + 27}, $${baseIdx + 28}, $${baseIdx + 29}, $${baseIdx + 30}
+			$${baseIdx + 27}, $${baseIdx + 28}, $${baseIdx + 29}
 		)`);
 
 		params.push(
@@ -102,12 +102,11 @@ async function pgUpsertPilotsBatch(pilots: PilotLong[]): Promise<void> {
 			p.frequency,
 			p.name,
 			p.server,
-			p.pilot_rating,
-			p.military_rating,
 			p.qnh_i_hg,
 			p.qnh_mb,
 			JSON.stringify(p.flight_plan),
 			JSON.stringify(p.times),
+			JSON.stringify(p.user_ratings),
 			JSON.stringify(p.overrides),
 			p.logon_time,
 			p.last_update,
@@ -132,8 +131,8 @@ async function pgUpsertPilotsBatch(pilots: PilotLong[]): Promise<void> {
 			id, cid, callsign, latitude, longitude, altitude_agl,
 			altitude_ms, groundspeed, vertical_speed, heading, aircraft,
 			transponder, frequency,
-			name, server, pilot_rating, military_rating, qnh_i_hg,
-			qnh_mb, flight_plan, times, overrides, logon_time, last_update, live,
+			name, server, qnh_i_hg,
+			qnh_mb, flight_plan, times, user_ratings, overrides, logon_time, last_update, live,
 			sched_off_block, sched_on_block, dep_icao, arr_icao, ac_reg
 		)
 		VALUES ${values.join(",")}
@@ -152,12 +151,11 @@ async function pgUpsertPilotsBatch(pilots: PilotLong[]): Promise<void> {
 			frequency = EXCLUDED.frequency,
 			name = EXCLUDED.name,
 			server = EXCLUDED.server,
-			pilot_rating = EXCLUDED.pilot_rating,
-			military_rating = EXCLUDED.military_rating,
 			qnh_i_hg = EXCLUDED.qnh_i_hg,
 			qnh_mb = EXCLUDED.qnh_mb,
 			flight_plan = EXCLUDED.flight_plan,
 			times = EXCLUDED.times,
+            user_ratings = EXCLUDED.user_ratings,
             overrides = EXCLUDED.overrides,
 			logon_time = EXCLUDED.logon_time,
 			last_update = EXCLUDED.last_update,

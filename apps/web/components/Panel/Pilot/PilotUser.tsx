@@ -1,6 +1,8 @@
 import type { PilotLong } from "@sr24/types/interface";
 import { UserIcon } from "lucide-react";
+import { BadgeControllerRating, BadgePilotRating, BadgeUserHours } from "@/components/shared/Badge";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { getControllerRatingShort, getPilotRatingLong, getPilotRatingShort } from "@/lib/ratings";
 
 export function PilotUser({ pilot }: { pilot: PilotLong }) {
 	return (
@@ -9,6 +11,14 @@ export function PilotUser({ pilot }: { pilot: PilotLong }) {
 				<div className="flex items-center gap-4">
 					<UserIcon className="size-4 shrink-0" />
 					<span>Pilot</span>
+					<div className="flex items-center gap-1">
+						<BadgeUserHours hours={pilot.user_ratings?.pilot_hours || 0} className="no-underline" />
+						<BadgePilotRating rating={pilot.user_ratings?.pilot_rating || 0} text={getPilotRatingShort(pilot.user_ratings?.pilot_rating)} />
+						<BadgeControllerRating
+							rating={pilot.user_ratings?.controller_rating}
+							text={getControllerRatingShort(pilot.user_ratings?.controller_rating)}
+						/>
+					</div>
 				</div>
 			</AccordionTrigger>
 			<AccordionContent className="py-1 grid grid-cols-2 gap-1">
@@ -22,7 +32,7 @@ export function PilotUser({ pilot }: { pilot: PilotLong }) {
 				</div>
 				<div className="flex flex-col">
 					<span className="text-muted-foreground">Pilot Rating</span>
-					<span>{pilot.pilot_rating}</span>
+					<span>{getPilotRatingLong(pilot.user_ratings?.pilot_rating)}</span>
 				</div>
 			</AccordionContent>
 		</AccordionItem>

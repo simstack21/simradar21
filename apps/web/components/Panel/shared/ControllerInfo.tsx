@@ -5,12 +5,14 @@ import type { ControllerLong } from "@sr24/types/interface";
 import { ChartNoAxesCombinedIcon, CheckIcon, CopyIcon, EyeIcon, EyeOffIcon, TowerControlIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { BadgeControllerRating, BadgePilotRating, BadgeUserHours } from "@/components/shared/Badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { getOnlineTime } from "@/lib/helpers";
 import { getControllerColor } from "@/lib/panels";
+import { getControllerRatingLong, getControllerRatingShort, getPilotRatingShort } from "@/lib/ratings";
 
 export default function ControllerInfo({
 	controller,
@@ -45,7 +47,17 @@ export default function ControllerInfo({
 						<span className="leading-none font-mono">{(controller.frequency / 1000).toFixed(3)}</span>
 					</Badge>
 				</CardTitle>
-				<CardDescription>{getControllerName(controller.facility, sector, airport)}</CardDescription>
+				<CardDescription className="flex flex-col gap-1">
+					<span>{getControllerName(controller.facility, sector, airport)}</span>
+					<div className="flex items-center gap-2 -ml-0.5">
+						<BadgeUserHours hours={controller.user_ratings?.controller_hours || 0} className="no-underline" />
+						<BadgeControllerRating
+							rating={controller.user_ratings?.controller_rating}
+							text={getControllerRatingShort(controller.user_ratings?.controller_rating)}
+						/>
+						<BadgePilotRating rating={controller.user_ratings?.pilot_rating || 0} text={getPilotRatingShort(controller.user_ratings?.pilot_rating)} />
+					</div>
+				</CardDescription>
 			</CardHeader>
 			<CardContent className="relative grid grid-cols-2 gap-1">
 				<div className="flex flex-col">
@@ -70,7 +82,7 @@ export default function ControllerInfo({
 				</div>
 				<div className="flex flex-col">
 					<span className="text-muted-foreground">Controller Rating</span>
-					<span>{controller.rating}</span>
+					<span>{getControllerRatingLong(controller.user_ratings?.controller_rating)}</span>
 				</div>
 				{showAtis && (
 					<div className="absolute inset-0 z-10 bg-muted">

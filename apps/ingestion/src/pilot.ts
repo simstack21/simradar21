@@ -5,7 +5,6 @@ import type { PilotDelta, PilotFlightPlan, PilotLong, PilotShort, PilotTimes } f
 import type { VatsimData, VatsimPilot, VatsimPilotFlightPlan, VatsimPrefile } from "@sr24/types/vatsim";
 import { parseRouteString } from "./navigraph.js";
 import { fromLonLat, haversineDistance } from "./utils/helpers.js";
-import { MILITARY_RATINGS, PILOT_RATINGS } from "./utils/ratings.js";
 
 const TAXI_TIME_MS = 5 * 60 * 1000;
 
@@ -51,10 +50,9 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 					...cachedPilot,
 					...updatedFields,
 					server: pilot.server,
-					pilot_rating: PILOT_RATINGS.find((r) => r.id === pilot.pilot_rating)?.short_name || "NEW",
-					military_rating: MILITARY_RATINGS.find((r) => r.id === pilot.military_rating)?.short_name || "M0",
 					flight_plan: await mapPilotFlightPlan(pilot.flight_plan),
 					logon_time: new Date(pilot.logon_time),
+					user_ratings: null,
 					times: null,
 					overrides: cachedPilot.overrides || null,
 					live: "live",
@@ -69,8 +67,7 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 					aircraft: pilot.flight_plan?.aircraft_short || existing?.aircraft || "A320",
 					name: pilot.name,
 					server: pilot.server,
-					pilot_rating: PILOT_RATINGS.find((r) => r.id === pilot.pilot_rating)?.short_name || "NEW",
-					military_rating: MILITARY_RATINGS.find((r) => r.id === pilot.military_rating)?.short_name || "M0",
+					user_ratings: null,
 					flight_plan: existing?.flight_plan || (await mapPilotFlightPlan(pilot.flight_plan)),
 					logon_time: new Date(pilot.logon_time),
 					times: existing?.times || null,
@@ -123,12 +120,11 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 				frequency: 122800,
 				name: prefile.name,
 				server: "N/A",
-				pilot_rating: "NEW",
-				military_rating: "M0",
 				qnh_i_hg: 29.92,
 				qnh_mb: 1013,
 				flight_plan: await mapPilotFlightPlan(prefile.flight_plan),
 				times: null,
+				user_ratings: null,
 				overrides: null,
 				logon_time: new Date(prefile.last_updated),
 				last_update: new Date(prefile.last_updated),
@@ -150,6 +146,14 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 			newPilotsLong.push(p);
 		}
 	}
+
+	// const userRatings = await getUserRatings(newPilotsLong.filter((p) => p.user_ratings === null).map((p) => p.cid));
+	// for (const pilot of newPilotsLong) {
+	// 	const ratings = userRatings[pilot.cid];
+	// 	if (ratings) {
+	// 		pilot.user_ratings = ratings;
+	// 	}
+	// }
 
 	await rdsSetMultiple(newPilotsLong, "pilot", (p) => p.id, 12 * 60 * 60);
 

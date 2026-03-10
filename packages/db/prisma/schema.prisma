@@ -14,31 +14,30 @@ enum PilotLiveStatus {
 }
 
 model Pilot {
-    id              String          @id @db.Char(16)
-    cid             String
-    callsign        String
-    latitude        Float
-    longitude       Float
-    altitude_agl    Int
-    altitude_ms     Int
-    groundspeed     Int
-    vertical_speed  Int
-    heading         Int
-    aircraft        String
-    transponder     String          @db.Char(4)
-    frequency       Int
-    name            String
-    server          String
-    pilot_rating    String
-    military_rating String
-    qnh_i_hg        Float
-    qnh_mb          Float
-    flight_plan     Json?
-    times           Json?
-    overrides       Json?
-    logon_time      DateTime
-    last_update     DateTime        @default(now())
-    live            PilotLiveStatus @default(off)
+    id             String          @id @db.Char(16)
+    cid            String
+    callsign       String
+    latitude       Float
+    longitude      Float
+    altitude_agl   Int
+    altitude_ms    Int
+    groundspeed    Int
+    vertical_speed Int
+    heading        Int
+    aircraft       String
+    transponder    String          @db.Char(4)
+    frequency      Int
+    name           String
+    server         String
+    qnh_i_hg       Float
+    qnh_mb         Float
+    flight_plan    Json?
+    times          Json?
+    user_ratings   Json?
+    overrides      Json?
+    logon_time     DateTime
+    last_update    DateTime        @default(now())
+    live           PilotLiveStatus @default(off)
 
     sched_off_block DateTime?
     sched_on_block  DateTime?

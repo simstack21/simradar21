@@ -1,6 +1,8 @@
-import { StarIcon, XIcon } from "lucide-react";
+import { ClockIcon, PlaneIcon, StarIcon, TowerControlIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { getControllerRatingColor, getPilotRatingColor } from "@/lib/ratings";
+import { cn } from "@/lib/utils";
 
 const FEATURE_HELP_STORAGE_KEY = "simradar21-feature-help-seen";
 
@@ -81,6 +83,33 @@ export const BadgePilotStatus = ({ status, className }: { status: "live" | "off"
 	return (
 		<Badge variant="outline" className={`${COLOR_MAP[status]} ${className || ""}`}>
 			{status.toUpperCase()}
+		</Badge>
+	);
+};
+
+export const BadgeUserHours = ({ hours, className }: { hours: number | undefined; className?: string }) => {
+	return (
+		<Badge variant="outline" className={cn("flex items-center", className)}>
+			<ClockIcon aria-hidden="true" />
+			<span className="leading-none">{hours}h</span>
+		</Badge>
+	);
+};
+
+export const BadgePilotRating = ({ rating, text, className }: { rating: number | undefined; text: string; className?: string }) => {
+	return (
+		<Badge variant="default" className={cn(getPilotRatingColor(rating), className)}>
+			<PlaneIcon aria-hidden="true" />
+			<span className="leading-none">{text}</span>
+		</Badge>
+	);
+};
+
+export const BadgeControllerRating = ({ rating, text, className }: { rating: number | undefined; text: string; className?: string }) => {
+	return (
+		<Badge variant="default" className={cn(getControllerRatingColor(rating), className)}>
+			<TowerControlIcon aria-hidden="true" />
+			<span className="leading-none">{text}</span>
 		</Badge>
 	);
 };

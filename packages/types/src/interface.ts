@@ -62,12 +62,11 @@ export interface PilotLong {
 	frequency: number;
 	name: string;
 	server: string;
-	pilot_rating: string;
-	military_rating: string;
 	qnh_i_hg: number;
 	qnh_mb: number;
 	flight_plan: PilotFlightPlan | null;
 	times: PilotTimes | null;
+	user_ratings: UserRatings | null;
 	logon_time: Date;
 	last_update: Date;
 	live: "pre" | "live" | "off";
@@ -130,6 +129,14 @@ interface PilotAirport {
 	longitude?: number;
 }
 
+export interface UserRatings {
+	pilot_rating: number;
+	military_rating: number;
+	controller_rating: number;
+	pilot_hours: number;
+	controller_hours: number;
+}
+
 export type PilotOverrides = {
 	modifiedRoute?: PilotParsedRoute;
 	diversionAirport?: string;
@@ -150,14 +157,14 @@ export interface ControllerShort {
 }
 
 export interface ControllerLong {
-	cid: number;
+	cid: string;
 	callsign: string;
 	name: string;
 	frequency: number;
 	facility: number;
 	atis: string[] | null;
 	connections: number;
-	rating: string;
+	user_ratings: UserRatings | null;
 	server: string;
 	visual_range: number;
 	logon_time: number;
