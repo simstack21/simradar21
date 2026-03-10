@@ -1,5 +1,6 @@
 import type { StaticAirline } from "@sr24/types/db";
 import { useSession } from "next-auth/react";
+import UserIcon from "@/assets/images/icons/user.jpeg";
 import FlagSprite from "@/assets/images/sprites/flagSprite42.png";
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "../ui/avatar";
 
@@ -8,7 +9,7 @@ export const AvatarUser = ({ withBadge }: { withBadge?: boolean }) => {
 
 	return (
 		<Avatar size="sm">
-			<AvatarImage src="https://github.com/shadcn.png" alt="@you" />
+			<AvatarImage src={UserIcon.src} alt="@you" />
 			<AvatarFallback>U</AvatarFallback>
 			{withBadge && <AvatarBadge className={`${session?.vatsim ? "bg-green" : "bg-red"}`} />}
 		</Avatar>
