@@ -33,6 +33,7 @@ type ListItem = {
 	property: string;
 	href?: string;
 	description?: string;
+	matchPaths?: string[];
 };
 
 function stripUserName(name: string): string {
@@ -125,6 +126,7 @@ const navListItems: ListItem[] = [
 		property: "Map",
 		description: "Main Map",
 		href: "/",
+		matchPaths: ["/", "/pilot", "/sector", "/airport", "/multi"],
 	},
 	{
 		icon: DatabaseIcon,
@@ -199,7 +201,10 @@ const DropdownMenuItemFromList = ({ item }: { item: ListItem }) => {
 	const pathname = usePathname();
 
 	return (
-		<DropdownMenuItem disabled={item.href === pathname} className="group">
+		<DropdownMenuItem
+			disabled={!!item.href && (item.matchPaths ?? [item.href]).some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)))}
+			className="group"
+		>
 			<a
 				href={item.href}
 				className="flex items-center space-x-2"
