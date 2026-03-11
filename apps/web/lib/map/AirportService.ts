@@ -52,6 +52,7 @@ export class AirportService {
 		this.rbush.clear();
 		this.source.clear();
 		this.map.clear();
+		this.rendered.clear();
 
 		const items: RBushFeature[] = airports.map((a) => {
 			const feature = new Feature({
