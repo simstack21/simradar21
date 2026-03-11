@@ -13,6 +13,7 @@
 - Fix booking page to show correct times
 - Fix/stop map interactions when hovering over an overlay
 - Fix disappearing airport icons on bookings page
+- Fix world-wrapping coordinates for flight tracks and Navigraph routes
 
 # [0.9.0-beta]
 

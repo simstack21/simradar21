@@ -1,4 +1,5 @@
 import type { DeltaTrackPoint, TrackPoint } from "@sr24/types/interface";
+import type { Coordinate } from "ol/coordinate";
 import Stroke from "ol/style/Stroke";
 
 export function getStroke(start: TrackPoint, end: TrackPoint): Stroke {
@@ -94,4 +95,12 @@ export function decodeTrackPoints(masked: (TrackPoint | DeltaTrackPoint)[] | und
 	}
 
 	return result;
+}
+
+const WORLD_WIDTH = 40075016.68;
+export function unwrapCoord(prev: Coordinate, next: Coordinate): [number, number] {
+	const dx = next[0] - prev[0];
+	if (dx > WORLD_WIDTH / 2) return [next[0] - WORLD_WIDTH, next[1]];
+	if (dx < -WORLD_WIDTH / 2) return [next[0] + WORLD_WIDTH, next[1]];
+	return [next[0], next[1]];
 }

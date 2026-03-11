@@ -7,7 +7,7 @@ import VectorSource from "ol/source/Vector";
 import Stroke from "ol/style/Stroke";
 import Style from "ol/style/Style";
 import type { PilotProperties } from "@/types/ol";
-import { getStroke, getTrackPointColor } from "./tracks";
+import { getStroke, getTrackPointColor, unwrapCoord } from "./tracks";
 
 type TrackCache = {
 	lastIndex: number;
@@ -43,13 +43,18 @@ export class TrackService {
 			lastIndex: 0,
 		};
 		const features: Feature<LineString>[] = [];
+		let unwrappedCoord = trackPoints[0].coordinates;
 
 		for (trackCache.lastIndex = 0; trackCache.lastIndex < trackPoints.length - 1; trackCache.lastIndex++) {
 			const start = trackPoints[trackCache.lastIndex];
 			const end = trackPoints[trackCache.lastIndex + 1];
 
+			const unwrappedStart = unwrappedCoord;
+			const unwrappedEnd = unwrapCoord(unwrappedStart, end.coordinates);
+			unwrappedCoord = unwrappedEnd;
+
 			const trackFeature = new Feature({
-				geometry: new LineString([start.coordinates, end.coordinates]),
+				geometry: new LineString([unwrappedStart, unwrappedEnd]),
 				type: "track",
 			});
 			const stroke = getStroke(start, end);
@@ -63,7 +68,7 @@ export class TrackService {
 			features.push(trackFeature);
 
 			if (trackCache.lastIndex === trackPoints.length - 2) {
-				trackCache.lastCoords = end.coordinates;
+				trackCache.lastCoords = unwrappedEnd;
 				trackCache.animatedTrackFeature = trackFeature;
 				trackCache.lastStroke = stroke;
 			}
@@ -81,6 +86,8 @@ export class TrackService {
 		const lastCoords = trackCache.lastCoords;
 		if (!coordinates || !lastCoords) return;
 
+		const unwrappedCoords = unwrapCoord(lastCoords, coordinates);
+
 		if (trackCache.animatedTrackFeature) {
 			const geom = trackCache.animatedTrackFeature.getGeometry() as LineString;
 			const coords = geom.getCoordinates();
@@ -92,7 +99,7 @@ export class TrackService {
 		const props: PilotProperties | undefined = feature?.get("properties");
 
 		const trackFeature = new Feature({
-			geometry: new LineString([lastCoords, coordinates]),
+			geometry: new LineString([lastCoords, unwrappedCoords]),
 			type: "track",
 		});
 		const stroke = props?.altitude_ms
@@ -108,7 +115,7 @@ export class TrackService {
 
 		this.source.addFeature(trackFeature);
 
-		trackCache.lastCoords = coordinates || lastCoords;
+		trackCache.lastCoords = unwrappedCoords;
 		trackCache.lastStroke = stroke;
 		trackCache.lastAltitudeAgl = props?.altitude_agl;
 		trackCache.animatedTrackFeature = trackFeature;
@@ -130,7 +137,7 @@ export class TrackService {
 
 		const geom = trackCache.animatedTrackFeature.getGeometry() as LineString;
 		const coords = geom.getCoordinates();
-		coords[1] = pilotCoords;
+		coords[1] = unwrapCoord(coords[0], pilotCoords);
 		geom.setCoordinates(coords);
 		trackCache.animatedTrackFeature.setGeometry(geom);
 	}

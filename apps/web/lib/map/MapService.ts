@@ -143,7 +143,7 @@ export class MapService {
 				maxZoom: 18,
 				minZoom: 3,
 				rotation,
-				extent: transformExtent([-190, -80, 190, 80], "EPSG:4326", "EPSG:3857"),
+				extent: transformExtent([-250, -80, 250, 80], "EPSG:4326", "EPSG:3857"),
 			}),
 			controls: [],
 		});

@@ -9,6 +9,7 @@ import RBush from "rbush";
 import { dxGetAllAirports, dxGetNavigraphAirports, dxGetNavigraphWaypoints } from "@/storage/dexie";
 import { getApproachPoints, getLonLatPoint, getSidPoints, getStarPoints } from "./navigraph";
 import { getNavigraphGateStyle, getNavigraphRoutePointStyle, getNavigraphRouteTrackStyle, type NavigraphStyleVars } from "./styles/navigraph";
+import { unwrapCoord } from "./tracks";
 
 type RBushAirport = {
 	minX: number;
@@ -192,6 +193,8 @@ export class NavigraphService {
 			this.routePointSource.addFeatures(pointFeatures);
 
 			const trackFeatures: Feature<LineString>[] = [];
+			let unwrappedRouteCoord: [number, number] | null = null;
+
 			for (let i = 0; i < route.waypoints.length - 1; i++) {
 				let start = waypoints.find((w) => w?.uid === route.waypoints[i].uid);
 				if (!start) {
@@ -203,8 +206,12 @@ export class NavigraphService {
 				}
 				if (!start || !end) continue;
 
+				const startCoord = unwrappedRouteCoord ?? (fromLonLat([start.longitude, start.latitude]) as [number, number]);
+				const endCoord = unwrapCoord(startCoord, fromLonLat([end.longitude, end.latitude]));
+				unwrappedRouteCoord = endCoord;
+
 				const trackFeature = new Feature({
-					geometry: new LineString([fromLonLat([start.longitude, start.latitude]), fromLonLat([end.longitude, end.latitude])]),
+					geometry: new LineString([startCoord, endCoord]),
 					type: "navigraph_route_track",
 				});
 				const airway = route.waypoints[i].airwayUid || route.waypoints[i + 1].airwayUid;
@@ -259,13 +266,19 @@ export class NavigraphService {
 
 		const label = proc.rwyCon?.split(":")[1] || proc.proc?.split(":")[1] || proc.trans?.split(":")[1] || type.toUpperCase();
 		const trackFeatures: Feature<LineString>[] = [];
+		let unwrappedProcCoord: [number, number] | null = null;
+
 		for (let i = 0; i < waypoints.length - 1; i++) {
 			const start = waypoints[i];
 			const end = waypoints[i + 1];
 			if (!start || !end) continue;
 
+			const startCoord = unwrappedProcCoord ?? (fromLonLat([start.longitude, start.latitude]) as [number, number]);
+			const endCoord = unwrapCoord(startCoord, fromLonLat([end.longitude, end.latitude]));
+			unwrappedProcCoord = endCoord;
+
 			const trackFeature = new Feature({
-				geometry: new LineString([fromLonLat([start.longitude, start.latitude]), fromLonLat([end.longitude, end.latitude])]),
+				geometry: new LineString([startCoord, endCoord]),
 				type,
 			});
 			trackFeature.set("label", label);
