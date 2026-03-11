@@ -6,10 +6,12 @@
 - Some pilot markers might not be updated correctly after longer idle sessions. A potential fix has been introduced. If the bug persist, simply reload the page for a temporary fix.
 
 ## Improvements and Fixes
+- **Major**: Fix missing pilots after long idle sessions
 - Fix missing flight service stations (e.g., NAT_FSS)
 - Fix cruise altitude rounding to display exact thousands
 - Fix replay page layout on mobile devices
 - Fix booking page to show correct times
+- Fix/stop map interactions when hovering over an overlay
 
 # [0.9.0-beta]
 

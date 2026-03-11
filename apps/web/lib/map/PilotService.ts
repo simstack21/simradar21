@@ -220,6 +220,10 @@ export class PilotService {
 				this.rbush.insert(item);
 			}
 
+			if (p.altitude_agl !== undefined) {
+				item.altitude_agl = p.altitude_agl;
+			}
+
 			this.map.set(p.id, item);
 		}
 
