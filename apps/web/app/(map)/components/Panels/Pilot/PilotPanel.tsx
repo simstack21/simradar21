@@ -131,11 +131,11 @@ export default function PilotPanel({ id }: { id: string }) {
 					{tab === "overview" ? (
 						<ScrollArea className="max-h-full overflow-hidden flex flex-col">
 							<Accordion multiple={!isMobile} className="rounded-none border-none" value={panel} onValueChange={setPanel}>
-								<PilotFlightplan pilot={pilotData} />
 								<PilotAircraft pilot={pilotData} />
+								<PilotUser pilot={pilotData} />
+								<PilotFlightplan pilot={pilotData} />
 								<PilotChart trackPoints={trackPoints} />
 								<PilotTelemetry pilot={pilotData} />
-								<PilotUser pilot={pilotData} />
 								<PilotMisc pilot={pilotData} />
 							</Accordion>
 							<ScrollBar />

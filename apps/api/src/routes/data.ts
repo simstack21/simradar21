@@ -1,8 +1,10 @@
 import { rdsGetSingle } from "@sr24/db/redis";
+import type { StaticAircraft } from "@sr24/types/db";
 import type { FastifyPluginAsync } from "fastify";
 import { ensureUser, getFlightsByCallsign, getFlightsByRegistration, getPilotReplay } from "../services/db.js";
 import { getNavigraphPackage } from "../services/navigraph.js";
 import { bookingsStore } from "../stores/bookings.js";
+import { getCachedImgs } from "../stores/planespotters.js";
 import { getDataVersions } from "../stores/static.js";
 
 const dataRoutes: FastifyPluginAsync = async (app) => {
@@ -96,10 +98,15 @@ const dataRoutes: FastifyPluginAsync = async (app) => {
 		},
 		async (request) => {
 			const { reg } = request.params as { reg: string };
-			const aircraft = await rdsGetSingle(`static_fleet:${reg.toUpperCase()}`);
+			const aircraft = (await rdsGetSingle(`static_fleet:${reg.toUpperCase()}`)) as StaticAircraft | undefined;
 			if (!aircraft) {
 				throw app.httpErrors.notFound({ error: "Aircraft not found" });
 			}
+			if (!aircraft.registration) return aircraft;
+
+			const cachedImgs = await getCachedImgs(aircraft.registration);
+			aircraft.imgs = cachedImgs;
+
 			return aircraft;
 		},
 	);

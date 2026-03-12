@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
 				protocol: "https",
 				hostname: "cdn.shadcnstudio.com",
 			},
+			{
+				protocol: "https",
+				hostname: "t.plnspttrs.net",
+			},
 		],
 	},
 };

@@ -68,11 +68,11 @@ export default function ReplayPanel({
 						<PilotRoute pilot={pilot} trackPoint={trackPoints[index]} />
 						<ScrollArea className="max-h-full overflow-hidden flex flex-col">
 							<Accordion multiple={!isMobile} className="rounded-none border-none" value={panel} onValueChange={setPanel}>
-								<PilotFlightplan pilot={pilot} />
 								<PilotAircraft pilot={pilot} />
+								<PilotUser pilot={pilot} />
+								<PilotFlightplan pilot={pilot} />
 								<PilotChart trackPoints={trackPoints} />
 								<PilotTelemetry pilot={pilot} trackPoint={trackPoints[index]} />
-								<PilotUser pilot={pilot} />
 								<PilotMisc pilot={pilot} trackPoint={trackPoints[index]} />
 							</Accordion>
 							<ScrollBar />

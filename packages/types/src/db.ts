@@ -78,6 +78,35 @@ export interface StaticAirline {
 	color?: string[];
 }
 
+type PlanespottersThumbnail = {
+	src: string;
+	size: {
+		width: number;
+		height: number;
+	};
+};
+
+type PlanespottersPhoto = {
+	id: string;
+	thumbnail?: PlanespottersThumbnail;
+	thumbnail_large?: PlanespottersThumbnail;
+	link: string;
+	photographer: string;
+};
+
+export type PlaneSpottersPhotos = {
+	photos: PlanespottersPhoto[];
+};
+
+export type StaticAircraftImg = {
+	id: string;
+	imgUrl: string;
+	width: number;
+	height: number;
+	photographer: string;
+	link: string;
+};
+
 export interface StaticAircraft {
 	icao24: string;
 	built: string;
@@ -89,6 +118,7 @@ export interface StaticAircraft {
 	serialNumber: string;
 	typecode: string;
 	country: string;
+	imgs?: StaticAircraftImg[];
 }
 
 export interface StaticAircraftType {
