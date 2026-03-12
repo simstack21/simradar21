@@ -92,7 +92,7 @@ async function pgUpsertPilotsBatch(pilots: PilotLong[]): Promise<void> {
 			p.callsign,
 			p.latitude,
 			p.longitude,
-			p.altitude_agl,
+			p.altitude_agl || p.altitude_ms || 0,
 			p.altitude_ms,
 			p.groundspeed,
 			p.vertical_speed,

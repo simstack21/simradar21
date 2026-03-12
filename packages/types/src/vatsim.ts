@@ -117,8 +117,8 @@ interface VatsimTransceiver {
 	frequency: number;
 	latDeg: number;
 	lonDeg: number;
-	heightMslM: number;
-	heightAglM: number;
+	heightMslM: number | null;
+	heightAglM: number | null;
 }
 
 export interface VatsimEventData {
