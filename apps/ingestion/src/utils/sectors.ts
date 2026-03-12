@@ -63,12 +63,19 @@ export function reduceCallsign(callsign: string): string[] {
 
 export function findPrefixMatch(levels: string[], facility: number): string | null {
 	const lookup = facility === 6 ? firPrefixes : traconPrefixes;
+	const callsign = levels[0];
 
-	for (const lvl of levels) {
-		const match = lookup.get(lvl);
-		if (match) return match;
+	let bestMatch: string | null = null;
+	let bestLen = 0;
+
+	for (const [prefix, id] of lookup) {
+		if (callsign.startsWith(prefix) && prefix.length > bestLen) {
+			bestMatch = id;
+			bestLen = prefix.length;
+		}
 	}
-	return null;
+
+	return bestMatch;
 }
 
 export function parseAirportFacility(callsign: string): number {
