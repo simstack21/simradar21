@@ -51,7 +51,7 @@ export async function ensureSectorPrefixes(): Promise<void> {
 }
 
 export function reduceCallsign(callsign: string): string[] {
-	const parts = callsign.split("_");
+	const parts = callsign.split(/__|_/);
 	const levels: string[] = [];
 
 	for (let i = parts.length; i > 0; i--) {

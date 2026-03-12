@@ -9,7 +9,7 @@
 ## Improvements and Fixes
 - **Major**: Fix missing pilots after long idle sessions
 - **Major**: Fix temporary live feed disconnects (caused by data processing bug)
-- Fix missing flight service stations (e.g., NAT_FSS)
+- Fix missing ATC sectors (e.g., NAT_FSS, LECM-R1, LECP)
 - Fix cruise altitude rounding to display exact thousands
 - Fix replay page layout on mobile devices
 - Fix booking page to show correct times
