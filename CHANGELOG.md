@@ -16,6 +16,8 @@
 - Fix disappearing airport icons on bookings page
 - Fix world-wrapping coordinates for flight tracks and Navigraph routes
 
+- Improve live feed revalidation logic
+
 # [0.9.0-beta]
 
 ## Known Issues

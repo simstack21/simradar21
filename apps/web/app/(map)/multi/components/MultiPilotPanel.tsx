@@ -10,7 +10,7 @@ import PilotRoute, { PilotProgress } from "@/components/Panel/Pilot/PilotRoute";
 import { PilotTelemetry } from "@/components/Panel/Pilot/PilotTelemetry";
 import { fetchApi } from "@/lib/api";
 import { decodeTrackPoints } from "@/lib/map/tracks";
-import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
+import { type WsMessage, wsClient } from "@/lib/ws";
 import { useMinimizedPanelsStore } from "@/storage/zustand";
 import { mapService } from "../../lib";
 
@@ -44,7 +44,7 @@ export default function MultiPilotPanel({ id, removeSelected }: { id: string; re
 	}, [pilotData]);
 
 	useEffect(() => {
-		const handleMessage = (msg: WsData | WsPresence) => {
+		const handleMessage = (msg: WsMessage) => {
 			if (msg.t === "delta") {
 				if (lastMessageSeqRef.current && msg.s !== (lastMessageSeqRef.current + 1) % Number.MAX_SAFE_INTEGER) {
 					console.warn(`Missed WS messages: last seq ${lastMessageSeqRef.current}, current seq ${msg.s}. Refetching trackpoints.`);

@@ -22,7 +22,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchApi } from "@/lib/api";
 import { decodeTrackPoints } from "@/lib/map/tracks";
-import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
+import { type WsMessage, wsClient } from "@/lib/ws";
 import { useMinimizedPanelsStore, usePilotPanelStore } from "@/storage/zustand";
 import PilotProcedures from "./PilotProcedures";
 
@@ -62,7 +62,7 @@ export default function PilotPanel({ id }: { id: string }) {
 	}, [pilotData]);
 
 	useEffect(() => {
-		const handleMessage = (msg: WsData | WsPresence) => {
+		const handleMessage = (msg: WsMessage) => {
 			if (msg.t === "delta") {
 				if (lastMessageSeq && msg.s !== (lastMessageSeq + 1) % Number.MAX_SAFE_INTEGER) {
 					console.warn(`Missed WS messages: last seq ${lastMessageSeq}, current seq ${msg.s}. Refetching trackpoints.`);

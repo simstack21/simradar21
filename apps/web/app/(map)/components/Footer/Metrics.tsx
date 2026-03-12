@@ -2,37 +2,36 @@
 
 import { UsersIcon, WifiIcon, WifiOffIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
+import { type WsMessage, wsClient } from "@/lib/ws";
 
 function getTimestamp(date: Date | string): string {
 	return new Date(date).toISOString().split("T")[1].split(".")[0];
 }
 
 export default function Metrics() {
-	const [timestamp, setTimestamp] = useState<string>("");
+	const [timestamp, setTimestamp] = useState<string | null>(null);
 	const [metrics, setMetrics] = useState<number | null>(null);
-	const [stale, setStale] = useState<boolean>(false);
+	const [status, setStatus] = useState<boolean | null>(null);
 
 	useEffect(() => {
-		setTimestamp(getTimestamp(new Date()));
-
-		let timeoutId: NodeJS.Timeout;
-		const handleMessage = (msg: WsData | WsPresence) => {
+		const handleMessage = (msg: WsMessage) => {
+			if (msg.t === "status") {
+				setStatus(msg.status);
+				return;
+			}
 			if (msg.t === "presence") {
 				setMetrics(msg.c);
 				return;
 			}
+			if (msg.t !== "delta") return;
 
 			setTimestamp(getTimestamp(msg.data.timestamp));
 			setMetrics(msg.c);
-			setStale(false);
-
-			clearTimeout(timeoutId);
-			timeoutId = setTimeout(() => {
-				setStale(true);
-			}, 60_000);
 		};
 		wsClient.addListener(handleMessage);
+
+		setTimestamp(getTimestamp(new Date()));
+		setStatus(true);
 
 		return () => {
 			wsClient.removeListener(handleMessage);
@@ -45,10 +44,18 @@ export default function Metrics() {
 				<UsersIcon className="size-4" aria-hidden="true" />
 				<span>{metrics || "..."}</span>
 			</div>
-			<div className="flex gap-1.5">
-				{stale ? <WifiOffIcon className="size-4 text-red" aria-hidden="true" /> : <WifiIcon className="size-4 text-primary" aria-hidden="true" />}
-				{timestamp} z
-			</div>
+			{status === true && (
+				<div className="flex gap-0.5">
+					<WifiIcon className="size-4 text-primary" aria-hidden="true" />
+					<span className="px-1 rounded">{timestamp ?? "..."}z</span>
+				</div>
+			)}
+			{status === false && (
+				<div className="flex gap-0.5">
+					<WifiOffIcon className="size-4 text-destructive" aria-hidden="true" />
+					<span className="text-destructive bg-destructive/20 animate-pulse px-1 rounded">{timestamp ?? "..."}z</span>
+				</div>
+			)}
 		</>
 	);
 }

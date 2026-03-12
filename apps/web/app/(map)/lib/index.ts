@@ -3,14 +3,12 @@
 import type { InitialData } from "@sr24/types/interface";
 import { fetchApi } from "@/lib/api";
 import { MapService } from "@/lib/map/MapService";
-import { type WsData, type WsPresence, wsClient } from "@/lib/ws";
+import { type WsMessage, wsClient } from "@/lib/ws";
 import { dxGetAllAirports } from "@/storage/dexie";
 
 export const mapService = new MapService();
 
 let initialized = false;
-let lastMessageSeq: number | null = null;
-let revalidating = false;
 
 export async function init(pathname: string): Promise<void> {
 	if (initialized) {
@@ -25,45 +23,24 @@ export async function init(pathname: string): Promise<void> {
 	mapService.setStore({ airports: data.airports, controllers: data.controllers });
 	await mapService.setFeatures({ pilots: data.pilots, airports: staticAirports, controllers: data.controllers });
 
-	const handleMessage = async (msg: WsData | WsPresence) => {
-		if (msg.t === "delta") {
-			// Capture and update seq before any await so concurrent handlers
-			// don't all see the same stale lastMessageSeq and trigger false gaps.
-			const prevSeq = lastMessageSeq;
-			lastMessageSeq = msg.s;
+	const handleMessage = async (msg: WsMessage) => {
+		if (msg.t !== "delta") return;
 
-			if (prevSeq !== null && msg.s !== (prevSeq + 1) % Number.MAX_SAFE_INTEGER) {
-				// Skip if a revalidation is already in flight — the in-progress
-				// setFeatures will land with a fresh snapshot, and the next delta
-				// after it completes will correctly sync any remaining differences.
-				if (revalidating) return;
-
-				console.warn(`Missed WS messages: last seq ${prevSeq}, current seq ${msg.s}. Refetching full data.`);
-				revalidating = true;
-				try {
-					const data = await fetchApi<InitialData>("/map/init");
-					mapService.setStore({ airports: data.airports, controllers: data.controllers });
-					await mapService.revalidateFeatures({ pilots: data.pilots, controllers: data.controllers });
-				} finally {
-					revalidating = false;
-				}
-			} else {
-				// While a revalidation is in flight, skip delta updates. Applying
-				// them against the stale pre-revalidation map and then having
-				// setFeatures clear it causes pilots added here to end up in
-				// `updated` (not `added`) on future deltas, making them invisible.
-				if (revalidating) return;
-
-				mapService.updateStore({ airports: msg.data.airports, controllers: msg.data.controllers });
-				await mapService.updateFeatures({ pilots: msg.data.pilots, controllers: msg.data.controllers });
-			}
-		}
+		mapService.updateStore({ airports: msg.data.airports, controllers: msg.data.controllers });
+		await mapService.updateFeatures({ pilots: msg.data.pilots, controllers: msg.data.controllers });
 	};
 	wsClient.addListener(handleMessage);
 
 	mapService.setView({ multi: pathname.startsWith("/multi") });
 	setClickedFromPath(pathname);
 	initialized = true;
+}
+
+wsClient.setRevalidateFunction(revalidate);
+async function revalidate(): Promise<void> {
+	const data = await fetchApi<InitialData>("/map/init");
+	mapService.setStore({ airports: data.airports, controllers: data.controllers });
+	await mapService.setFeatures({ pilots: data.pilots, controllers: data.controllers });
 }
 
 function setClickedFromPath(pathname: string): void {

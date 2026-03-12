@@ -6,19 +6,26 @@ const WS_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "ws://localhost:3002";
 const RECONNECT_DELAY = 1000;
 const MAX_RECONNECT_DELAY = 30000;
 const MAX_RECONNECT_ATTEMPTS = 10;
+const STALE_THRESHOLD_MS = 45_000;
 
-export type WsPresence = {
+export type WsMessage = WsData | WsPresence | WsStatus;
+
+type WsPresence = {
 	t: "presence";
 	c: number;
 };
-export type WsData = {
+type WsData = {
 	t: "delta";
 	s: number;
 	c: number;
 	data: WsDelta;
 };
+type WsStatus = {
+	t: "status";
+	status: boolean;
+};
 
-type Listener = (msg: WsData | WsPresence) => void;
+type Listener = (msg: WsData | WsPresence | WsStatus) => void;
 
 interface WsClientConfig {
 	autoReconnect?: boolean;
@@ -32,9 +39,14 @@ class WsClient {
 	private reconnectAttempts = 0;
 	private reconnectTimeout: NodeJS.Timeout | null = null;
 	private heartbeatTimeout: NodeJS.Timeout | null = null;
-	private messageBuffer: (WsData | WsPresence)[] = [];
+	private messageBuffer: (WsData | WsPresence | WsStatus)[] = [];
 	private config: Required<WsClientConfig>;
 	private isConnecting = false;
+
+	private revalidateFn: (() => Promise<void>) | null = null;
+	private revalidating = false;
+	private lastSeq: number | null = null;
+	private lastDeltaTime = 0;
 
 	constructor(config: WsClientConfig = {}) {
 		this.config = {
@@ -47,13 +59,56 @@ class WsClient {
 
 		if (typeof document !== "undefined") {
 			document.addEventListener("visibilitychange", () => {
-				if (document.visibilityState === "visible" && !this.isConnected() && !this.isConnecting) {
+				if (document.visibilityState !== "visible") return;
+
+				if (!this.isConnected() && !this.isConnecting) {
 					console.log("Page became visible, reconnecting WebSocket...");
 					this.reconnectAttempts = 0;
 					this.connect();
+				} else if (this.isConnected() && Date.now() - this.lastDeltaTime > STALE_THRESHOLD_MS) {
+					console.log("Tab returned after >45s without delta, refetching snapshot...");
+					this.broadcastStatus(false);
+					this.revalidate();
 				}
 			});
 		}
+	}
+
+	public setRevalidateFunction(fn: () => Promise<void>): void {
+		this.revalidateFn = fn;
+	}
+
+	private async revalidate(): Promise<void> {
+		if (this.revalidating) return;
+		this.revalidating = true;
+
+		try {
+			if (this.revalidateFn) {
+				await this.revalidateFn();
+			}
+
+			this.lastSeq = null;
+			this.lastDeltaTime = Date.now();
+			this.broadcastStatus(true);
+		} catch (err) {
+			console.error("Failed to fetch snapshot:", err);
+		} finally {
+			this.revalidating = false;
+		}
+	}
+
+	private broadcastStatus(status: boolean): void {
+		this.broadcastToListeners({ t: "status", status });
+	}
+
+	private broadcastToListeners(msg: WsData | WsPresence | WsStatus): void {
+		this.listeners.forEach((listener) => {
+			try {
+				listener(msg);
+			} catch (err) {
+				console.error("Error in listener:", err);
+			}
+		});
 	}
 
 	private connect(): void {
@@ -89,6 +144,14 @@ class WsClient {
 		this.reconnectAttempts = 0;
 		this.startHeartbeat();
 		this.flushMessageBuffer();
+
+		if (this.lastDeltaTime === 0) {
+			// No delta ever received — wait for first incoming delta to set status true
+		} else if (Date.now() - this.lastDeltaTime > STALE_THRESHOLD_MS) {
+			this.revalidate();
+		} else {
+			this.broadcastStatus(true);
+		}
 	}
 
 	private handleError(err: Event): void {
@@ -100,6 +163,7 @@ class WsClient {
 		console.log("WebSocket disconnected");
 		this.isConnecting = false;
 		this.stopHeartbeat();
+		this.broadcastStatus(false);
 		if (this.config.autoReconnect) {
 			this.scheduleReconnect();
 		}
@@ -109,17 +173,25 @@ class WsClient {
 		try {
 			const buffer = new Uint8Array(event.data);
 			const decompressed = inflate(buffer, { to: "string", raw: true });
-
 			const msg: WsData | WsPresence = JSON.parse(decompressed);
 
-			this.listeners.forEach((listener) => {
-				try {
-					listener(msg);
-				} catch (err) {
-					console.error("Error in listener:", err);
-				}
-			});
+			if (msg.t === "delta") {
+				if (this.revalidating) return;
 
+				this.lastDeltaTime = Date.now();
+				const prevSeq = this.lastSeq;
+				this.lastSeq = msg.s;
+
+				if (prevSeq !== null && msg.s !== (prevSeq + 1) % Number.MAX_SAFE_INTEGER) {
+					console.warn(`Missed WS seq: ${prevSeq} → ${msg.s}. Refetching snapshot.`);
+					this.revalidate();
+					return;
+				}
+
+				this.broadcastStatus(true);
+			}
+
+			this.broadcastToListeners(msg);
 			this.resetHeartbeatTimeout();
 		} catch (err) {
 			console.error("Failed to parse/decompress message:", err);
@@ -159,10 +231,11 @@ class WsClient {
 		this.heartbeatTimeout = setTimeout(() => {
 			if (this.isConnected()) {
 				console.warn("⚠️  No messages received in 60 seconds, reconnecting...");
+				this.broadcastStatus(false);
 				this.disconnect();
 				this.scheduleReconnect();
 			}
-		}, 60000);
+		}, STALE_THRESHOLD_MS);
 	}
 
 	private stopHeartbeat(): void {
