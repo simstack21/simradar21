@@ -88,10 +88,23 @@ export const BadgePilotStatus = ({ status, className }: { status: "live" | "off"
 };
 
 export const BadgeUserHours = ({ hours, className }: { hours: number | undefined; className?: string }) => {
+	const ratio = hours ? Math.round((hours / 3000) * 100) : 0;
+	const capped = Math.min(100, ratio);
+
 	return (
-		<Badge variant="outline" className={cn("flex items-center", className)}>
+		<Badge
+			variant="default"
+			className={cn("flex items-center text-white border-muted", className)}
+			style={{
+				background: `linear-gradient(
+      to right,
+      var(--red) ${capped}%,
+      transparent ${capped}%
+    )`,
+			}}
+		>
 			<ClockIcon aria-hidden="true" />
-			<span className="leading-none">{hours}h</span>
+			<span className="leading-none">{hours?.toLocaleString()}h</span>
 		</Badge>
 	);
 };

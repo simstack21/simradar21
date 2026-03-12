@@ -2,8 +2,8 @@
 
 # [0.9.1-beta]
 
-## Known Issues
-- Some pilot markers might not be updated correctly after longer idle sessions. A potential fix has been introduced. If the bug persist, simply reload the page for a temporary fix.
+## New Features
+- Display users' hours and ratings at a glance
 
 ## Improvements and Fixes
 - **Major**: Fix missing pilots after long idle sessions

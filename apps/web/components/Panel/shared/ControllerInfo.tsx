@@ -49,14 +49,19 @@ export default function ControllerInfo({
 				</CardTitle>
 				<CardDescription className="flex flex-col gap-1">
 					<span>{getControllerName(controller.facility, sector, airport)}</span>
-					<div className="flex items-center gap-2 -ml-0.5">
-						<BadgeUserHours hours={controller.user_ratings?.controller_hours || 0} className="no-underline" />
-						<BadgeControllerRating
-							rating={controller.user_ratings?.controller_rating}
-							text={getControllerRatingShort(controller.user_ratings?.controller_rating)}
-						/>
-						<BadgePilotRating rating={controller.user_ratings?.pilot_rating || 0} text={getPilotRatingShort(controller.user_ratings?.pilot_rating)} />
-					</div>
+					{controller.facility !== -1 && (
+						<div className="flex items-center gap-2 -ml-0.5">
+							<BadgeUserHours hours={controller.user_ratings?.controller_hours || 0} className="no-underline" />
+							<BadgeControllerRating
+								rating={controller.user_ratings?.controller_rating}
+								text={getControllerRatingShort(controller.user_ratings?.controller_rating)}
+							/>
+							<BadgePilotRating
+								rating={controller.user_ratings?.pilot_rating || 0}
+								text={getPilotRatingShort(controller.user_ratings?.pilot_rating)}
+							/>
+						</div>
+					)}
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="relative grid grid-cols-2 gap-1">

@@ -7,18 +7,20 @@ import { getControllerRatingShort, getPilotRatingLong, getPilotRatingShort } fro
 export function PilotUser({ pilot }: { pilot: PilotLong }) {
 	return (
 		<AccordionItem value="user" className="overflow-hidden flex flex-col">
-			<AccordionTrigger className="items-center data-panel-open:bg-muted">
+			<AccordionTrigger className="items-center data-panel-open:bg-muted hover:no-underline group">
 				<div className="flex items-center gap-4">
 					<UserIcon className="size-4 shrink-0" />
-					<span>Pilot</span>
-					<div className="flex items-center gap-1">
-						<BadgeUserHours hours={pilot.user_ratings?.pilot_hours || 0} className="no-underline" />
-						<BadgePilotRating rating={pilot.user_ratings?.pilot_rating || 0} text={getPilotRatingShort(pilot.user_ratings?.pilot_rating)} />
-						<BadgeControllerRating
-							rating={pilot.user_ratings?.controller_rating}
-							text={getControllerRatingShort(pilot.user_ratings?.controller_rating)}
-						/>
-					</div>
+					<span className="group-hover:underline">Pilot</span>
+					<span className="inline-block">
+						<div className="flex items-center gap-1">
+							<BadgeUserHours hours={pilot.user_ratings?.pilot_hours || 0} />
+							<BadgePilotRating rating={pilot.user_ratings?.pilot_rating || 0} text={getPilotRatingShort(pilot.user_ratings?.pilot_rating)} />
+							<BadgeControllerRating
+								rating={pilot.user_ratings?.controller_rating}
+								text={getControllerRatingShort(pilot.user_ratings?.controller_rating)}
+							/>
+						</div>
+					</span>
 				</div>
 			</AccordionTrigger>
 			<AccordionContent className="py-1 grid grid-cols-2 gap-1">

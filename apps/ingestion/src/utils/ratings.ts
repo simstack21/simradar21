@@ -1,23 +1,52 @@
 import type { UserRatings } from "@sr24/types/interface";
 import type { VatsimMemberDetails, VatsimMemberHours } from "@sr24/types/vatsim";
 import axios from "axios";
+import pLimit from "p-limit";
 
-const BATCH_SIZE = 5;
-const BATCH_DELAY_MS = 2000;
+const limit = pLimit(20);
+const TIMEOUT_MS = 60_000;
+const MAX_CONSECUTIVE_TIMEOUTS = 3;
+const COOLDOWN_MS = 10 * 60_000;
 
-export async function getUserRatings(cids: string[]): Promise<Record<string, UserRatings>> {
-	const ratings: Record<string, UserRatings> = {};
-	for (let i = 0; i < cids.length; i += BATCH_SIZE) {
-		const batch = cids.slice(i, i + BATCH_SIZE);
-		await Promise.all(
-			batch.map(async (cid) => {
-				ratings[cid] = await getUserRatingByCid(cid);
+let consecutiveTimeouts = 0;
+let coolingDownUntil = 0;
+
+export async function getUserRatings(cids: string[]): Promise<Map<string, UserRatings>> {
+	if (Date.now() < coolingDownUntil) {
+		console.warn("Skipping members fetch. Timed out multiple times.");
+		return new Map();
+	}
+
+	const ratings: Map<string, UserRatings> = new Map();
+
+	const work = Promise.all(
+		cids.map((cid) =>
+			limit(async () => {
+				try {
+					ratings.set(cid, await getUserRatingByCid(cid));
+				} catch {
+					// console.warn(`Failed to fetch ratings for ${cid}:`, err instanceof Error ? err.message : err);
+				}
 			}),
-		);
-		if (i + BATCH_SIZE < cids.length) {
-			await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
+		),
+	);
+
+	const timeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error(`getUserRatings timed out after ${TIMEOUT_MS}ms`)), TIMEOUT_MS));
+
+	try {
+		await Promise.race([work, timeout]);
+		consecutiveTimeouts = 0;
+	} catch {
+		consecutiveTimeouts++;
+		console.warn("Members fetch timed out.");
+
+		if (consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS) {
+			coolingDownUntil = Date.now() + COOLDOWN_MS;
+			consecutiveTimeouts = 0;
+			console.warn("Too many timeouts — pausing members fetches for 10 minutes.");
 		}
 	}
+
 	return ratings;
 }
 
@@ -31,7 +60,7 @@ async function getUserRatingByCid(cid: string): Promise<UserRatings> {
 		pilot_rating: details.pilotrating,
 		military_rating: details.militaryrating,
 		controller_rating: details.rating,
-		pilot_hours: hours.pilot,
-		controller_hours: hours.atc,
+		pilot_hours: Math.round(hours.pilot),
+		controller_hours: Math.round(hours.atc),
 	};
 }

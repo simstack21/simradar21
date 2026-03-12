@@ -13,6 +13,9 @@ import { getPilotDelta, getPilotShort, mapPilots } from "./pilot.js";
 import { mapTrackPoints } from "./tracks.js";
 import { ensureSectorPrefixes } from "./utils/sectors.js";
 
+axios.defaults.headers.common["x-identifier"] = process.env.VATSIM_API_IDENTIFIER || "simradar21-unknown";
+axios.defaults.headers.common["User-Agent"] = "simradar21/1.0";
+
 const VATSIM_DATA_URL = "https://data.vatsim.net/v3/vatsim-data.json";
 const VATSIM_TRANSCEIVERS_URL = "https://data.vatsim.net/v3/transceivers-data.json";
 const FETCH_INTERVAL = 5_000;

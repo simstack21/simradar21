@@ -5,6 +5,7 @@ import type { PilotDelta, PilotFlightPlan, PilotLong, PilotShort, PilotTimes } f
 import type { VatsimData, VatsimPilot, VatsimPilotFlightPlan, VatsimPrefile } from "@sr24/types/vatsim";
 import { parseRouteString } from "./navigraph.js";
 import { fromLonLat, haversineDistance } from "./utils/helpers.js";
+import { getUserRatings } from "./utils/ratings.js";
 
 const TAXI_TIME_MS = 5 * 60 * 1000;
 
@@ -52,8 +53,8 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 					server: pilot.server,
 					flight_plan: await mapPilotFlightPlan(pilot.flight_plan),
 					logon_time: new Date(pilot.logon_time),
-					user_ratings: null,
 					times: null,
+					user_ratings: cachedPilot.user_ratings || null,
 					overrides: cachedPilot.overrides || null,
 					live: "live",
 				};
@@ -67,10 +68,10 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 					aircraft: pilot.flight_plan?.aircraft_short || existing?.aircraft || "A320",
 					name: pilot.name,
 					server: pilot.server,
-					user_ratings: null,
 					flight_plan: existing?.flight_plan || (await mapPilotFlightPlan(pilot.flight_plan)),
 					logon_time: new Date(pilot.logon_time),
 					times: existing?.times || null,
+					user_ratings: existing?.user_ratings || null,
 					live: "live",
 					overrides: existing?.overrides || null,
 					...updatedFields,
@@ -147,13 +148,14 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 		}
 	}
 
-	// const userRatings = await getUserRatings(newPilotsLong.filter((p) => p.user_ratings === null).map((p) => p.cid));
-	// for (const pilot of newPilotsLong) {
-	// 	const ratings = userRatings[pilot.cid];
-	// 	if (ratings) {
-	// 		pilot.user_ratings = ratings;
-	// 	}
-	// }
+	const uniqueCids = Array.from(new Set(newPilotsLong.filter((p) => p.user_ratings === null).map((p) => p.cid)));
+	const userRatings = await getUserRatings(uniqueCids);
+	for (const pilot of newPilotsLong) {
+		const ratings = userRatings.get(pilot.cid);
+		if (ratings) {
+			pilot.user_ratings = ratings;
+		}
+	}
 
 	await rdsSetMultiple(newPilotsLong, "pilot", (p) => p.id, 12 * 60 * 60);
 
