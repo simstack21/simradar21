@@ -49,12 +49,36 @@ export class AirportService {
 	}
 
 	public setFeatures(airports: StaticAirport[]): void {
+		const tempFeatures = new Map<string, Feature<Point>>();
+		for (const id of [...this.focused, ...this.highlighted]) {
+			const feature = this.map.get(id);
+			if (feature) {
+				tempFeatures.set(id, feature);
+			}
+		}
+
 		this.rbush.clear();
 		this.source.clear();
 		this.map.clear();
 		this.rendered.clear();
 
-		const items: RBushFeature[] = airports.map((a) => {
+		const items: RBushFeature[] = [];
+
+		for (const a of airports) {
+			const tempFeature = tempFeatures.get(a.id);
+			if (tempFeature) {
+				this.map.set(a.id, tempFeature);
+				items.push({
+					minX: a.longitude,
+					minY: a.latitude,
+					maxX: a.longitude,
+					maxY: a.latitude,
+					size: getAirportSize(a.size),
+					feature: tempFeature,
+				});
+				continue;
+			}
+
 			const feature = new Feature({
 				geometry: new Point(fromLonLat([a.longitude, a.latitude])),
 			});
@@ -69,15 +93,16 @@ export class AirportService {
 
 			this.map.set(a.id, feature);
 
-			return {
+			items.push({
 				minX: a.longitude,
 				minY: a.latitude,
 				maxX: a.longitude,
 				maxY: a.latitude,
 				size: getAirportSize(a.size),
 				feature: feature,
-			};
-		});
+			});
+		}
+
 		this.rbush.load(items);
 	}
 

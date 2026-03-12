@@ -147,6 +147,14 @@ export class PilotService {
 	}
 
 	public setFeatures(pilots: PilotShort[]) {
+		const tempItems = new Map<string, RBushFeature>();
+		for (const id of [...this.focused, ...this.highlighted]) {
+			const item = this.map.get(id);
+			if (item?.feature) {
+				tempItems.set(id, item);
+			}
+		}
+
 		this.rbush.clear();
 		this.map.clear();
 		this.source.clear();
@@ -155,7 +163,12 @@ export class PilotService {
 
 		for (const p of pilots) {
 			if (!p.coordinates) continue;
-			if (p.id === "kpve109naTzQZ5nn") console.log(p);
+
+			const tempItem = tempItems.get(p.id);
+			if (tempItem) {
+				this.updateItem(p, tempItem);
+				continue;
+			}
 
 			const { vx, vy } = this.calculateVelocities(p);
 
@@ -199,32 +212,7 @@ export class PilotService {
 
 			if (Object.keys(p).length === 1) continue;
 
-			for (const k in p) {
-				item.feature.set(k, p[k as keyof typeof p], true);
-			}
-
-			if (p.groundspeed && p.heading) {
-				const { vx, vy } = this.calculateVelocities(p);
-				item.feature.set("vx", vx, true);
-				item.feature.set("vy", vy, true);
-			}
-
-			if (p.coordinates) {
-				const geom = item.feature.getGeometry();
-				geom?.setCoordinates(p.coordinates);
-
-				item.feature.set("coord3857", p.coordinates, true);
-				this.rbush.remove(item);
-				item.minX = item.maxX = p.coordinates[0];
-				item.minY = item.maxY = p.coordinates[1];
-				this.rbush.insert(item);
-			}
-
-			if (p.altitude_agl !== undefined) {
-				item.altitude_agl = p.altitude_agl;
-			}
-
-			this.map.set(p.id, item);
+			this.updateItem(p, item);
 		}
 
 		for (const p of delta.added) {
@@ -286,6 +274,35 @@ export class PilotService {
 		}
 
 		return removedIds;
+	}
+
+	private updateItem(p: PilotShort, item: RBushFeature): void {
+		for (const k in p) {
+			item.feature.set(k, p[k as keyof typeof p], true);
+		}
+
+		if (p.groundspeed && p.heading) {
+			const { vx, vy } = this.calculateVelocities(p);
+			item.feature.set("vx", vx, true);
+			item.feature.set("vy", vy, true);
+		}
+
+		if (p.coordinates) {
+			const geom = item.feature.getGeometry();
+			geom?.setCoordinates(p.coordinates);
+
+			item.feature.set("coord3857", p.coordinates, true);
+			this.rbush.remove(item);
+			item.minX = item.maxX = p.coordinates[0];
+			item.minY = item.maxY = p.coordinates[1];
+			this.rbush.insert(item);
+		}
+
+		if (p.altitude_agl !== undefined) {
+			item.altitude_agl = p.altitude_agl;
+		}
+
+		this.map.set(p.id, item);
 	}
 
 	private calculateVelocities(pilot: PilotShort): { vx: number; vy: number } {

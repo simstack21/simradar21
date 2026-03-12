@@ -111,6 +111,21 @@ export class ControllerService {
 	}
 
 	public async setFeatures(controllers: ControllerMerged[]) {
+		const tempLabels = new Map<string, Feature<Point>>();
+		const tempSectors = new Map<string, Feature<MultiPolygon | Polygon>>();
+		for (const id of this.highlighted) {
+			const labelId = id.replace(/^(tracon_|fir_|airport_)/, "sector_");
+			const labelFeature = this.labelSource.getFeatureById(labelId) as Feature<Point> | undefined;
+			if (labelFeature) {
+				tempLabels.set(id, labelFeature);
+			}
+
+			const sectorFeature = this.traconSource.getFeatureById(labelId) || this.firSource.getFeatureById(labelId);
+			if (sectorFeature) {
+				tempSectors.set(id, sectorFeature as Feature<MultiPolygon | Polygon>);
+			}
+		}
+
 		this.set.clear();
 		this.firSource.clear();
 		this.traconSource.clear();
@@ -118,7 +133,7 @@ export class ControllerService {
 		this.labelSource.clear();
 
 		const traconFeatures: Feature<MultiPolygon | Polygon>[] = [];
-		const firFeatures: Feature<MultiPolygon>[] = [];
+		const firFeatures: Feature<MultiPolygon | Polygon>[] = [];
 		const labelFeatures: Feature<Point>[] = [];
 		const airportFeatures: Feature<Point>[] = [];
 
@@ -126,13 +141,20 @@ export class ControllerService {
 			controllers.map(async (c) => {
 				const id = stripPrefix(c.id);
 				this.set.add(c.id);
+				const tempLabel = tempLabels.get(c.id);
+				const tempSector = tempSectors.get(c.id);
 
 				if (c.facility === "tracon") {
 					const { tracon, label } = await createTraconFeature(id);
-					if (tracon) {
+					if (tempSector) {
+						traconFeatures.push(tempSector);
+					} else if (tracon) {
 						traconFeatures.push(tracon);
 					}
-					if (label) {
+
+					if (tempLabel) {
+						labelFeatures.push(tempLabel);
+					} else if (label) {
 						labelFeatures.push(label);
 					}
 
@@ -141,10 +163,15 @@ export class ControllerService {
 
 				if (c.facility === "fir") {
 					const { fir, label } = await createFirFeature(id);
-					if (fir) {
+					if (tempSector) {
+						firFeatures.push(tempSector);
+					} else if (fir) {
 						firFeatures.push(fir);
 					}
-					if (label) {
+
+					if (tempLabel) {
+						labelFeatures.push(tempLabel);
+					} else if (label) {
 						labelFeatures.push(label);
 					}
 
