@@ -137,30 +137,31 @@ export interface NavigraphPackage {
 }
 
 export interface VatglassesSector {
-	points: [number, number][];
+	points: [string, string][];
 	min?: number;
 	max?: number;
-	runways?: { icao: string; runway: string[] }[];
+	runways?: { icao: string; runway: string | string[] }[];
 }
 
 export interface VatglassesAirspaceEntry {
 	id: string;
 	group: string;
-	owner: string[];
+	owner?: string[];
 	sectors: VatglassesSector[];
 }
 
 export interface VatglassesPosition {
-	pre: string[];
+	pre?: string | string[];
 	type: string;
-	frequency: string;
+	frequency?: string;
 	callsign?: string;
-	colour?: string;
+	colours?: { hex: string; online?: string | string[] }[];
 }
 
 export interface VatglassesGroup {
 	name: string;
-	colour: string;
+	colour?: string;
+	color?: string;
 }
 
 export interface VatglassesDataset {

@@ -128,8 +128,6 @@ async function dxInitDatabases(setStatus?: StatusSetter): Promise<void> {
 		});
 	}
 
-	console.log(latestManifest.vatglassesVersion);
-
 	if (latestManifest.vatglassesVersion !== storedManifest?.versions.vatglassesVersion) {
 		fetchApi<VatglassesDataset[]>(`${R2_BUCKET_URL}/vatglasses_${latestManifest.vatglassesVersion}.json`, {
 			cache: "no-store",
