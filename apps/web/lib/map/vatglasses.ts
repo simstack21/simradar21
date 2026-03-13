@@ -11,7 +11,7 @@ function toArray<T>(val: T | T[] | undefined): T[] {
 }
 
 export async function getVatglassesSectors(merged: ControllerMerged): Promise<{ sectors: VatglassesSector[]; color: string | null } | null> {
-	const code = merged.id.replace("fir_", "").slice(0, 2).toLowerCase();
+	const code = merged.id.replace(/^[^_]+_/, "").slice(0, 2).toLowerCase();
 	const dataset = await dxGetVatglassesDatasetByCode(code);
 	if (!dataset) return null;
 
