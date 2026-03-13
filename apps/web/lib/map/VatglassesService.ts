@@ -5,7 +5,7 @@ import type { MultiPolygon, Polygon } from "ol/geom";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { getVatglassesStyle } from "./styles/vatglasses";
-import { getVatglassesMultipolygon, getVatglassesSectors } from "./vatglasses";
+import { buildActivePositions, getVatglassesMultipolygon, getVatglassesSectors } from "./vatglasses";
 
 type CachedSector = {
 	sectors: VatglassesSector[];
@@ -51,6 +51,9 @@ export class VatglassesService {
 		if (this.vatglassesEnabled !== true) return;
 		const features: Feature<MultiPolygon | Polygon>[] = [];
 
+		const activePositions = await buildActivePositions(controllers);
+		this.cachedSectors.clear();
+
 		await Promise.all(
 			controllers.map(async (merged) => {
 				const cached = this.cachedSectors.get(merged.id);
@@ -61,13 +64,14 @@ export class VatglassesService {
 					sectors = cached.sectors;
 					color = cached.color;
 				} else {
-					const result = await getVatglassesSectors(merged);
+					const result = await getVatglassesSectors(merged, activePositions);
 					if (!result) return;
 
 					sectors = result.sectors;
 					color = result.color;
 					this.cachedSectors.set(merged.id, { sectors, color });
 				}
+
 				const multipolygon = getVatglassesMultipolygon(sectors, this.altitude);
 				const feature = new Feature(multipolygon);
 				feature.set("color", color);

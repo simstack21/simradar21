@@ -10,12 +10,50 @@ function toArray<T>(val: T | T[] | undefined): T[] {
 	return Array.isArray(val) ? val : [val];
 }
 
-export async function getVatglassesSectors(merged: ControllerMerged): Promise<{ sectors: VatglassesSector[]; color: string | null } | null> {
-	const code = merged.id.replace(/^[^_]+_/, "").slice(0, 2).toLowerCase();
+function getCode(mergedId: string): string {
+	return mergedId
+		.replace(/^[^_]+_/, "")
+		.slice(0, 2)
+		.toLowerCase();
+}
+
+export async function buildActivePositions(controllers: ControllerMerged[]): Promise<Map<string, Set<string>>> {
+	const result = new Map<string, Set<string>>();
+
+	for (const merged of controllers) {
+		const code = getCode(merged.id);
+		const dataset = await dxGetVatglassesDatasetByCode(code);
+		if (!dataset) continue;
+
+		const posEntries = Object.entries(dataset.positions);
+		for (const c of merged.controllers) {
+			for (const [posId, pos] of posEntries) {
+				if (pos.frequency && parseFloat(pos.frequency) * 1000 !== c.frequency) continue;
+				if (!c.callsign.endsWith(pos.type)) continue;
+
+				const pre = toArray(pos.pre);
+				if (!pre.some((prefix) => c.callsign.startsWith(prefix))) continue;
+				if (!result.has(code)) result.set(code, new Set());
+				result.get(code)?.add(posId);
+
+				break;
+			}
+		}
+	}
+
+	return result;
+}
+
+export async function getVatglassesSectors(
+	merged: ControllerMerged,
+	activePositions: Map<string, Set<string>>,
+): Promise<{ sectors: VatglassesSector[]; color: string | null } | null> {
+	const code = getCode(merged.id);
 	const dataset = await dxGetVatglassesDatasetByCode(code);
 	if (!dataset) return null;
 
 	const posEntries = Object.entries(dataset.positions);
+	const activeForCode = activePositions.get(code) ?? new Set<string>();
 	const sectors: VatglassesSector[] = [];
 	let color: string | null = null;
 
@@ -29,11 +67,16 @@ export async function getVatglassesSectors(merged: ControllerMerged): Promise<{ 
 
 			if (!color) {
 				const colours = pos.colours?.filter((x) => x.hex) ?? [];
-				color = colours.find((x) => !toArray(x.online).length)?.hex ?? colours[0]?.hex ?? null;
+				color =
+					colours.find((x) => {
+						const online = toArray(x.online);
+						return !online.length || online.every((id) => activeForCode.has(id));
+					})?.hex ?? null;
 			}
 
 			for (const as of dataset.airspace) {
-				if (as.owner?.includes(posId)) {
+				const firstActiveOwner = as.owner?.find((o) => activeForCode.has(o));
+				if (firstActiveOwner === posId) {
 					sectors.push(...getActiveSectors(as.sectors));
 				}
 			}
