@@ -24,6 +24,7 @@ export async function updateFirs(): Promise<void> {
 		if (!vatSpyDat) return;
 
 		const firs = extractVatSpyDat(vatSpyDat);
+		storePrefixes(firs);
 
 		const boundsResponse = await axios.get(firBoundJsonUrl, {
 			responseType: "json",
@@ -101,4 +102,12 @@ function extractVatSpyDat(vatSpyDat: string): VatSpyDat[] {
 	}
 
 	return firs;
+}
+
+async function storePrefixes(firs: VatSpyDat[]): Promise<void> {
+	const prefixes: Record<string, string> = {};
+	for (const fir of firs) {
+		prefixes[fir.callsign_prefix || fir.fir_bound] = fir.fir_bound;
+	}
+	await rdsSetSingle("static_firs:prefixes", prefixes);
 }

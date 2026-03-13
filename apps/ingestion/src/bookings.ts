@@ -2,7 +2,7 @@ import { rdsPub } from "@sr24/db/redis";
 import type { Booking } from "@sr24/types/interface";
 import type { VatsimBooking } from "@sr24/types/vatsim";
 import axios from "axios";
-import { findPrefixMatch, parseAirportFacility, reduceCallsign } from "./utils/sectors.js";
+import { findFirId, findTraconId, parseAirportFacility, reduceCallsign } from "./utils/sectors.js";
 
 const UPDATE_INTERVAL = 10 * 60 * 1000;
 let lastUpdate = 0;
@@ -41,13 +41,13 @@ function parseBookings(bookings: VatsimBooking[]): Booking[] {
 			id = levels[levels.length - 1];
 			facility = parseAirportFacility(callsign);
 		} else if (callsign.endsWith("_APP") || callsign.endsWith("_DEP")) {
-			id = findPrefixMatch(levels, 5);
+			id = findTraconId(callsign);
 			if (!id) {
 				id = levels[levels.length - 1];
 			}
 			facility = 5;
 		} else {
-			id = findPrefixMatch(levels, 6);
+			id = findFirId(callsign);
 			facility = 6;
 		}
 

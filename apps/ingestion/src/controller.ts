@@ -2,7 +2,7 @@ import type { ControllerDelta, ControllerLong, ControllerMerged, ControllerShort
 import type { VatsimData } from "@sr24/types/vatsim";
 import { haversineDistance } from "./utils/helpers.js";
 import { getUserRatings } from "./utils/ratings.js";
-import { findPrefixMatch, reduceCallsign } from "./utils/sectors.js";
+import { findFirId, findTraconId, reduceCallsign } from "./utils/sectors.js";
 
 let cachedLongs: ControllerLong[] = [];
 let cached: ControllerMerged[] = [];
@@ -196,11 +196,11 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 
 		if (c.facility === 6 || c.facility === 1) {
 			// FIR
-			id = findPrefixMatch(levels, 6);
+			id = findFirId(c.callsign);
 			facility = "fir";
 		} else if (c.facility === 5) {
 			// TRACON
-			id = findPrefixMatch(levels, 5);
+			id = findTraconId(c.callsign);
 			// Fallback for circle tracon controllers
 			if (!id) {
 				id = levels[levels.length - 1];

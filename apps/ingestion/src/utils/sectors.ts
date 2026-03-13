@@ -1,30 +1,20 @@
 import { rdsGetSingle } from "@sr24/db/redis";
-import type { FIRFeature, SimAwareTraconFeature } from "@sr24/types/db";
+import type { SimAwareTraconFeature } from "@sr24/types/db";
 
 let currentFirsVersion: string | null = null;
 let currentTraconsVersion: string | null = null;
 
-const firPrefixes: Map<string, string> = new Map();
-const traconPrefixes: Map<string, string> = new Map();
+let firPrefixes: Record<string, string> = {};
+const traconPrefixes = new Map<string, string>();
 
 export async function ensureSectorPrefixes(): Promise<void> {
 	const firsVersion = await rdsGetSingle("static_firs:version");
 	const traconsVersion = await rdsGetSingle("static_tracons:version");
 
 	if (currentFirsVersion !== firsVersion) {
-		const features = (await rdsGetSingle("static_firs:all")) as FIRFeature[] | undefined;
-		if (features) {
-			firPrefixes.clear();
-			features.forEach((f) => {
-				const prefix = f.properties.callsign_prefix;
-				const id = f.properties.id;
-				if (prefix === "") {
-					firPrefixes.set(id, id);
-				} else {
-					firPrefixes.set(prefix, id);
-				}
-			});
-
+		const prefixes = (await rdsGetSingle("static_firs:prefixes")) as Record<string, string> | undefined;
+		if (prefixes) {
+			firPrefixes = prefixes;
 			currentFirsVersion = firsVersion;
 		}
 	}
@@ -61,16 +51,27 @@ export function reduceCallsign(callsign: string): string[] {
 	return levels;
 }
 
-export function findPrefixMatch(levels: string[], facility: number): string | null {
-	const lookup = facility === 6 ? firPrefixes : traconPrefixes;
-	const callsign = levels[0];
-
+export function findTraconId(callsign: string): string | null {
 	let bestMatch: string | null = null;
 	let bestLen = 0;
 
-	for (const [prefix, id] of lookup) {
+	for (const [prefix, id] of traconPrefixes) {
 		if (callsign.startsWith(prefix) && prefix.length > bestLen) {
 			bestMatch = id;
+			bestLen = prefix.length;
+		}
+	}
+
+	return bestMatch;
+}
+
+export function findFirId(callsign: string): string | null {
+	let bestMatch: string | null = null;
+	let bestLen = 0;
+
+	for (const prefix in firPrefixes) {
+		if (callsign.startsWith(prefix) && prefix.length > bestLen) {
+			bestMatch = firPrefixes[prefix];
 			bestLen = prefix.length;
 		}
 	}
