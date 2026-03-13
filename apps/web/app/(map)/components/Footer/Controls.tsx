@@ -108,7 +108,9 @@ const SliderVatglasses = () => {
 				step={5}
 				className="w-full"
 			/>
-			<span className="text-xs font-mono leading-none">{vatglassesAltitude === 0 ? "AUTO" : `FL${String(vatglassesAltitude).padStart(3, "0")}`}</span>
+			<span className="text-xs font-mono leading-none shrink-0">
+				{vatglassesAltitude === 0 ? "AUTO (FLXXX)" : `FL${String(vatglassesAltitude).padStart(3, "0")}`}
+			</span>
 		</div>
 	);
 };
