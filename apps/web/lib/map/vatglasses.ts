@@ -1,4 +1,4 @@
-import type { VatglassesDataset, VatglassesSector } from "@sr24/types/db";
+import type { VatglassesDataset, VatglassesDynamicOwnership, VatglassesSector } from "@sr24/types/db";
 import type { ControllerMerged } from "@sr24/types/interface";
 import type { Coordinate } from "ol/coordinate";
 import { MultiPolygon } from "ol/geom";
@@ -49,11 +49,16 @@ function parseDms(dms: string): number {
 	return Math.round((neg ? -decimal : decimal) * 10000) / 10000;
 }
 
+// cover dynamic airspaces having numeric points
+function toDecimal(v: string | number): number {
+	return typeof v === "number" ? v : parseDms(v);
+}
+
 function convertSector(sector: VatglassesSector): ConvertedSector {
 	return {
 		min: sector.min ?? 0,
 		max: sector.max ?? Infinity,
-		points: sector.points.map(([lat, lon]) => fromLonLat([parseDms(lon), parseDms(lat)])),
+		points: sector.points.map(([lat, lon]) => fromLonLat([toDecimal(lon), toDecimal(lat)])),
 	};
 }
 
@@ -89,6 +94,7 @@ export async function buildActivePositions(controllers: ControllerMerged[]): Pro
 export async function getVatglassesSectors(
 	merged: ControllerMerged,
 	activePositions: Map<string, Set<string>>,
+	dynamicOwnership: VatglassesDynamicOwnership | null,
 ): Promise<{ sectors: ConvertedSector[]; color: string | null } | null> {
 	const code = getCode(merged.id);
 	const dataset = await getDataset(code);
@@ -96,6 +102,7 @@ export async function getVatglassesSectors(
 
 	const posEntries = Object.entries(dataset.positions);
 	const activeForCode = activePositions.get(code) ?? new Set<string>();
+	const dynamicForCode = dynamicOwnership?.[code]?.airspace ?? null;
 	const rawSectors: VatglassesSector[] = [];
 	let color: string | null = null;
 
@@ -118,7 +125,9 @@ export async function getVatglassesSectors(
 			}
 
 			for (const as of dataset.airspace) {
-				const firstActiveOwner = as.owner?.find((o) => activeForCode.has(o));
+				// check fpr dynamic, otherwise use static
+				const owner = (as.key ? dynamicForCode?.[as.key] : undefined) ?? as.owner;
+				const firstActiveOwner = owner?.find((o) => activeForCode.has(o));
 				if (firstActiveOwner === posId) {
 					rawSectors.push(...as.sectors.filter((s) => !s.runways));
 				}

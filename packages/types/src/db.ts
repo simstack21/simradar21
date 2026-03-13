@@ -137,18 +137,21 @@ export interface NavigraphPackage {
 }
 
 export interface VatglassesSector {
-	points: [string, string][];
+	points: [string | number, string | number][];
 	min?: number;
 	max?: number;
 	runways?: { icao: string; runway: string | string[] }[];
 }
 
 export interface VatglassesAirspaceEntry {
+	key?: string;
 	id: string;
 	group: string;
 	owner?: string[];
 	sectors: VatglassesSector[];
 }
+
+export type VatglassesDynamicOwnership = Record<string, { airspace: Record<string, string[]> }>;
 
 export interface VatglassesPosition {
 	pre?: string | string[];

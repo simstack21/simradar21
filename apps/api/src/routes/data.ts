@@ -6,6 +6,7 @@ import { getNavigraphPackage } from "../services/navigraph.js";
 import { bookingsStore } from "../stores/bookings.js";
 import { getCachedImgs } from "../stores/planespotters.js";
 import { getDataVersions } from "../stores/static.js";
+import { getVatglassesDynamicOwnership } from "../stores/vatglasses.js";
 
 const dataRoutes: FastifyPluginAsync = async (app) => {
 	app.get("/static/versions", async () => {
@@ -110,6 +111,10 @@ const dataRoutes: FastifyPluginAsync = async (app) => {
 			return aircraft;
 		},
 	);
+
+	app.get("/vatglasses/dynamic", async () => {
+		return getVatglassesDynamicOwnership();
+	});
 
 	app.get("/bookings", async () => {
 		return bookingsStore.bookings;

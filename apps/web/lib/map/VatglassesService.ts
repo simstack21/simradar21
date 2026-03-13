@@ -1,3 +1,4 @@
+import type { VatglassesDynamicOwnership } from "@sr24/types/db";
 import type { ControllerMerged } from "@sr24/types/interface";
 import { Feature } from "ol";
 import type { MultiPolygon, Polygon } from "ol/geom";
@@ -5,6 +6,7 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { getVatglassesStyle } from "./styles/vatglasses";
 import { buildActivePositions, type ConvertedSector, getVatglassesMultipolygon, getVatglassesSectors } from "./vatglasses";
+import { fetchApi } from "../api";
 
 type CachedSector = {
 	sectors: ConvertedSector[];
@@ -21,6 +23,8 @@ export class VatglassesService {
 
 	private cachedSectors = new Map<string, CachedSector>();
 	private controllerKey = "";
+	private dynamicOwnership: VatglassesDynamicOwnership | null = null;
+	private dynamicOwnershipInterval: NodeJS.Timeout | null = null;
 
 	private altitude: number = 200;
 	private vatglassesEnabled: boolean | undefined;
@@ -44,7 +48,26 @@ export class VatglassesService {
 		if (!enabled) {
 			this.clearSource();
 		} else {
-			void this.setFeatures(this.getControllers());
+			this.fetchDynamicOwnership();
+			this.dynamicOwnershipInterval = setInterval(() => this.fetchDynamicOwnership(), 60_000);
+			this.setFeatures(this.getControllers());
+		}
+	}
+
+	private async fetchDynamicOwnership(): Promise<void> {
+		try {
+			const ownership = await fetchApi<VatglassesDynamicOwnership | null>("/data/vatglasses/dynamic");
+			if (!ownership) return;
+
+			const changed = JSON.stringify(ownership) !== JSON.stringify(this.dynamicOwnership);
+			this.dynamicOwnership = ownership;
+
+			if (changed) {
+				this.controllerKey = "";
+				this.setFeatures(this.getControllers());
+			}
+		} catch {
+			// keep last
 		}
 	}
 
@@ -60,7 +83,7 @@ export class VatglassesService {
 
 			await Promise.all(
 				controllers.map(async (merged) => {
-					const result = await getVatglassesSectors(merged, activePositions);
+					const result = await getVatglassesSectors(merged, activePositions, this.dynamicOwnership);
 					if (result) {
 						this.cachedSectors.set(merged.id, result);
 					}
@@ -93,6 +116,10 @@ export class VatglassesService {
 		if (this.altitudeRafId !== null) {
 			cancelAnimationFrame(this.altitudeRafId);
 			this.altitudeRafId = null;
+		}
+		if (this.dynamicOwnershipInterval !== null) {
+			clearInterval(this.dynamicOwnershipInterval);
+			this.dynamicOwnershipInterval = null;
 		}
 		this.controllerKey = "";
 		this.source.clear();

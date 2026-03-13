@@ -91,6 +91,7 @@ async function fetchDynamicDataset(code: string): Promise<VatglassesDataset | nu
 		const rawOwnership = ownershipRes.data;
 
 		const airspace = Object.entries(rawAirspace.airspace).map(([sectorId, entry]: [string, any]) => ({
+			key: sectorId,
 			id: entry.id,
 			group: entry.group,
 			owner: rawOwnership.airspace[sectorId] ?? [],
