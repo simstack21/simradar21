@@ -10,6 +10,8 @@ import { createAirportFeature, createFirFeature, createTraconFeature, stripPrefi
 import { type ControllerStyleVars, getAirportStyle, getFirStyle, getLabelStyle, getTraconStyle } from "./styles/controller";
 
 export class ControllerService {
+	constructor(private getControllers: () => ControllerMerged[]) {}
+
 	private firSource = new VectorSource({
 		useSpatialIndex: false,
 	});
@@ -29,6 +31,7 @@ export class ControllerService {
 	private highlighted = new Set<string>();
 
 	private styleVars: ControllerStyleVars = {};
+	private vatglassesEnabled: boolean | undefined;
 
 	public init(): VectorLayer[] {
 		this.firLayer = new VectorLayer({
@@ -76,6 +79,20 @@ export class ControllerService {
 		// No theme changes yet
 	}
 
+	public setVatglassesEnabled(enabled: boolean): void {
+		this.vatglassesEnabled = enabled;
+		if (enabled) {
+			this.set.clear();
+			this.firSource.clear();
+			this.traconSource.clear();
+			this.airportSource.clear();
+			this.labelSource.clear();
+			this.highlighted.clear();
+		} else {
+			void this.setFeatures(this.getControllers());
+		}
+	}
+
 	public hoverSector(feature: Feature<Point> | undefined | null, hovered: boolean, event: "hovered" | "clicked"): void {
 		if (feature?.get("type") === "tracon") {
 			const id = feature.getId()?.toString();
@@ -110,7 +127,9 @@ export class ControllerService {
 		this.highlighted.clear();
 	}
 
-	public async setFeatures(controllers: ControllerMerged[]) {
+	public async setFeatures(controllers: ControllerMerged[]): Promise<void> {
+		if (this.vatglassesEnabled !== false) return;
+
 		const tempLabels = new Map<string, Feature<Point>>();
 		const tempSectors = new Map<string, Feature<MultiPolygon | Polygon>>();
 		for (const id of this.highlighted) {
@@ -194,6 +213,8 @@ export class ControllerService {
 	}
 
 	public async updateFeatures(controllers: ControllerDelta): Promise<string[]> {
+		if (this.vatglassesEnabled !== false) return [];
+
 		const controllersInDelta = new Set<string>();
 
 		for (const c of controllers.updated) {

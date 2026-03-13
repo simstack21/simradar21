@@ -24,6 +24,7 @@ export async function updateR2Storage(): Promise<void> {
 		"static_tracons:version",
 		"static_airlines:version",
 		"static_aircrafts:version",
+		"static_vatglasses:sha",
 	]);
 	const manifest = {
 		airportsVersion: versions[0],
@@ -31,6 +32,7 @@ export async function updateR2Storage(): Promise<void> {
 		traconsVersion: versions[2],
 		airlinesVersion: versions[3],
 		aircraftsVersion: versions[4],
+		vatglassesSha: versions[5],
 	};
 
 	await uploadManifestToR2(manifest);
@@ -41,12 +43,14 @@ export async function updateR2Storage(): Promise<void> {
 		"static_tracons:all",
 		"static_airlines:all",
 		"static_aircrafts:all",
+		"static_vatglasses:all",
 	]);
 	await uploadJsonToR2(`airports_${manifest.airportsVersion}.json`, datas[0]);
 	await uploadJsonToR2(`firs_${manifest.firsVersion}.json`, datas[1]);
 	await uploadJsonToR2(`tracons_${manifest.traconsVersion}.json`, datas[2]);
 	await uploadJsonToR2(`airlines_${manifest.airlinesVersion}.json`, datas[3]);
 	await uploadJsonToR2(`aircrafts_${manifest.aircraftsVersion}.json`, datas[4]);
+	await uploadJsonToR2(`vatglasses_${manifest.vatglassesSha}.json`, datas[5]);
 	console.log("✅ R2 storage update completed!");
 }
 

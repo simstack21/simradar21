@@ -148,14 +148,14 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 		}
 	}
 
-	const uniqueCids = Array.from(new Set(newPilotsLong.filter((p) => p.user_ratings === null).map((p) => p.cid)));
-	const userRatings = await getUserRatings(uniqueCids);
-	for (const pilot of newPilotsLong) {
-		const ratings = userRatings.get(pilot.cid);
-		if (ratings) {
-			pilot.user_ratings = ratings;
-		}
-	}
+	// const uniqueCids = Array.from(new Set(newPilotsLong.filter((p) => p.user_ratings === null).map((p) => p.cid)));
+	// const userRatings = await getUserRatings(uniqueCids);
+	// for (const pilot of newPilotsLong) {
+	// 	const ratings = userRatings.get(pilot.cid);
+	// 	if (ratings) {
+	// 		pilot.user_ratings = ratings;
+	// 	}
+	// }
 
 	await rdsSetMultiple(newPilotsLong, "pilot", (p) => p.id, 12 * 60 * 60);
 

@@ -4,6 +4,7 @@ import {
 	EyeIcon,
 	EyeOffIcon,
 	FunnelIcon,
+	GlassesIcon,
 	LayersIcon,
 	LocateIcon,
 	MaximizeIcon,
@@ -19,20 +20,23 @@ import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFiltersStore, useMapPageStore, useMapVisibilityStore } from "@/storage/zustand";
 import { mapService } from "../../lib";
 
 export default function Controls() {
-	const { isHidden, setHidden } = useMapVisibilityStore();
+	const { isHidden, vatglasses } = useMapVisibilityStore();
 
 	return (
 		<div className="flex flex-col gap-2">
-			<div className="flex items-center justify-center gap-4">
-				{!isHidden && <SwitchMultiView />}
-				<SwitchVisibility checked={!isHidden} onCheckedChange={(checked) => setHidden(!checked)} />
+			<div className="flex items-center justify-center gap-4 pt-0.5">
+				<SwitchMultiView />
+				<SwitchVisibility />
+				<SwitchVatglasses />
 			</div>
+			{vatglasses && !isHidden && <SliderVatglasses />}
 			{!isHidden && <ButtonGroupControls />}
 		</div>
 	);
@@ -42,6 +46,9 @@ const SwitchMultiView = () => {
 	const id = useId();
 	const router = useRouter();
 	const pathname = usePathname();
+	const { isHidden } = useMapVisibilityStore();
+
+	if (isHidden) return null;
 
 	const isMultiView = pathname.startsWith("/multi");
 
@@ -56,16 +63,52 @@ const SwitchMultiView = () => {
 	);
 };
 
-const SwitchVisibility = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (checked: boolean) => void }) => {
+const SwitchVisibility = () => {
 	const id = useId();
+	const { isHidden, setHidden } = useMapVisibilityStore();
 
 	return (
 		<div className="flex items-center gap-2">
-			<Switch id={id} checked={checked} onCheckedChange={onCheckedChange} aria-label="Toggle switch" />
+			<Switch id={id} checked={!isHidden} onCheckedChange={(checked) => setHidden(!checked)} aria-label="Toggle switch" />
 			<Label htmlFor={id}>
 				<span className="sr-only">Toggle switch</span>
-				{checked ? <EyeIcon className="size-4" aria-hidden="true" /> : <EyeOffIcon className="size-4" aria-hidden="true" />}
+				{!isHidden ? <EyeIcon className="size-4" aria-hidden="true" /> : <EyeOffIcon className="size-4" aria-hidden="true" />}
 			</Label>
+		</div>
+	);
+};
+
+const SwitchVatglasses = () => {
+	const id = useId();
+	const { vatglasses, setVatglasses, isHidden } = useMapVisibilityStore();
+
+	if (isHidden) return null;
+
+	return (
+		<div className="flex items-center gap-2">
+			<Switch id={id} checked={vatglasses} onCheckedChange={(checked) => setVatglasses(checked)} aria-label="Toggle switch" />
+			<Label htmlFor={id}>
+				<span className="sr-only">Toggle switch</span>
+				<GlassesIcon className="size-4" aria-hidden="true" />
+			</Label>
+		</div>
+	);
+};
+
+const SliderVatglasses = () => {
+	const { vatglassesAltitude, setVatglassesAltitude } = useMapVisibilityStore();
+
+	return (
+		<div className="flex gap-2 items-center">
+			<Slider
+				value={vatglassesAltitude}
+				onValueChange={(value) => setVatglassesAltitude(value as number)}
+				min={10}
+				max={500}
+				step={5}
+				className="w-full"
+			/>
+			<span className="text-xs font-mono leading-none">FL{String(vatglassesAltitude).padStart(3, "0")}</span>
 		</div>
 	);
 };

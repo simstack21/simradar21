@@ -8,6 +8,7 @@ type StaticVersions = {
 	firsVersion: string;
 	airlinesVersion: string;
 	aircraftsVersion: string;
+	vatglassesVersion: string;
 };
 
 let versionsCache: StaticVersions | null = null;
@@ -24,6 +25,7 @@ export async function getDataVersions(): Promise<StaticVersions> {
 	const airports = await rdsGetSingle("static_airports:version");
 	const firs = await rdsGetSingle("static_firs:version");
 	const tracons = await rdsGetSingle("static_tracons:version");
+	const vatglasses = await rdsGetSingle("static_vatglasses:sha");
 
 	const versions: StaticVersions = {
 		airlinesVersion: airlines || "unknown",
@@ -31,6 +33,7 @@ export async function getDataVersions(): Promise<StaticVersions> {
 		airportsVersion: airports || "unknown",
 		firsVersion: firs || "unknown",
 		traconsVersion: tracons || "unknown",
+		vatglassesVersion: vatglasses || "unknown",
 	};
 	versionsCache = versions;
 	cacheTimestamp = now;

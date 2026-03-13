@@ -1,4 +1,4 @@
-import type { FIRFeature, SimAwareTraconFeature, StaticAircraftType, StaticAirline, StaticAirport } from "@sr24/types/db";
+import type { FIRFeature, SimAwareTraconFeature, StaticAircraftType, StaticAirline, StaticAirport, VatglassesDataset } from "@sr24/types/db";
 import type { NavigraphAirport, NavigraphAirway, NavigraphApproach, NavigraphProcedure, NavigraphWaypoint } from "@sr24/types/navigraph";
 import Dexie, { type EntityTable } from "dexie";
 import type { StatusSetter } from "@/hooks/useInitializer";
@@ -11,6 +11,7 @@ interface DatabaseVersions {
 	firsVersion: string;
 	airlinesVersion: string;
 	aircraftsVersion: string;
+	vatglassesVersion: string;
 	navigraphCycle?: string;
 }
 
@@ -29,6 +30,7 @@ const db = new Dexie("StaticDatabase") as Dexie & {
 	tracons: EntityTable<DexieFeature, "id">;
 	airlines: EntityTable<StaticAirline, "id">;
 	aircrafts: EntityTable<StaticAircraftType, "icao">;
+	vatglasses: EntityTable<VatglassesDataset, "code">;
 	manifest: EntityTable<Manifest, "key">;
 	ngWaypoints: EntityTable<NavigraphWaypoint, "uid">;
 	ngAirways: EntityTable<NavigraphAirway, "uid">;
@@ -41,6 +43,7 @@ db.version(1).stores({
 	tracons: "id",
 	airlines: "id",
 	aircrafts: "icao",
+	vatglasses: "code",
 	manifest: "key",
 	ngWaypoints: "uid",
 	ngAirways: "uid",
@@ -73,54 +76,68 @@ async function dxInitDatabases(setStatus?: StatusSetter): Promise<void> {
 	const storedManifest = (await db.manifest.get("databaseVersions")) as Manifest | undefined;
 
 	if (latestManifest.airportsVersion !== storedManifest?.versions.airportsVersion) {
-		const entries = (await fetchApi<StaticAirport[]>(`${R2_BUCKET_URL}/airports_${latestManifest.airportsVersion}.json`, {
+		fetchApi<StaticAirport[]>(`${R2_BUCKET_URL}/airports_${latestManifest.airportsVersion}.json`, {
 			cache: "no-store",
-		})) as StaticAirport[];
-		storeData(entries, db.airports as EntityTable<any, "id">);
+		}).then(async (res) => {
+			await storeData(res, db.airports as EntityTable<any, "id">);
+			setStatus?.((prev) => ({ ...prev, airports: true }));
+		});
 	}
-	setStatus?.((prev) => ({ ...prev, airports: true }));
 
 	if (latestManifest.firsVersion !== storedManifest?.versions.firsVersion) {
-		const features = (await fetchApi<FIRFeature[]>(`${R2_BUCKET_URL}/firs_${latestManifest.firsVersion}.json`, {
+		fetchApi<FIRFeature[]>(`${R2_BUCKET_URL}/firs_${latestManifest.firsVersion}.json`, {
 			cache: "no-store",
-		})) as FIRFeature[];
-		const entries: DexieFeature[] = features.map((f) => ({
-			id: f.properties.id,
-			feature: f,
-		}));
-
-		storeData(entries, db.firs as EntityTable<any, "id">);
+		}).then(async (res) => {
+			const entries: DexieFeature[] = res.map((f) => ({
+				id: f.properties.id,
+				feature: f,
+			}));
+			await storeData(entries, db.firs as EntityTable<any, "id">);
+			setStatus?.((prev) => ({ ...prev, firs: true }));
+		});
 	}
-	setStatus?.((prev) => ({ ...prev, firs: true }));
 
 	if (latestManifest.traconsVersion !== storedManifest?.versions.traconsVersion) {
-		const features = (await fetchApi<SimAwareTraconFeature[]>(`${R2_BUCKET_URL}/tracons_${latestManifest.traconsVersion}.json`, {
+		fetchApi<SimAwareTraconFeature[]>(`${R2_BUCKET_URL}/tracons_${latestManifest.traconsVersion}.json`, {
 			cache: "no-store",
-		})) as SimAwareTraconFeature[];
-		const entries: DexieFeature[] = features.map((f) => ({
-			id: f.properties.id,
-			feature: f,
-		}));
-
-		storeData(entries, db.tracons as EntityTable<any, "id">);
+		}).then(async (res) => {
+			const entries: DexieFeature[] = res.map((f) => ({
+				id: f.properties.id,
+				feature: f,
+			}));
+			await storeData(entries, db.tracons as EntityTable<any, "id">);
+			setStatus?.((prev) => ({ ...prev, tracons: true }));
+		});
 	}
-	setStatus?.((prev) => ({ ...prev, tracons: true }));
 
 	if (latestManifest.airlinesVersion !== storedManifest?.versions.airlinesVersion) {
-		const entries = (await fetchApi<StaticAirline[]>(`${R2_BUCKET_URL}/airlines_${latestManifest.airlinesVersion}.json`, {
+		fetchApi<StaticAirline[]>(`${R2_BUCKET_URL}/airlines_${latestManifest.airlinesVersion}.json`, {
 			cache: "no-store",
-		})) as StaticAirline[];
-		storeData(entries, db.airlines as EntityTable<any, "id">);
+		}).then(async (res) => {
+			await storeData(res, db.airlines as EntityTable<any, "id">);
+			setStatus?.((prev) => ({ ...prev, airlines: true }));
+		});
 	}
-	setStatus?.((prev) => ({ ...prev, airlines: true }));
 
 	if (latestManifest.aircraftsVersion !== storedManifest?.versions.aircraftsVersion) {
-		const entries = (await fetchApi<StaticAircraftType[]>(`${R2_BUCKET_URL}/aircrafts_${latestManifest.aircraftsVersion}.json`, {
+		fetchApi<StaticAircraftType[]>(`${R2_BUCKET_URL}/aircrafts_${latestManifest.aircraftsVersion}.json`, {
 			cache: "no-store",
-		})) as StaticAircraftType[];
-		storeData(entries, db.aircrafts as EntityTable<StaticAircraftType, "icao">);
+		}).then(async (res) => {
+			await storeData(res, db.aircrafts as EntityTable<StaticAircraftType, "icao">);
+			setStatus?.((prev) => ({ ...prev, aircrafts: true }));
+		});
 	}
-	setStatus?.((prev) => ({ ...prev, aircrafts: true }));
+
+	console.log(latestManifest.vatglassesVersion);
+
+	if (latestManifest.vatglassesVersion !== storedManifest?.versions.vatglassesVersion) {
+		fetchApi<VatglassesDataset[]>(`${R2_BUCKET_URL}/vatglasses_${latestManifest.vatglassesVersion}.json`, {
+			cache: "no-store",
+		}).then(async (res) => {
+			await storeData(res, db.vatglasses as EntityTable<VatglassesDataset, "code">);
+			setStatus?.((prev) => ({ ...prev, vatglasses: true }));
+		});
+	}
 
 	const ngData = await ensureNavigraphData(storedManifest?.versions.navigraphCycle);
 	if (ngData) {
@@ -250,5 +267,12 @@ export async function dxGetNavigraphApproachesByAirport(airportId: string): Prom
 	return await db.ngAirports.get(airportId).then((airport) => {
 		if (!airport) return [];
 		return airport.approaches;
+	});
+}
+
+export async function dxGetVatglassesDatasetByCode(code: string): Promise<VatglassesDataset | null> {
+	await dxEnsureInitialized();
+	return await db.vatglasses.get(code).then((dataset) => {
+		return dataset || null;
 	});
 }

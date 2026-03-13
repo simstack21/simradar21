@@ -29,6 +29,7 @@ import styleDark from "./positron_dark.json";
 import styleLight from "./positron_light.json";
 import { Sunservice } from "./SunService";
 import { TrackService } from "./TrackService";
+import { VatglassesService } from "./VatglassesService";
 
 type Options = {
 	onNavigate?: (href: string) => void;
@@ -37,13 +38,6 @@ type Options = {
 	disableCenterOnPageLoad?: boolean;
 	sunTime?: Date;
 };
-type Stats = {
-	pilots: {
-		total: number;
-		rendered: number;
-	};
-};
-type StatsListener = (stats: Stats) => void;
 
 export class MapService {
 	private static readonly MAP_PADDING = [204, 116, 140, 436];
@@ -60,9 +54,10 @@ export class MapService {
 	private sunService = new Sunservice();
 	private pilotService = new PilotService();
 	private airportService = new AirportService();
-	private controllerService = new ControllerService();
+	private controllerService = new ControllerService(() => this.sharedControllers);
 	private trackService = new TrackService();
 	private navigraphService = new NavigraphService();
+	private vatglassesService = new VatglassesService(() => this.sharedControllers);
 
 	private multiView: boolean | undefined;
 	private minimalOverlays = false;
@@ -79,18 +74,12 @@ export class MapService {
 
 	private storedControllers = new Map<string, ControllerMerged>();
 	private storedAirports = new Map<string, AirportShort>();
+	private sharedControllers: ControllerMerged[] = [];
 
 	private animationTimestamp = 0;
 	private animationFrame?: number;
 
 	private followInterval: NodeJS.Timeout | null = null;
-
-	private statsListeners = new Set<StatsListener>();
-
-	subscribe(cb: StatsListener) {
-		this.statsListeners.add(cb);
-		return () => this.statsListeners.delete(cb);
-	}
 
 	public init(options?: Options): OlMap {
 		if (options) {
@@ -133,10 +122,11 @@ export class MapService {
 		const controllerLayers = this.controllerService.init();
 		const trackLayer = this.trackService.init();
 		const navigraphLayers = this.navigraphService.init();
+		const vatglassesLayer = this.vatglassesService.init();
 
 		this.map = new OlMap({
 			target: "map",
-			layers: [this.baseLayer, sunLayer, ...pilotLayers, airportLayer, ...controllerLayers, trackLayer, ...navigraphLayers],
+			layers: [this.baseLayer, sunLayer, ...pilotLayers, airportLayer, ...controllerLayers, trackLayer, ...navigraphLayers, vatglassesLayer],
 			view: new View({
 				center: fromLonLat(center),
 				zoom,
@@ -196,6 +186,8 @@ export class MapService {
 		zoom,
 		multi,
 		minimalOverlays,
+		vatglasses,
+		vatglassesAltitude,
 	}: {
 		rotation?: number;
 		zoomStep?: number;
@@ -203,6 +195,8 @@ export class MapService {
 		zoom?: number;
 		multi?: boolean;
 		minimalOverlays?: boolean;
+		vatglasses?: boolean;
+		vatglassesAltitude?: number;
 	}): void {
 		const view = this.map?.getView();
 		if (!view) return;
@@ -231,6 +225,13 @@ export class MapService {
 		if (minimalOverlays !== undefined) {
 			this.minimalOverlays = minimalOverlays;
 			this.updateRelatives();
+		}
+		if (vatglasses !== undefined) {
+			this.vatglassesService.setVatglassesEnabled(vatglasses);
+			this.controllerService.setVatglassesEnabled(vatglasses);
+		}
+		if (vatglassesAltitude !== undefined) {
+			this.vatglassesService.setAltitude(vatglassesAltitude);
 		}
 	}
 
@@ -556,6 +557,8 @@ export class MapService {
 			this.airportService.setFeatures(airports);
 		}
 		if (controllers) {
+			this.sharedControllers = controllers;
+			this.vatglassesService.setFeatures(controllers);
 			await this.controllerService.setFeatures(controllers);
 		}
 		if (trackPoints && autoTrackId) {
@@ -589,6 +592,8 @@ export class MapService {
 			// this.airportService.setFeatures(airports);
 		}
 		if (controllers) {
+			this.sharedControllers = controllers;
+			this.vatglassesService.setFeatures(controllers);
 			await this.controllerService.setFeatures(controllers);
 		}
 
@@ -749,8 +754,6 @@ export class MapService {
 		this.pilotService.renderFeatures(extent, resolution);
 		this.airportService.renderFeatures(extent, resolution);
 		this.navigraphService.renderFeatures(extent, resolution);
-
-		this.emit();
 	}
 
 	private toggleAnimation(enabled: boolean): void {
@@ -1035,17 +1038,5 @@ export class MapService {
 			clearInterval(this.followInterval);
 			this.followInterval = null;
 		}
-	}
-
-	private emit() {
-		this.statsListeners.forEach((cb) => {
-			const pilotStats = this.pilotService.getStats();
-			cb({
-				pilots: {
-					total: pilotStats.total,
-					rendered: pilotStats.rendered,
-				},
-			});
-		});
 	}
 }

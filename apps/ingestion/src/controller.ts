@@ -35,14 +35,14 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 
 	getConnectionsCount(vatsimData, controllersLong, pilotsLong);
 
-	const uniqueCids = Array.from(new Set(controllersLong.filter((c) => c.user_ratings === null).map((c) => c.cid)));
-	const userRatings = await getUserRatings(uniqueCids);
-	for (const controller of controllersLong) {
-		const ratings = userRatings.get(controller.cid);
-		if (ratings) {
-			controller.user_ratings = ratings;
-		}
-	}
+	// const uniqueCids = Array.from(new Set(controllersLong.filter((c) => c.user_ratings === null).map((c) => c.cid)));
+	// const userRatings = await getUserRatings(uniqueCids);
+	// for (const controller of controllersLong) {
+	// 	const ratings = userRatings.get(controller.cid);
+	// 	if (ratings) {
+	// 		controller.user_ratings = ratings;
+	// 	}
+	// }
 
 	vatsimData.atis.forEach((atis) => {
 		controllersLong.push({

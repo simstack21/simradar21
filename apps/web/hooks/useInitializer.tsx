@@ -12,6 +12,7 @@ type StatusMap = {
 	tracons?: boolean;
 	airlines?: boolean;
 	aircrafts?: boolean;
+	vatglasses?: boolean;
 	navigraph?: boolean;
 };
 
@@ -28,6 +29,8 @@ function getInitializerText(status: StatusMap): string {
 		return "Downloading airline data";
 	} else if (!status.aircrafts) {
 		return "Downloading aircraft data";
+	} else if (!status.vatglasses) {
+		return "Downloading VATGlasses data";
 	} else if (!status.navigraph) {
 		return "Downloading Navigraph data";
 	} else {
@@ -74,7 +77,7 @@ export default function useInitializer() {
 							<Spinner />
 							<span>Updating Local Databases</span>
 						</div>
-						<Progress value={Math.round((Object.keys(status).length / 6) * 100)} className="w-full max-w-sm">
+						<Progress value={Math.round((Object.keys(status).length / 7) * 100)} className="w-full max-w-sm">
 							<ProgressLabel>{getInitializerText(status)}</ProgressLabel>
 							<ProgressValue />
 						</Progress>

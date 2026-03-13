@@ -135,3 +135,37 @@ export interface NavigraphPackage {
 	r2Key: string;
 	package_status: "current" | "outdated" | "future";
 }
+
+export interface VatglassesSector {
+	points: [number, number][];
+	min?: number;
+	max?: number;
+	runways?: { icao: string; runway: string[] }[];
+}
+
+export interface VatglassesAirspaceEntry {
+	id: string;
+	group: string;
+	owner: string[];
+	sectors: VatglassesSector[];
+}
+
+export interface VatglassesPosition {
+	pre: string[];
+	type: string;
+	frequency: string;
+	callsign?: string;
+	colour?: string;
+}
+
+export interface VatglassesGroup {
+	name: string;
+	colour: string;
+}
+
+export interface VatglassesDataset {
+	code: string;
+	airspace: VatglassesAirspaceEntry[];
+	positions: Record<string, VatglassesPosition>;
+	groups: Record<string, VatglassesGroup>;
+}

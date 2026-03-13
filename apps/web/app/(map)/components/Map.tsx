@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
-import { useFiltersStore, useSettingsStore } from "@/storage/zustand";
+import { useFiltersStore, useMapVisibilityStore, useSettingsStore } from "@/storage/zustand";
 import { init, mapService } from "../lib";
 
 export default function OMap() {
@@ -28,6 +28,7 @@ export default function OMap() {
 		navigraphRoutesInMulti,
 	} = useSettingsStore();
 	const filters = useFiltersStore();
+	const { vatglassesAltitude, vatglasses, _hasHydrated } = useMapVisibilityStore();
 
 	useEffect(() => {
 		const map = mapService.init({ onNavigate: (href) => router.push(href), autoTrackPoints: true });
@@ -51,6 +52,11 @@ export default function OMap() {
 	useEffect(() => {
 		mapService.setFilters(filters);
 	}, [filters]);
+
+	useEffect(() => {
+		if (!_hasHydrated) return;
+		mapService.setView({ vatglasses, vatglassesAltitude });
+	}, [_hasHydrated, vatglasses, vatglassesAltitude]);
 
 	useEffect(() => {
 		mapService.setSettings({
