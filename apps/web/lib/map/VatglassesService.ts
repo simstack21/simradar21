@@ -53,27 +53,25 @@ export class VatglassesService {
 
 		await Promise.all(
 			controllers.map(async (merged) => {
-				if (merged.facility === "fir") {
-					const cached = this.cachedSectors.get(merged.id);
-					let sectors: VatglassesSector[];
-					let color: string | null = null;
+				const cached = this.cachedSectors.get(merged.id);
+				let sectors: VatglassesSector[];
+				let color: string | null = null;
 
-					if (cached) {
-						sectors = cached.sectors;
-						color = cached.color;
-					} else {
-						const result = await getVatglassesSectors(merged);
-						if (!result) return;
+				if (cached) {
+					sectors = cached.sectors;
+					color = cached.color;
+				} else {
+					const result = await getVatglassesSectors(merged);
+					if (!result) return;
 
-						sectors = result.sectors;
-						color = result.color;
-						this.cachedSectors.set(merged.id, { sectors, color });
-					}
-					const multipolygon = getVatglassesMultipolygon(sectors, this.altitude);
-					const feature = new Feature(multipolygon);
-					feature.set("color", color);
-					features.push(feature);
+					sectors = result.sectors;
+					color = result.color;
+					this.cachedSectors.set(merged.id, { sectors, color });
 				}
+				const multipolygon = getVatglassesMultipolygon(sectors, this.altitude);
+				const feature = new Feature(multipolygon);
+				feature.set("color", color);
+				features.push(feature);
 			}),
 		);
 

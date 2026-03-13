@@ -23,6 +23,7 @@ export async function getVatglassesSectors(merged: ControllerMerged): Promise<{ 
 		for (const [posId, pos] of posEntries) {
 			if (pos.frequency && parseFloat(pos.frequency) * 1000 !== c.frequency) continue;
 			if (!c.callsign.endsWith(pos.type)) continue;
+
 			const pre = toArray(pos.pre);
 			if (!pre.some((prefix) => c.callsign.startsWith(prefix))) continue;
 
@@ -36,6 +37,7 @@ export async function getVatglassesSectors(merged: ControllerMerged): Promise<{ 
 					sectors.push(...getActiveSectors(as.sectors));
 				}
 			}
+
 			break;
 		}
 	}
@@ -51,10 +53,12 @@ function parseDms(dms: string): number {
 	const neg = dms.startsWith("-");
 	const abs = neg ? dms.slice(1) : dms;
 	const padded = abs.padStart(7, "0");
+
 	const ss = Number(padded.slice(-2));
 	const mm = Number(padded.slice(-4, -2));
 	const dd = Number(padded.slice(0, -4));
 	const decimal = dd + mm / 60 + ss / 3600;
+
 	return Math.round((neg ? -decimal : decimal) * 10000) / 10000;
 }
 
