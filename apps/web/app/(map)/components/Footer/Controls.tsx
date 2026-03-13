@@ -103,12 +103,12 @@ const SliderVatglasses = () => {
 			<Slider
 				value={vatglassesAltitude}
 				onValueChange={(value) => setVatglassesAltitude(value as number)}
-				min={10}
+				min={0}
 				max={500}
 				step={5}
 				className="w-full"
 			/>
-			<span className="text-xs font-mono leading-none">FL{String(vatglassesAltitude).padStart(3, "0")}</span>
+			<span className="text-xs font-mono leading-none">{vatglassesAltitude === 0 ? "AUTO" : `FL${String(vatglassesAltitude).padStart(3, "0")}`}</span>
 		</div>
 	);
 };
