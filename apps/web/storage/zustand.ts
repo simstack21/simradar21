@@ -265,7 +265,7 @@ export const useMapVisibilityStore = create<MapVisibilityState>()(
 			setHidden: (value: boolean) => set({ isHidden: value }),
 			vatglasses: false,
 			setVatglasses: (value: boolean) => set({ vatglasses: value }),
-			vatglassesAltitude: 20000,
+			vatglassesAltitude: 200,
 			setVatglassesAltitude: (value: number) => set({ vatglassesAltitude: value }),
 		}),
 		{

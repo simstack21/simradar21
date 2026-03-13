@@ -1,4 +1,4 @@
-import type { VatglassesSector } from "@sr24/types/db";
+import type { VatglassesDataset, VatglassesSector } from "@sr24/types/db";
 import type { ControllerMerged } from "@sr24/types/interface";
 import type { Coordinate } from "ol/coordinate";
 import { MultiPolygon } from "ol/geom";
@@ -17,80 +17,24 @@ function getCode(mergedId: string): string {
 		.toLowerCase();
 }
 
-export async function buildActivePositions(controllers: ControllerMerged[]): Promise<Map<string, Set<string>>> {
-	const result = new Map<string, Set<string>>();
+// cache dexie dataset for faster access and perf opt
+const datasetPromises = new Map<string, Promise<VatglassesDataset | null>>();
 
-	for (const merged of controllers) {
-		const code = getCode(merged.id);
-		const dataset = await dxGetVatglassesDatasetByCode(code);
-		if (!dataset) continue;
-
-		const posEntries = Object.entries(dataset.positions);
-		for (const c of merged.controllers) {
-			for (const [posId, pos] of posEntries) {
-				if (pos.frequency && parseFloat(pos.frequency) * 1000 !== c.frequency) continue;
-				if (!c.callsign.endsWith(pos.type)) continue;
-
-				const pre = toArray(pos.pre);
-				if (!pre.some((prefix) => c.callsign.startsWith(prefix))) continue;
-				if (!result.has(code)) result.set(code, new Set());
-				result.get(code)?.add(posId);
-
-				break;
-			}
-		}
+function getDataset(code: string): Promise<VatglassesDataset | null> {
+	let promise = datasetPromises.get(code);
+	if (!promise) {
+		promise = dxGetVatglassesDatasetByCode(code);
+		datasetPromises.set(code, promise);
 	}
-
-	return result;
+	return promise;
 }
 
-export async function getVatglassesSectors(
-	merged: ControllerMerged,
-	activePositions: Map<string, Set<string>>,
-): Promise<{ sectors: VatglassesSector[]; color: string | null } | null> {
-	const code = getCode(merged.id);
-	const dataset = await dxGetVatglassesDatasetByCode(code);
-	if (!dataset) return null;
-
-	const posEntries = Object.entries(dataset.positions);
-	const activeForCode = activePositions.get(code) ?? new Set<string>();
-	const sectors: VatglassesSector[] = [];
-	let color: string | null = null;
-
-	for (const c of merged.controllers) {
-		for (const [posId, pos] of posEntries) {
-			if (pos.frequency && parseFloat(pos.frequency) * 1000 !== c.frequency) continue;
-			if (!c.callsign.endsWith(pos.type)) continue;
-
-			const pre = toArray(pos.pre);
-			if (!pre.some((prefix) => c.callsign.startsWith(prefix))) continue;
-
-			if (!color) {
-				const colours = pos.colours?.filter((x) => x.hex) ?? [];
-				color =
-					colours.find((x) => {
-						const online = toArray(x.online);
-						return !online.length || online.every((id) => activeForCode.has(id));
-					})?.hex ?? null;
-			}
-
-			for (const as of dataset.airspace) {
-				const firstActiveOwner = as.owner?.find((o) => activeForCode.has(o));
-				if (firstActiveOwner === posId) {
-					sectors.push(...getActiveSectors(as.sectors));
-				}
-			}
-
-			break;
-		}
-	}
-
-	return sectors.length ? { sectors, color } : null;
-}
-
-function getActiveSectors(sectors: VatglassesSector[]): VatglassesSector[] {
-	return sectors.filter((s) => !s.runways);
-}
+// pre onverted coordinates are save in this, to opt performance
+export type ConvertedSector = {
+	min: number;
+	max: number;
+	points: Coordinate[];
+};
 
 function parseDms(dms: string): number {
 	const neg = dms.startsWith("-");
@@ -105,8 +49,90 @@ function parseDms(dms: string): number {
 	return Math.round((neg ? -decimal : decimal) * 10000) / 10000;
 }
 
-export function getVatglassesMultipolygon(sectors: VatglassesSector[], altitude: number): MultiPolygon {
-	const filteredSectors = sectors.filter((s) => (s.min ?? 0) <= altitude && (s.max ?? Infinity) >= altitude);
-	const points: Coordinate[][][] = filteredSectors.map((s) => [s.points.map(([lat, lon]) => fromLonLat([parseDms(lon), parseDms(lat)]))]);
-	return new MultiPolygon(points);
+function convertSector(sector: VatglassesSector): ConvertedSector {
+	return {
+		min: sector.min ?? 0,
+		max: sector.max ?? Infinity,
+		points: sector.points.map(([lat, lon]) => fromLonLat([parseDms(lon), parseDms(lat)])),
+	};
+}
+
+export async function buildActivePositions(controllers: ControllerMerged[]): Promise<Map<string, Set<string>>> {
+	const result = new Map<string, Set<string>>();
+
+	await Promise.all(
+		controllers.map(async (merged) => {
+			const code = getCode(merged.id);
+			const dataset = await getDataset(code);
+			if (!dataset) return;
+
+			const posEntries = Object.entries(dataset.positions);
+			for (const c of merged.controllers) {
+				for (const [posId, pos] of posEntries) {
+					if (pos.frequency && parseFloat(pos.frequency) * 1000 !== c.frequency) continue;
+					if (!c.callsign.endsWith(pos.type)) continue;
+
+					const pre = toArray(pos.pre);
+					if (!pre.some((prefix) => c.callsign.startsWith(prefix))) continue;
+					if (!result.has(code)) result.set(code, new Set());
+					result.get(code)?.add(posId);
+
+					break;
+				}
+			}
+		}),
+	);
+
+	return result;
+}
+
+export async function getVatglassesSectors(
+	merged: ControllerMerged,
+	activePositions: Map<string, Set<string>>,
+): Promise<{ sectors: ConvertedSector[]; color: string | null } | null> {
+	const code = getCode(merged.id);
+	const dataset = await getDataset(code);
+	if (!dataset) return null;
+
+	const posEntries = Object.entries(dataset.positions);
+	const activeForCode = activePositions.get(code) ?? new Set<string>();
+	const rawSectors: VatglassesSector[] = [];
+	let color: string | null = null;
+
+	for (const c of merged.controllers) {
+		for (const [posId, pos] of posEntries) {
+			if (pos.frequency && parseFloat(pos.frequency) * 1000 !== c.frequency) continue;
+			if (!c.callsign.endsWith(pos.type)) continue;
+
+			const pre = toArray(pos.pre);
+			if (!pre.some((prefix) => c.callsign.startsWith(prefix))) continue;
+
+			if (!color) {
+				const colours = pos.colours?.filter((x) => x.hex) ?? [];
+				// Take correct color, first matching active pos, otherswise first defined color
+				color =
+					colours.find((x) => {
+						const online = toArray(x.online);
+						return !online.length || online.every((id) => activeForCode.has(id));
+					})?.hex ?? null;
+			}
+
+			for (const as of dataset.airspace) {
+				const firstActiveOwner = as.owner?.find((o) => activeForCode.has(o));
+				if (firstActiveOwner === posId) {
+					rawSectors.push(...as.sectors.filter((s) => !s.runways));
+				}
+			}
+
+			break;
+		}
+	}
+
+	// pre convert coordinates once
+	return rawSectors.length ? { sectors: rawSectors.map(convertSector), color } : null;
+}
+
+export function getVatglassesMultipolygon(sectors: ConvertedSector[], altitude: number): MultiPolygon {
+	const filtered = sectors.filter((s) => s.min <= altitude && s.max >= altitude);
+	return new MultiPolygon(filtered.map((s) => [s.points]));
 }
