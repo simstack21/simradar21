@@ -42,7 +42,7 @@ export class VatglassesService {
 	public setVatglassesEnabled(enabled: boolean): void {
 		this.vatglassesEnabled = enabled;
 		if (!enabled) {
-			this.source.clear();
+			this.clearSource();
 		} else {
 			void this.setFeatures(this.getControllers());
 		}
@@ -72,6 +72,7 @@ export class VatglassesService {
 	}
 
 	private renderFeatures(controllers: ControllerMerged[]): void {
+		if (this.vatglassesEnabled !== true) return;
 		const features: Feature<MultiPolygon | Polygon>[] = [];
 
 		for (const merged of controllers) {
@@ -88,9 +89,20 @@ export class VatglassesService {
 		this.source.addFeatures(features);
 	}
 
+	private clearSource(): void {
+		if (this.altitudeRafId !== null) {
+			cancelAnimationFrame(this.altitudeRafId);
+			this.altitudeRafId = null;
+		}
+		this.controllerKey = "";
+		this.source.clear();
+	}
+
 	// incl debounce
 	public setAltitude(altitude: number): void {
 		this.altitude = altitude;
+		if (!this.vatglassesEnabled) return;
+
 		if (this.altitudeRafId !== null) cancelAnimationFrame(this.altitudeRafId);
 
 		this.altitudeRafId = requestAnimationFrame(() => {
