@@ -44,7 +44,9 @@ export class VatglassesService {
 	}
 
 	public setVatglassesEnabled(enabled: boolean): void {
+		if (this.vatglassesEnabled === enabled) return;
 		this.vatglassesEnabled = enabled;
+
 		if (!enabled) {
 			this.clearSource();
 		} else {
