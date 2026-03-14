@@ -8,7 +8,7 @@ const gzipAsync = promisify(gzip);
 const accountId = process.env.CF_ACCOUNT_ID || "";
 const accessKeyId = process.env.R2_ACCESS_KEY_ID || "";
 const secret = process.env.R2_SECRET_ACCESS_KEY || "";
-const bucket = process.env.R2_BUCKET_NAME || "";
+const bucket = process.env.NODE_ENV === "production" ? process.env.R2_BUCKET_NAME || "" : process.env.R2_DEV_BUCKET_NAME || "";
 const privateBucket = process.env.R2_PRIVATE_BUCKET_NAME || "";
 
 const r2 = new S3Client({
@@ -51,7 +51,7 @@ export async function updateR2Storage(): Promise<void> {
 	await uploadJsonToR2(`airlines_${manifest.airlinesVersion}.json`, datas[3]);
 	await uploadJsonToR2(`aircrafts_${manifest.aircraftsVersion}.json`, datas[4]);
 	await uploadJsonToR2(`vatglasses_${manifest.vatglassesSha}.json`, datas[5]);
-	console.log("✅ R2 storage update completed!");
+	console.log(`✅ R2 storage update completed (${bucket})!`);
 }
 
 export async function uploadJsonToR2(key: string, data: unknown) {

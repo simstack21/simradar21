@@ -44,11 +44,21 @@ interface SimAwareTRACONProperties {
 
 export type SimAwareTraconFeature = Feature<MultiPolygon, SimAwareTRACONProperties>;
 
-export interface VatSpyDat {
+export interface VatSpyFir {
 	icao: string;
 	name: string;
 	callsign_prefix: string;
 	fir_bound: string;
+}
+
+export interface VatSpyAirport {
+	icao: string;
+	name: string;
+	latitude: number;
+	longitude: number;
+	lid: string;
+	fir: string;
+	isPsuedo: boolean;
 }
 
 interface VatSpyFIRProperties {

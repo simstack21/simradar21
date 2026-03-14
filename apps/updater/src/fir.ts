@@ -1,6 +1,7 @@
 import { rdsGetSingle, rdsSetSingle } from "@sr24/db/redis";
-import type { FIRFeature, FIRProperties, VatSpyDat, VatSpyFIRFeatureCollection } from "@sr24/types/db";
+import type { FIRFeature, FIRProperties, VatSpyFIRFeatureCollection } from "@sr24/types/db";
 import axios from "axios";
+import { extractFirs } from "./prefixes.js";
 
 const RELEASE_URL = "https://api.github.com/repos/vatsimnetwork/vatspy-data-project/releases/latest";
 const BASE_DATA_URL = "https://github.com/vatsimnetwork/vatspy-data-project/releases/download/";
@@ -23,9 +24,7 @@ export async function updateFirs(): Promise<void> {
 		const vatSpyDat = vatSpyResponse.data;
 		if (!vatSpyDat) return;
 
-		const firs = extractVatSpyDat(vatSpyDat);
-		storePrefixes(firs);
-
+		const firs = extractFirs(vatSpyDat);
 		const boundsResponse = await axios.get(firBoundJsonUrl, {
 			responseType: "json",
 		});
@@ -76,38 +75,4 @@ async function isNewRelease(): Promise<boolean> {
 	}
 
 	return false;
-}
-
-function extractVatSpyDat(vatSpyDat: string): VatSpyDat[] {
-	const firs: VatSpyDat[] = [];
-
-	const sectionStart = vatSpyDat.indexOf("[FIRs]");
-	if (sectionStart === -1) return [];
-
-	const lines = vatSpyDat.slice(sectionStart).split("\r\n");
-
-	for (let line of lines) {
-		line = line.trim();
-
-		if (line === "") break;
-		if (line.startsWith(";") || line.startsWith("[FIRs]")) continue;
-
-		const [icao, name, callsign_prefix, fir_bound] = line.split("|");
-		firs.push({
-			icao,
-			name,
-			callsign_prefix,
-			fir_bound,
-		});
-	}
-
-	return firs;
-}
-
-async function storePrefixes(firs: VatSpyDat[]): Promise<void> {
-	const prefixes: Record<string, string> = {};
-	for (const fir of firs) {
-		prefixes[fir.callsign_prefix || fir.fir_bound] = fir.fir_bound;
-	}
-	await rdsSetSingle("static_firs:prefixes", prefixes);
 }

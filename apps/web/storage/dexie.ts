@@ -102,7 +102,7 @@ async function dxInitDatabases(setStatus?: StatusSetter): Promise<void> {
 			cache: "no-store",
 		}).then(async (res) => {
 			const entries: DexieFeature[] = res.map((f) => ({
-				id: f.properties.id,
+				id: typeof f.properties.prefix === "string" ? f.properties.prefix : f.properties.prefix.join(":"),
 				feature: f,
 			}));
 			await storeData(entries, db.tracons as EntityTable<any, "id">);

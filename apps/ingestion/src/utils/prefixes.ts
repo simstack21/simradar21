@@ -1,45 +1,28 @@
 import { rdsGetSingle } from "@sr24/db/redis";
-import type { SimAwareTraconFeature } from "@sr24/types/db";
 
-let currentFirsVersion: string | null = null;
-let currentTraconsVersion: string | null = null;
+let currentVatspyVersion: string | null = null;
 let currentAirportsVersion: string | null = null;
 
 let firPrefixes: Record<string, string> = {};
 let airportPrefixes: Record<string, string> = {};
-const traconPrefixes = new Map<string, string>();
+let traconPrefixes: Record<string, string> = {};
 
 export async function ensureSectorPrefixes(): Promise<void> {
-	const firsVersion = await rdsGetSingle("static_firs:version");
-	const traconsVersion = await rdsGetSingle("static_tracons:version");
+	const vatspyVersion = await rdsGetSingle("vatspy:version");
 	const airportVersion = await rdsGetSingle("static_airports:version");
 
-	if (currentFirsVersion !== firsVersion) {
-		const prefixes = (await rdsGetSingle("static_firs:prefixes")) as Record<string, string> | undefined;
-		if (prefixes) {
-			firPrefixes = prefixes;
-			currentFirsVersion = firsVersion;
+	if (vatspyVersion !== currentVatspyVersion) {
+		const newFirPrefixes = (await rdsGetSingle("static_firs:prefixes")) as Record<string, string> | undefined;
+		if (newFirPrefixes) {
+			firPrefixes = newFirPrefixes;
 		}
-	}
 
-	if (currentTraconsVersion !== traconsVersion) {
-		const features = (await rdsGetSingle("static_tracons:all")) as SimAwareTraconFeature[] | undefined;
-		if (features) {
-			traconPrefixes.clear();
-			features.forEach((f) => {
-				const prefixes = f.properties.prefix;
-
-				if (typeof prefixes === "string") {
-					traconPrefixes.set(prefixes, f.properties.id);
-				} else {
-					prefixes.forEach((prefix) => {
-						traconPrefixes.set(prefix, f.properties.id);
-					});
-				}
-			});
-
-			currentTraconsVersion = traconsVersion;
+		const newTraconPrefixes = (await rdsGetSingle("static_tracons:prefixes")) as Record<string, string> | undefined;
+		if (newTraconPrefixes) {
+			traconPrefixes = newTraconPrefixes;
 		}
+
+		currentVatspyVersion = vatspyVersion;
 	}
 
 	if (currentAirportsVersion !== airportVersion) {
@@ -70,9 +53,9 @@ export function findTraconId(callsign: string): string | null {
 	let bestMatch: string | null = null;
 	let bestLen = 0;
 
-	for (const [prefix, id] of traconPrefixes) {
+	for (const prefix in traconPrefixes) {
 		if (matchesPrefix(callsign, prefix) && prefix.length > bestLen) {
-			bestMatch = id;
+			bestMatch = traconPrefixes[prefix];
 			bestLen = prefix.length;
 		}
 	}

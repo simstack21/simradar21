@@ -7,10 +7,11 @@
 - Display users' hours and ratings at a glance
 
 ## Improvements and Fixes
-- **Major**: Fix missing ATC sectors (especially in US airspace!)
-- **Major**: Fix missing airport ATC (especially in US airspace!)
-- **Major**: Fix missing pilots after long idle sessions
-- **Major**: Fix temporary live feed disconnects (caused by data processing bug)
+- **Major**: Fix missing and incorrect FIRs!
+- **Major**: Fix missing and incorrect TRACONs (dep/arr)!
+- **Major**: Fix missing TWR, GND, DEL (especially in US airspace)!
+- **Major**: Fix missing pilots after long idle sessions!
+- Fix temporary live feed disconnects (caused by data processing bug)
 - Fix cruise altitude rounding to display exact thousands
 - Fix replay page layout on mobile devices
 - Fix booking page to show correct times

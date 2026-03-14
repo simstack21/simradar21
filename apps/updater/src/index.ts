@@ -6,6 +6,7 @@ import { updateAirports } from "./airports.js";
 import { updateFirs } from "./fir.js";
 import { updateFleets } from "./fleet.js";
 import { updateNavigraphPackages } from "./navigraph.js";
+import { updatePrefixes } from "./prefixes.js";
 import { updateR2Storage } from "./s3.js";
 import { updateTracons } from "./tracon.js";
 import { updateVatglasses } from "./vatglasses.js";
@@ -20,6 +21,7 @@ CronJob.from({
 		await updateTracons();
 		await updateFleets();
 		await updateVatglasses();
+		await updatePrefixes();
 
 		await updateR2Storage();
 		await updateNavigraphPackages();
