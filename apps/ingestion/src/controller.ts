@@ -1,7 +1,7 @@
 import type { ControllerDelta, ControllerLong, ControllerMerged, ControllerShort, PilotLong } from "@sr24/types/interface";
 import type { VatsimData } from "@sr24/types/vatsim";
 import { haversineDistance } from "./utils/helpers.js";
-import { findAirportId, findFirId, findTraconId, reduceCallsign } from "./utils/prefixes.js";
+import { findAirportId, findFirId, findFirsByUir, findTraconId, reduceCallsign } from "./utils/prefixes.js";
 import { getUserRatings } from "./utils/ratings.js";
 
 let cachedLongs: ControllerLong[] = [];
@@ -189,12 +189,43 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 	const merged = new Map<string, ControllerMerged>();
 
 	for (const c of controllersLong) {
+		if (c.facility === 1) {
+			const firs = findFirsByUir(c.callsign);
+			if (firs.length === 0) continue;
+
+			for (const fir of firs) {
+				let id = findFirId(fir);
+				if (!id) continue;
+
+				id = `fir_${id}`;
+				const controllerShort: ControllerShort = {
+					callsign: c.callsign,
+					frequency: c.frequency,
+					facility: c.facility,
+					atis: c.atis,
+					logon_time: c.logon_time,
+					connections: c.connections,
+				};
+
+				const existing = merged.get(id);
+				if (existing) {
+					existing.controllers.push(controllerShort);
+				} else {
+					merged.set(id, {
+						id,
+						facility: "fir",
+						controllers: [controllerShort],
+					});
+				}
+			}
+		}
+
 		let id: string | null = null;
 		let facility: ControllerMerged["facility"] | null = null;
 
 		const levels = reduceCallsign(c.callsign);
 
-		if (c.facility === 6 || c.facility === 1) {
+		if (c.facility === 6) {
 			// FIR
 			id = findFirId(c.callsign);
 			facility = "fir";

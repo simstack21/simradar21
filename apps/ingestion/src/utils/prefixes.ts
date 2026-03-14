@@ -5,6 +5,7 @@ let currentAirportsVersion: string | null = null;
 
 let firPrefixes: Record<string, string> = {};
 let airportPrefixes: Record<string, string> = {};
+let uirPrefixes: Record<string, string[]> = {};
 let traconPrefixes: Record<string, string> = {};
 
 export async function ensureSectorPrefixes(): Promise<void> {
@@ -20,6 +21,11 @@ export async function ensureSectorPrefixes(): Promise<void> {
 		const newTraconPrefixes = (await rdsGetSingle("static_tracons:prefixes")) as Record<string, string> | undefined;
 		if (newTraconPrefixes) {
 			traconPrefixes = newTraconPrefixes;
+		}
+
+		const newUirPrefixes = (await rdsGetSingle("static_uirs:prefixes")) as Record<string, string[]> | undefined;
+		if (newUirPrefixes) {
+			uirPrefixes = newUirPrefixes;
 		}
 
 		currentVatspyVersion = vatspyVersion;
@@ -75,6 +81,15 @@ export function findFirId(callsign: string): string | null {
 	}
 
 	return bestMatch;
+}
+
+export function findFirsByUir(callsign: string): string[] {
+	for (const uirPrefix in uirPrefixes) {
+		if (matchesPrefix(callsign, uirPrefix)) {
+			return uirPrefixes[uirPrefix];
+		}
+	}
+	return [];
 }
 
 export function findAirportId(id: string): string | null {

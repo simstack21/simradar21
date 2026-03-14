@@ -8,6 +8,7 @@
 
 ## Improvements and Fixes
 - **Major**: Fix missing and incorrect FIRs!
+- **Major**: Fix missing and incorrect UIRs!
 - **Major**: Fix missing and incorrect TRACONs (dep/arr)!
 - **Major**: Fix missing TWR, GND, DEL (especially in US airspace)!
 - **Major**: Fix missing pilots after long idle sessions!

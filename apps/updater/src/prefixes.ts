@@ -1,5 +1,5 @@
 import { rdsGetSingle, rdsSetSingle } from "@sr24/db/redis";
-import type { SimAwareTraconFeature, VatSpyAirport, VatSpyFir } from "@sr24/types/db";
+import type { SimAwareTraconFeature, VatSpyAirport, VatSpyFir, VatSpyUir } from "@sr24/types/db";
 import axios from "axios";
 
 const RELEASE_URL = "https://api.github.com/repos/vatsimnetwork/vatspy-data-project/releases/latest";
@@ -27,6 +27,9 @@ export async function updatePrefixes(): Promise<void> {
 
 		const airports = extractAirports(vatSpyDat);
 		storeTraconPrefixes(airports);
+
+		const uirs = extractUirs(vatSpyDat);
+		storeUirPrefixes(uirs);
 
 		await rdsSetSingle("vatspy:version", version || "1.0.0");
 
@@ -114,6 +117,31 @@ function extractAirports(vatSpyDat: string): VatSpyAirport[] {
 	return airports;
 }
 
+function extractUirs(vatSpyDat: string): VatSpyUir[] {
+	const uirs: VatSpyUir[] = [];
+
+	const sectionStart = vatSpyDat.indexOf("[UIRs]");
+	if (sectionStart === -1) return [];
+
+	const lines = vatSpyDat.slice(sectionStart).split("\r\n");
+
+	for (let line of lines) {
+		line = line.trim();
+
+		if (line === "") break;
+		if (line.startsWith(";") || line.startsWith("[UIRs]")) continue;
+
+		const [callsign_prefix, name, firs] = line.split("|");
+		uirs.push({
+			callsign_prefix,
+			name,
+			firs: firs ? firs.split(",") : [],
+		});
+	}
+
+	return uirs;
+}
+
 async function storeFirPrefixes(firs: VatSpyFir[]): Promise<void> {
 	const prefixes: Record<string, string> = {};
 	for (const fir of firs) {
@@ -151,4 +179,12 @@ async function storeTraconPrefixes(airports: VatSpyAirport[]): Promise<void> {
 	});
 
 	await rdsSetSingle("static_tracons:prefixes", prefixes);
+}
+
+async function storeUirPrefixes(uirs: VatSpyUir[]): Promise<void> {
+	const prefixes: Record<string, string[]> = {};
+	for (const uir of uirs) {
+		prefixes[uir.callsign_prefix] = uir.firs;
+	}
+	await rdsSetSingle("static_uirs:prefixes", prefixes);
 }

@@ -61,6 +61,12 @@ export interface VatSpyAirport {
 	isPsuedo: boolean;
 }
 
+export interface VatSpyUir {
+	callsign_prefix: string;
+	name: string;
+	firs: string[];
+}
+
 interface VatSpyFIRProperties {
 	id: string;
 	oceanic: "0" | "1";
