@@ -1,12 +1,17 @@
 import { rdsGetSingle } from "@sr24/db/redis";
+import type { VatglassesDataset } from "@sr24/types/db";
 
 let currentVatspyVersion: string | null = null;
 let currentAirportsVersion: string | null = null;
+let currentVatglassesSha: string | null = null;
 
 let firPrefixes: Record<string, string> = {};
 let airportPrefixes: Record<string, string> = {};
 let uirPrefixes: Record<string, string[]> = {};
 let traconPrefixes: Record<string, string> = {};
+
+// index: 2-char / 3-char / full code / hyphen-split segment → dataset
+const vatglassesIndex = new Map<string, VatglassesDataset>();
 
 export async function ensureSectorPrefixes(): Promise<void> {
 	const vatspyVersion = await rdsGetSingle("vatspy:version");
@@ -38,6 +43,47 @@ export async function ensureSectorPrefixes(): Promise<void> {
 			currentAirportsVersion = airportVersion;
 		}
 	}
+
+	const vatglassesSha = await rdsGetSingle("static_vatglasses:sha");
+	if (vatglassesSha !== currentVatglassesSha) {
+		const datasets = (await rdsGetSingle("static_vatglasses:all")) as VatglassesDataset[] | undefined;
+		if (datasets) {
+			vatglassesIndex.clear();
+
+			for (const dataset of datasets) {
+				const parts = dataset.code.split("-");
+				for (const part of parts) {
+					if (!vatglassesIndex.has(part)) vatglassesIndex.set(part, dataset);
+				}
+				vatglassesIndex.set(dataset.code, dataset);
+			}
+
+			currentVatglassesSha = vatglassesSha;
+		}
+	}
+}
+
+function resolveVatglassesDataset(code: string): VatglassesDataset | null {
+	const lower = code.toLowerCase();
+	return vatglassesIndex.get(lower.slice(0, 2)) ?? vatglassesIndex.get(lower.slice(0, 3)) ?? vatglassesIndex.get(lower) ?? null;
+}
+
+export function resolveVatglassesPos(callsign: string, frequency: number, mergedId: string): { datasetId: string; posId: string } | null {
+	const code = mergedId.replace(/^[^_]+_/, "");
+	const dataset = resolveVatglassesDataset(code);
+	if (!dataset) return null;
+
+	for (const [posId, pos] of Object.entries(dataset.positions)) {
+		if (pos.frequency && Math.round(parseFloat(pos.frequency) * 1000) !== frequency) continue;
+		if (!callsign.endsWith(pos.type)) continue;
+
+		const pre = Array.isArray(pos.pre) ? pos.pre : pos.pre ? [pos.pre] : [];
+		if (pre.length && !pre.some((p) => callsign.startsWith(p))) continue;
+
+		return { datasetId: dataset.code, posId };
+	}
+
+	return null;
 }
 
 export function reduceCallsign(callsign: string): string[] {

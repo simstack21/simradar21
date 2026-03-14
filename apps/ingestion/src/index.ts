@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { pgDeleteStalePilots, pgUpsertPilots } from "@sr24/db/pg";
 import { rdsConnectBufferClient, rdsPub, rdsSetTrackpoints } from "@sr24/db/redis";
-import type { InitialData, RedisAll, WsDelta } from "@sr24/types/interface";
+import type { ControllerMerged, InitialData, RedisAll, WsDelta } from "@sr24/types/interface";
 import type { VatsimData, VatsimTransceivers } from "@sr24/types/vatsim";
 import axios from "axios";
 import { getAirportDelta, getAirportShort, mapAirports } from "./airport.js";
@@ -66,7 +66,7 @@ async function fetchVatsimData(): Promise<void> {
 		const init: InitialData = {
 			pilots: pilotsLong.filter((p) => p.live === "live").map((p) => getPilotShort(p)),
 			airports: airportsLong.map((a) => getAirportShort(a)),
-			controllers: controllersMerged,
+			controllers: controllersMerged as Required<ControllerMerged>[],
 			timestamp: nowish,
 		};
 
