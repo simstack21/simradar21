@@ -3,7 +3,7 @@ import type { ControllerMerged } from "@sr24/types/interface";
 import type { Coordinate } from "ol/coordinate";
 import { MultiPolygon } from "ol/geom";
 import { fromLonLat } from "ol/proj";
-import { dxGetVatglassesDatasetByCode } from "@/storage/dexie";
+import { dxFindVatglassesDatasetByPrefix, dxGetVatglassesDatasetByCode } from "@/storage/dexie";
 
 function toArray<T>(val: T | T[] | undefined): T[] {
 	if (!val) return [];
@@ -34,6 +34,11 @@ async function resolveDataset(code: string): Promise<{ dataset: VatglassesDatase
 		const dataset = await getDataset(candidate);
 		if (dataset) return { dataset, resolvedCode: candidate };
 	}
+
+	// fallback: shared datasets like "bi-bg" where the 2-letter prefix is one segment
+	const prefix = code.slice(0, 2);
+	const shared = await dxFindVatglassesDatasetByPrefix(prefix);
+	if (shared) return { dataset: shared, resolvedCode: shared.code };
 
 	return null;
 }
@@ -85,7 +90,7 @@ export async function buildActivePositions(controllers: ControllerMerged[]): Pro
 			const posEntries = Object.entries(dataset.positions);
 			for (const c of merged.controllers) {
 				for (const [posId, pos] of posEntries) {
-					if (pos.frequency && parseFloat(pos.frequency) * 1000 !== c.frequency) continue;
+					if (pos.frequency && Math.round(parseFloat(pos.frequency) * 1000) !== c.frequency) continue;
 					if (!c.callsign.endsWith(pos.type)) continue;
 
 					const pre = toArray(pos.pre);
@@ -121,7 +126,7 @@ export async function getVatglassesSectors(
 
 	for (const c of merged.controllers) {
 		for (const [posId, pos] of posEntries) {
-			if (pos.frequency && parseFloat(pos.frequency) * 1000 !== c.frequency) continue;
+			if (pos.frequency && Math.round(parseFloat(pos.frequency) * 1000) !== c.frequency) continue;
 			if (!c.callsign.endsWith(pos.type)) continue;
 
 			const pre = toArray(pos.pre);

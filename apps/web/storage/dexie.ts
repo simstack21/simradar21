@@ -274,3 +274,11 @@ export async function dxGetVatglassesDatasetByCode(code: string): Promise<Vatgla
 		return dataset || null;
 	});
 }
+
+export async function dxFindVatglassesDatasetByPrefix(prefix: string): Promise<VatglassesDataset | null> {
+	await dxEnsureInitialized();
+	return await db.vatglasses
+		.filter((d) => d.code.split("-").includes(prefix))
+		.first()
+		.then((d) => d ?? null);
+}
