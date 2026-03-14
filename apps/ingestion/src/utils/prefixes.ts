@@ -65,7 +65,7 @@ export async function ensureSectorPrefixes(): Promise<void> {
 
 function resolveVatglassesDataset(code: string): VatglassesDataset | null {
 	const lower = code.toLowerCase();
-	return vatglassesIndex.get(lower.slice(0, 2)) ?? vatglassesIndex.get(lower.slice(0, 3)) ?? vatglassesIndex.get(lower) ?? null;
+	return vatglassesIndex.get(lower.slice(0, 2)) ?? vatglassesIndex.get(lower.slice(1, 4)) ?? vatglassesIndex.get(lower) ?? null;
 }
 
 export function resolveVatglassesPos(callsign: string, frequency: number, mergedId: string): { datasetId: string; posId: string } | null {

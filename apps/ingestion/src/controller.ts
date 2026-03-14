@@ -192,7 +192,6 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 	for (const c of controllersLong) {
 		if (c.facility === 1) {
 			const firs = findFirsByUir(c.callsign);
-			if (firs.length === 0) continue;
 
 			for (const fir of firs) {
 				let id = findFirId(fir);
@@ -229,7 +228,7 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 
 		const levels = reduceCallsign(c.callsign);
 
-		if (c.facility === 6) {
+		if (c.facility === 6 || c.facility === 1) {
 			// FIR
 			id = findFirId(c.callsign);
 			facility = "fir";
