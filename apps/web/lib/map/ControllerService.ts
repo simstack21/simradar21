@@ -33,6 +33,10 @@ export class ControllerService {
 	private styleVars: ControllerStyleVars = {};
 	private vatglassesEnabled: boolean | undefined;
 
+	private needsVatglassesFallback(c: ControllerMerged): boolean {
+		return !c.datasetId || c.controllers.every((ctrl) => !ctrl.posId);
+	}
+
 	public init(): VectorLayer[] {
 		this.firLayer = new VectorLayer({
 			source: this.firSource,
@@ -80,17 +84,17 @@ export class ControllerService {
 	}
 
 	public setVatglassesEnabled(enabled: boolean): void {
+		if (this.vatglassesEnabled === enabled) return;
 		this.vatglassesEnabled = enabled;
-		if (enabled) {
-			this.set.clear();
-			this.firSource.clear();
-			this.traconSource.clear();
-			this.airportSource.clear();
-			this.labelSource.clear();
-			this.highlighted.clear();
-		} else {
-			void this.setFeatures(this.getControllers());
-		}
+
+		this.set.clear();
+		this.firSource.clear();
+		this.traconSource.clear();
+		this.airportSource.clear();
+		this.labelSource.clear();
+		this.highlighted.clear();
+
+		void this.setFeatures(this.getControllers());
 	}
 
 	public hoverSector(feature: Feature<Point> | undefined | null, hovered: boolean, event: "hovered" | "clicked"): void {
@@ -128,8 +132,6 @@ export class ControllerService {
 	}
 
 	public async setFeatures(controllers: ControllerMerged[]): Promise<void> {
-		if (this.vatglassesEnabled !== false) return;
-
 		const tempLabels = new Map<string, Feature<Point>>();
 		const tempSectors = new Map<string, Feature<MultiPolygon | Polygon>>();
 		for (const id of this.highlighted) {
@@ -165,16 +167,21 @@ export class ControllerService {
 
 				if (c.facility === "tracon") {
 					const { tracon, label } = await createTraconFeature(id);
-					if (tempSector) {
-						traconFeatures.push(tempSector);
-					} else if (tracon) {
-						traconFeatures.push(tracon);
-					}
 
+					// always show labels
 					if (tempLabel) {
 						labelFeatures.push(tempLabel);
 					} else if (label) {
 						labelFeatures.push(label);
+					}
+
+					// show only sector feature when no vatglasses or no vatglasses dataset
+					if (!this.vatglassesEnabled || this.needsVatglassesFallback(c)) {
+						if (tempSector) {
+							traconFeatures.push(tempSector);
+						} else if (tracon) {
+							traconFeatures.push(tracon);
+						}
 					}
 
 					return;
@@ -182,16 +189,21 @@ export class ControllerService {
 
 				if (c.facility === "fir") {
 					const { fir, label } = await createFirFeature(id);
-					if (tempSector) {
-						firFeatures.push(tempSector);
-					} else if (fir) {
-						firFeatures.push(fir);
-					}
 
+					// always show labels
 					if (tempLabel) {
 						labelFeatures.push(tempLabel);
 					} else if (label) {
 						labelFeatures.push(label);
+					}
+
+					// show only sector feature when no vatglasses or no vatglasses dataset
+					if (!this.vatglassesEnabled || this.needsVatglassesFallback(c)) {
+						if (tempSector) {
+							firFeatures.push(tempSector);
+						} else if (fir) {
+							firFeatures.push(fir);
+						}
 					}
 
 					return;
@@ -213,8 +225,6 @@ export class ControllerService {
 	}
 
 	public async updateFeatures(controllers: ControllerDelta): Promise<string[]> {
-		if (this.vatglassesEnabled !== false) return [];
-
 		const controllersInDelta = new Set<string>();
 
 		for (const c of controllers.updated) {
@@ -244,11 +254,15 @@ export class ControllerService {
 
 			if (c.facility === "tracon") {
 				const { tracon, label } = await createTraconFeature(id);
-				if (tracon) {
-					this.traconSource.addFeature(tracon);
-				}
+
+				// always show labels
 				if (label) {
 					this.labelSource.addFeature(label);
+				}
+
+				// show only sector feature when no vatglasses or no vatglasses dataset
+				if (tracon && (!this.vatglassesEnabled || this.needsVatglassesFallback(c))) {
+					this.traconSource.addFeature(tracon);
 				}
 
 				continue;
@@ -256,11 +270,15 @@ export class ControllerService {
 
 			if (c.facility === "fir") {
 				const { fir, label } = await createFirFeature(id);
-				if (fir) {
-					this.firSource.addFeature(fir);
-				}
+
+				// always show labels
 				if (label) {
 					this.labelSource.addFeature(label);
+				}
+
+				// show only sector feature when no vatglasses or no vatglasses dataset
+				if (fir && (!this.vatglassesEnabled || this.needsVatglassesFallback(c))) {
+					this.firSource.addFeature(fir);
 				}
 
 				continue;
