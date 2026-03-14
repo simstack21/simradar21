@@ -11,10 +11,7 @@ function toArray<T>(val: T | T[] | undefined): T[] {
 }
 
 function getCode(mergedId: string): string {
-	return mergedId
-		.replace(/^[^_]+_/, "")
-		.slice(0, 2)
-		.toLowerCase();
+	return mergedId.replace(/^[^_]+_/, "").toLowerCase();
 }
 
 // cache dexie dataset for faster access and perf opt
@@ -67,8 +64,12 @@ export async function buildActivePositions(controllers: ControllerMerged[]): Pro
 
 	await Promise.all(
 		controllers.map(async (merged) => {
+			let dataset: VatglassesDataset | null = null;
 			const code = getCode(merged.id);
-			const dataset = await getDataset(code);
+			dataset = await getDataset(code.slice(0, 2));
+			if (!dataset) {
+				dataset = await getDataset(code.slice(-3));
+			}
 			if (!dataset) return;
 
 			const posEntries = Object.entries(dataset.positions);
@@ -96,8 +97,12 @@ export async function getVatglassesSectors(
 	activePositions: Map<string, Set<string>>,
 	dynamicOwnership: VatglassesDynamicOwnership | null,
 ): Promise<{ sectors: ConvertedSector[]; color: string | null } | null> {
+	let dataset: VatglassesDataset | null = null;
 	const code = getCode(merged.id);
-	const dataset = await getDataset(code);
+	dataset = await getDataset(code.slice(0, 2));
+	if (!dataset) {
+		dataset = await getDataset(code.slice(-3));
+	}
 	if (!dataset) return null;
 
 	const posEntries = Object.entries(dataset.positions);

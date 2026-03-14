@@ -4,9 +4,9 @@ import { Feature } from "ol";
 import type { MultiPolygon, Polygon } from "ol/geom";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
+import { fetchApi } from "../api";
 import { getVatglassesStyle } from "./styles/vatglasses";
 import { buildActivePositions, type ConvertedSector, getVatglassesMultipolygon, getVatglassesSectors } from "./vatglasses";
-import { fetchApi } from "../api";
 
 type CachedSector = {
 	sectors: ConvertedSector[];
