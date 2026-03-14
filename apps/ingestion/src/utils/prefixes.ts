@@ -62,12 +62,16 @@ export function reduceCallsign(callsign: string): string[] {
 	return levels;
 }
 
+function matchesPrefix(callsign: string, prefix: string): boolean {
+	return callsign === prefix || callsign.startsWith(`${prefix}_`);
+}
+
 export function findTraconId(callsign: string): string | null {
 	let bestMatch: string | null = null;
 	let bestLen = 0;
 
 	for (const [prefix, id] of traconPrefixes) {
-		if (callsign.startsWith(prefix) && prefix.length > bestLen) {
+		if (matchesPrefix(callsign, prefix) && prefix.length > bestLen) {
 			bestMatch = id;
 			bestLen = prefix.length;
 		}
@@ -81,7 +85,7 @@ export function findFirId(callsign: string): string | null {
 	let bestLen = 0;
 
 	for (const prefix in firPrefixes) {
-		if (callsign.startsWith(prefix) && prefix.length > bestLen) {
+		if (matchesPrefix(callsign, prefix) && prefix.length > bestLen) {
 			bestMatch = firPrefixes[prefix];
 			bestLen = prefix.length;
 		}
