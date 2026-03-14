@@ -26,6 +26,18 @@ function getDataset(code: string): Promise<VatglassesDataset | null> {
 	return promise;
 }
 
+async function resolveDataset(code: string): Promise<{ dataset: VatglassesDataset; resolvedCode: string } | null> {
+	const candidates = [code.slice(0, 2), code.slice(0, 3), code.split("-")[0]];
+
+	for (const candidate of candidates) {
+		if (!candidate) continue;
+		const dataset = await getDataset(candidate);
+		if (dataset) return { dataset, resolvedCode: candidate };
+	}
+
+	return null;
+}
+
 // pre onverted coordinates are save in this, to opt performance
 export type ConvertedSector = {
 	min: number;
@@ -64,13 +76,11 @@ export async function buildActivePositions(controllers: ControllerMerged[]): Pro
 
 	await Promise.all(
 		controllers.map(async (merged) => {
-			let dataset: VatglassesDataset | null = null;
 			const code = getCode(merged.id);
-			dataset = await getDataset(code.slice(0, 2));
-			if (!dataset) {
-				dataset = await getDataset(code.slice(-3));
-			}
-			if (!dataset) return;
+			const resolved = await resolveDataset(code);
+			if (!resolved) return;
+
+			const { dataset, resolvedCode } = resolved;
 
 			const posEntries = Object.entries(dataset.positions);
 			for (const c of merged.controllers) {
@@ -80,8 +90,8 @@ export async function buildActivePositions(controllers: ControllerMerged[]): Pro
 
 					const pre = toArray(pos.pre);
 					if (!pre.some((prefix) => c.callsign.startsWith(prefix))) continue;
-					if (!result.has(code)) result.set(code, new Set());
-					result.get(code)?.add(posId);
+					if (!result.has(resolvedCode)) result.set(resolvedCode, new Set());
+					result.get(resolvedCode)?.add(posId);
 
 					break;
 				}
@@ -97,17 +107,15 @@ export async function getVatglassesSectors(
 	activePositions: Map<string, Set<string>>,
 	dynamicOwnership: VatglassesDynamicOwnership | null,
 ): Promise<{ sectors: ConvertedSector[]; color: string | null } | null> {
-	let dataset: VatglassesDataset | null = null;
 	const code = getCode(merged.id);
-	dataset = await getDataset(code.slice(0, 2));
-	if (!dataset) {
-		dataset = await getDataset(code.slice(-3));
-	}
-	if (!dataset) return null;
+	const resolved = await resolveDataset(code);
+	if (!resolved) return null;
+
+	const { dataset, resolvedCode } = resolved;
 
 	const posEntries = Object.entries(dataset.positions);
-	const activeForCode = activePositions.get(code) ?? new Set<string>();
-	const dynamicForCode = dynamicOwnership?.[code]?.airspace ?? null;
+	const activeForCode = activePositions.get(resolvedCode) ?? new Set<string>();
+	const dynamicForCode = dynamicOwnership?.[resolvedCode]?.airspace ?? null;
 	const rawSectors: VatglassesSector[] = [];
 	let color: string | null = null;
 
