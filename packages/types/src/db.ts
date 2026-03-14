@@ -183,9 +183,14 @@ export interface VatglassesGroup {
 	color?: string;
 }
 
+export interface VatglassesAirport {
+	runways?: string[];
+}
+
 export interface VatglassesDataset {
 	code: string;
 	airspace: VatglassesAirspaceEntry[];
 	positions: Record<string, VatglassesPosition>;
 	groups: Record<string, VatglassesGroup>;
+	airports?: Record<string, VatglassesAirport>;
 }

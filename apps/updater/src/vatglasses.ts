@@ -72,6 +72,7 @@ async function fetchStaticDataset(code: string): Promise<VatglassesDataset | nul
 			airspace: raw.airspace,
 			positions: raw.positions ?? {},
 			groups: raw.groups ?? {},
+			airports: raw.airports ?? {},
 		};
 	} catch {
 		return null;
@@ -103,6 +104,7 @@ async function fetchDynamicDataset(code: string): Promise<VatglassesDataset | nu
 			airspace,
 			positions: rawPositions.positions ?? {},
 			groups: rawAirspace.groups ?? {},
+			airports: rawAirspace.airports ?? {},
 		};
 	} catch {
 		return null;

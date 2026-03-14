@@ -31,12 +31,12 @@ export default function Controls() {
 
 	return (
 		<div className="flex flex-col gap-2">
-			<div className="flex items-center justify-center gap-4 pt-0.5">
+			{vatglasses && !isHidden && <SliderVatglasses />}
+			<div className="flex items-center justify-center gap-4">
 				<SwitchMultiView />
 				<SwitchVisibility />
 				<SwitchVatglasses />
 			</div>
-			{vatglasses && !isHidden && <SliderVatglasses />}
 			{!isHidden && <ButtonGroupControls />}
 		</div>
 	);
@@ -99,7 +99,7 @@ const SliderVatglasses = () => {
 	const { vatglassesAltitude, setVatglassesAltitude } = useMapVisibilityStore();
 
 	return (
-		<div className="flex gap-2 items-center">
+		<div className="flex gap-2 items-center pt-0.5">
 			<Slider
 				value={vatglassesAltitude}
 				onValueChange={(value) => setVatglassesAltitude(value as number)}
