@@ -8,9 +8,12 @@ import type { RgbaColor } from "react-colorful";
 import { toast } from "sonner";
 import { createAirportFeature, createFirFeature, createTraconFeature, stripPrefix } from "./controllers";
 import { type ControllerStyleVars, getAirportStyle, getFirStyle, getLabelStyle, getTraconStyle } from "./styles/controller";
+import { VatglassesService } from "./VatglassesService";
 
 export class ControllerService {
 	constructor(private getControllers: () => ControllerMerged[]) {}
+
+	private vatglassesService = new VatglassesService(this.getControllers);
 
 	private firSource = new VectorSource({
 		useSpatialIndex: false,
@@ -71,8 +74,9 @@ export class ControllerService {
 			declutter: true,
 			zIndex: 10,
 		});
+		const vatglassesLayer = this.vatglassesService.init();
 
-		return [this.firLayer, this.traconLayer, this.airportLayer, this.labelLayer];
+		return [this.firLayer, this.traconLayer, this.airportLayer, this.labelLayer, vatglassesLayer];
 	}
 
 	public getSource(): VectorSource<Feature<Point>> {
@@ -83,7 +87,12 @@ export class ControllerService {
 		// No theme changes yet
 	}
 
+	public setVatglassesAltitude(altitude: number): void {
+		this.vatglassesService.setAltitude(altitude);
+	}
+
 	public setVatglassesEnabled(enabled: boolean): void {
+		this.vatglassesService.setVatglassesEnabled(enabled);
 		if (this.vatglassesEnabled === enabled) return;
 		this.vatglassesEnabled = enabled;
 

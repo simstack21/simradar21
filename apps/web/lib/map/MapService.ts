@@ -29,7 +29,6 @@ import styleDark from "./positron_dark.json";
 import styleLight from "./positron_light.json";
 import { Sunservice } from "./SunService";
 import { TrackService } from "./TrackService";
-import { VatglassesService } from "./VatglassesService";
 
 type Options = {
 	onNavigate?: (href: string) => void;
@@ -57,7 +56,6 @@ export class MapService {
 	private controllerService = new ControllerService(() => this.sharedControllers);
 	private trackService = new TrackService();
 	private navigraphService = new NavigraphService();
-	private vatglassesService = new VatglassesService(() => this.sharedControllers);
 
 	private multiView: boolean | undefined;
 	private minimalOverlays = false;
@@ -122,11 +120,10 @@ export class MapService {
 		const controllerLayers = this.controllerService.init();
 		const trackLayer = this.trackService.init();
 		const navigraphLayers = this.navigraphService.init();
-		const vatglassesLayer = this.vatglassesService.init();
 
 		this.map = new OlMap({
 			target: "map",
-			layers: [this.baseLayer, sunLayer, ...pilotLayers, airportLayer, ...controllerLayers, trackLayer, ...navigraphLayers, vatglassesLayer],
+			layers: [this.baseLayer, sunLayer, ...pilotLayers, airportLayer, ...controllerLayers, trackLayer, ...navigraphLayers],
 			view: new View({
 				center: fromLonLat(center),
 				zoom,
@@ -227,11 +224,10 @@ export class MapService {
 			this.updateRelatives();
 		}
 		if (vatglasses !== undefined) {
-			this.vatglassesService.setVatglassesEnabled(vatglasses);
 			this.controllerService.setVatglassesEnabled(vatglasses);
 		}
 		if (vatglassesAltitude !== undefined) {
-			this.vatglassesService.setAltitude(vatglassesAltitude);
+			this.controllerService.setVatglassesAltitude(vatglassesAltitude);
 		}
 	}
 
@@ -558,7 +554,6 @@ export class MapService {
 		}
 		if (controllers) {
 			this.sharedControllers = controllers;
-			this.vatglassesService.setFeatures(controllers);
 			await this.controllerService.setFeatures(controllers);
 		}
 		if (trackPoints && autoTrackId) {
@@ -593,7 +588,6 @@ export class MapService {
 		}
 		if (controllers) {
 			this.sharedControllers = controllers;
-			this.vatglassesService.setFeatures(controllers);
 			await this.controllerService.setFeatures(controllers);
 		}
 
