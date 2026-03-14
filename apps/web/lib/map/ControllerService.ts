@@ -231,6 +231,8 @@ export class ControllerService {
 		this.traconSource.addFeatures(traconFeatures);
 		this.airportSource.addFeatures(airportFeatures);
 		this.labelSource.addFeatures(labelFeatures);
+
+		this.vatglassesService.setFeatures(controllers);
 	}
 
 	public async updateFeatures(controllers: ControllerDelta): Promise<string[]> {
@@ -335,6 +337,8 @@ export class ControllerService {
 		for (const id of toRemove) {
 			this.set.delete(id);
 		}
+
+		this.vatglassesService.setFeatures(this.getControllers());
 
 		const removedIds: string[] = [];
 
