@@ -107,23 +107,17 @@ export class ControllerService {
 	}
 
 	public hoverSector(feature: Feature<Point> | undefined | null, hovered: boolean, event: "hovered" | "clicked"): void {
-		if (feature?.get("type") === "tracon") {
-			const id = feature.getId()?.toString();
-			if (id) {
-				const multiFeature = this.traconSource.getFeatureById(id);
-				if (multiFeature) {
-					multiFeature.set(event, hovered);
-				}
-			}
-		}
+		const type = feature?.get("type") as string | undefined;
+		const id = feature?.getId()?.toString();
+		if (!type || !id) return;
 
-		if (feature?.get("type") === "fir") {
-			const id = feature.getId()?.toString();
-			if (id) {
-				const multiFeature = this.firSource.getFeatureById(id);
-				if (multiFeature) {
-					multiFeature.set(event, hovered);
-				}
+		if (type === "tracon" || type === "fir") {
+			const source = type === "tracon" ? this.traconSource : this.firSource;
+			const multiFeature = source.getFeatureById(id);
+			if (multiFeature) {
+				multiFeature.set(event, hovered);
+			} else if (this.vatglassesEnabled) {
+				this.vatglassesService.hoverSector(feature, hovered, event);
 			}
 		}
 	}

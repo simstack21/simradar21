@@ -1,10 +1,11 @@
 import type { VatglassesDynamicOwnership } from "@sr24/types/db";
 import type { ControllerMerged } from "@sr24/types/interface";
 import { Feature } from "ol";
-import type { MultiPolygon, Polygon } from "ol/geom";
+import type { MultiPolygon, Point, Polygon } from "ol/geom";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { fetchApi } from "../api";
+import { stripPrefix } from "./controllers";
 import { getVatglassesStyle } from "./styles/vatglasses";
 import { buildActivePositions, type ConvertedSector, getVatglassesMultipolygon, getVatglassesSectors } from "./vatglasses";
 
@@ -29,6 +30,9 @@ export class VatglassesService {
 	private altitude: number = 200;
 	private vatglassesEnabled: boolean | undefined;
 	private altitudeRafId: number | null = null;
+
+	private hoveredId: string | null = null;
+	private clickedIds = new Set<string>();
 
 	public init(): VectorLayer {
 		this.layer = new VectorLayer({
@@ -81,7 +85,7 @@ export class VatglassesService {
 			this.controllerKey = newKey;
 			this.cachedSectors.clear();
 
-			const activePositions = await buildActivePositions(controllers);
+			const activePositions = buildActivePositions(controllers);
 
 			await Promise.all(
 				controllers.map(async (merged) => {
@@ -106,7 +110,13 @@ export class VatglassesService {
 
 			const multipolygon = getVatglassesMultipolygon(cached.sectors, this.altitude);
 			const feature = new Feature(multipolygon);
+
+			const featureId = `sector_${stripPrefix(merged.id)}`;
+			feature.setId(featureId);
 			feature.set("color", cached.color);
+			feature.set("hovered", this.hoveredId === featureId);
+			feature.set("clicked", this.clickedIds.has(featureId));
+
 			features.push(feature);
 		}
 
@@ -123,6 +133,10 @@ export class VatglassesService {
 			clearInterval(this.dynamicOwnershipInterval);
 			this.dynamicOwnershipInterval = null;
 		}
+
+		this.hoveredId = null;
+		this.clickedIds.clear();
+
 		this.controllerKey = "";
 		this.source.clear();
 	}
@@ -138,5 +152,19 @@ export class VatglassesService {
 			this.altitudeRafId = null;
 			this.renderFeatures(this.getControllers());
 		});
+	}
+
+	public hoverSector(feature: Feature<Point> | undefined | null, hovered: boolean, event: "hovered" | "clicked"): void {
+		const id = feature?.getId()?.toString();
+		if (!id) return;
+
+		if (event === "hovered") {
+			this.hoveredId = hovered ? id : null;
+		} else {
+			hovered ? this.clickedIds.add(id) : this.clickedIds.delete(id);
+		}
+
+		const multiFeature = this.source.getFeatureById(id);
+		multiFeature?.set(event, hovered);
 	}
 }
