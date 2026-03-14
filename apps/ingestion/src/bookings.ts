@@ -2,7 +2,7 @@ import { rdsPub } from "@sr24/db/redis";
 import type { Booking } from "@sr24/types/interface";
 import type { VatsimBooking } from "@sr24/types/vatsim";
 import axios from "axios";
-import { findFirId, findTraconId, parseAirportFacility, reduceCallsign } from "./utils/sectors.js";
+import { findFirId, findTraconId, parseAirportFacility, reduceCallsign } from "./utils/prefixes.js";
 
 const UPDATE_INTERVAL = 10 * 60 * 1000;
 let lastUpdate = 0;

@@ -11,7 +11,7 @@ import { updateDashboardData } from "./dashboard.js";
 import { ensureNavigraphData } from "./navigraph.js";
 import { getPilotDelta, getPilotShort, mapPilots } from "./pilot.js";
 import { mapTrackPoints } from "./tracks.js";
-import { ensureSectorPrefixes } from "./utils/sectors.js";
+import { ensureSectorPrefixes } from "./utils/prefixes.js";
 
 axios.defaults.headers.common["x-identifier"] = process.env.VATSIM_API_IDENTIFIER || "simradar21-unknown";
 axios.defaults.headers.common["User-Agent"] = "simradar21/1.0";

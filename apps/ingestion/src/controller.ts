@@ -1,8 +1,8 @@
 import type { ControllerDelta, ControllerLong, ControllerMerged, ControllerShort, PilotLong } from "@sr24/types/interface";
 import type { VatsimData } from "@sr24/types/vatsim";
 import { haversineDistance } from "./utils/helpers.js";
+import { findAirportId, findFirId, findTraconId, reduceCallsign } from "./utils/prefixes.js";
 import { getUserRatings } from "./utils/ratings.js";
-import { findFirId, findTraconId, reduceCallsign } from "./utils/sectors.js";
 
 let cachedLongs: ControllerLong[] = [];
 let cached: ControllerMerged[] = [];
@@ -209,6 +209,7 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 		} else {
 			// Airport: simply take the first segment
 			id = levels[levels.length - 1];
+			id = findAirportId(id);
 			facility = "airport";
 		}
 

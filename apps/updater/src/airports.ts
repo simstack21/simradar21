@@ -41,6 +41,7 @@ export async function updateAirports(): Promise<void> {
 			timezone: findTimezone(Number(a.latitude_deg), Number(a.longitude_deg))[0],
 		}));
 
+	await storeAirportIatas(filteredAirports);
 	await rdsSetMultiple(filteredAirports, "static_airport", (a) => a.id);
 	await rdsSetSingle("static_airports:all", filteredAirports);
 	await rdsSetSingle("static_airports:version", MANUAL_VERSION);
@@ -54,4 +55,12 @@ async function initVersion(): Promise<void> {
 		const redisVersion = await rdsGetSingle("static_airports:version");
 		version = redisVersion || "0.0.0";
 	}
+}
+
+async function storeAirportIatas(airports: StaticAirport[]) {
+	const prefixes: Record<string, string> = {};
+	for (const airport of airports) {
+		prefixes[airport.iata || airport.id] = airport.id;
+	}
+	await rdsSetSingle("static_airports:prefixes", prefixes);
 }

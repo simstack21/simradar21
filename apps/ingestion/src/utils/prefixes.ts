@@ -3,13 +3,16 @@ import type { SimAwareTraconFeature } from "@sr24/types/db";
 
 let currentFirsVersion: string | null = null;
 let currentTraconsVersion: string | null = null;
+let currentAirportsVersion: string | null = null;
 
 let firPrefixes: Record<string, string> = {};
+let airportPrefixes: Record<string, string> = {};
 const traconPrefixes = new Map<string, string>();
 
 export async function ensureSectorPrefixes(): Promise<void> {
 	const firsVersion = await rdsGetSingle("static_firs:version");
 	const traconsVersion = await rdsGetSingle("static_tracons:version");
+	const airportVersion = await rdsGetSingle("static_airports:version");
 
 	if (currentFirsVersion !== firsVersion) {
 		const prefixes = (await rdsGetSingle("static_firs:prefixes")) as Record<string, string> | undefined;
@@ -36,6 +39,14 @@ export async function ensureSectorPrefixes(): Promise<void> {
 			});
 
 			currentTraconsVersion = traconsVersion;
+		}
+	}
+
+	if (currentAirportsVersion !== airportVersion) {
+		const prefixes = (await rdsGetSingle("static_airports:prefixes")) as Record<string, string> | undefined;
+		if (prefixes) {
+			airportPrefixes = prefixes;
+			currentAirportsVersion = airportVersion;
 		}
 	}
 }
@@ -77,6 +88,10 @@ export function findFirId(callsign: string): string | null {
 	}
 
 	return bestMatch;
+}
+
+export function findAirportId(id: string): string | null {
+	return airportPrefixes[id] || id;
 }
 
 export function parseAirportFacility(callsign: string): number {
