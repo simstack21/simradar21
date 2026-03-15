@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import { useFiltersStore, useMapVisibilityStore, useSettingsStore } from "@/storage/zustand";
@@ -9,6 +10,8 @@ import { init, mapService } from "../lib";
 export default function OMap() {
 	const router = useRouter();
 	const pathname = usePathname();
+
+	const { data: session } = useSession();
 
 	const { theme } = useTheme();
 	const {
@@ -28,10 +31,14 @@ export default function OMap() {
 		navigraphRoutesInMulti,
 	} = useSettingsStore();
 	const filters = useFiltersStore();
-	const { vatglassesAltitude, vatglasses, _hasHydrated } = useMapVisibilityStore();
+	const { vatglassesAltitude, setVatglassesAltitude, vatglasses, vatglassesAuto, _hasHydrated } = useMapVisibilityStore();
 
 	useEffect(() => {
-		const map = mapService.init({ onNavigate: (href) => router.push(href), autoTrackPoints: true });
+		const map = mapService.init({
+			onNavigate: (href) => router.push(href),
+			autoTrackPoints: true,
+			onVatglassesAltitudeChange: setVatglassesAltitude,
+		});
 
 		mapService.addEventListeners();
 
@@ -39,7 +46,7 @@ export default function OMap() {
 			mapService.removeEventListeners();
 			map.setTarget(undefined);
 		};
-	}, [router]);
+	}, [router, setVatglassesAltitude]);
 
 	useEffect(() => {
 		init(pathname);
@@ -55,8 +62,12 @@ export default function OMap() {
 
 	useEffect(() => {
 		if (!_hasHydrated) return;
-		mapService.setView({ vatglasses, vatglassesAltitude });
-	}, [_hasHydrated, vatglasses, vatglassesAltitude]);
+		mapService.setVatglasses({ vatglasses, vatglassesAltitude, vatglassesAuto });
+	}, [_hasHydrated, vatglasses, vatglassesAltitude, vatglassesAuto]);
+
+	useEffect(() => {
+		mapService.setVatglasses({ cid: session?.vatsim?.cid });
+	}, [session?.vatsim?.cid]);
 
 	useEffect(() => {
 		mapService.setSettings({

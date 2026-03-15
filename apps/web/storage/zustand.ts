@@ -255,6 +255,8 @@ type MapVisibilityState = {
 	setVatglasses: (value: boolean) => void;
 	vatglassesAltitude: number;
 	setVatglassesAltitude: (value: number) => void;
+	vatglassesAuto: boolean;
+	setVatglassesAuto: (value: boolean) => void;
 };
 
 export const useMapVisibilityStore = create<MapVisibilityState>()(
@@ -267,6 +269,8 @@ export const useMapVisibilityStore = create<MapVisibilityState>()(
 			setVatglasses: (value: boolean) => set({ vatglasses: value }),
 			vatglassesAltitude: 0,
 			setVatglassesAltitude: (value: number) => set({ vatglassesAltitude: value }),
+			vatglassesAuto: false,
+			setVatglassesAuto: (value: boolean) => set({ vatglassesAuto: value }),
 		}),
 		{
 			name: "simradar21-map-visibility",

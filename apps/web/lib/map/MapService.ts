@@ -32,6 +32,7 @@ import { TrackService } from "./TrackService";
 
 type Options = {
 	onNavigate?: (href: string) => void;
+	onVatglassesAltitudeChange?: (altitude: number) => void;
 	autoTrackPoints?: boolean;
 	disableInteractions?: boolean;
 	disableCenterOnPageLoad?: boolean;
@@ -66,6 +67,9 @@ export class MapService {
 	private clickFeatures = new Map<string, Feature<Point>>();
 	private clickOverlays = new Map<string, Overlay>();
 	private clickSelect: Select | undefined;
+	private trackedCid: string | null = null;
+	private vatglassesEnabled = false;
+	private vatglassesAuto = false;
 
 	private lastExtent: Extent | null = null;
 	private lastSettings: Partial<SettingValues> = {};
@@ -182,8 +186,6 @@ export class MapService {
 		zoom,
 		multi,
 		minimalOverlays,
-		vatglasses,
-		vatglassesAltitude,
 	}: {
 		rotation?: number;
 		zoomStep?: number;
@@ -191,8 +193,6 @@ export class MapService {
 		zoom?: number;
 		multi?: boolean;
 		minimalOverlays?: boolean;
-		vatglasses?: boolean;
-		vatglassesAltitude?: number;
 	}): void {
 		const view = this.map?.getView();
 		if (!view) return;
@@ -222,11 +222,43 @@ export class MapService {
 			this.minimalOverlays = minimalOverlays;
 			this.updateRelatives();
 		}
+	}
+
+	public setVatglasses({
+		vatglasses,
+		vatglassesAltitude,
+		vatglassesAuto,
+		cid,
+	}: {
+		vatglasses?: boolean;
+		vatglassesAltitude?: number;
+		vatglassesAuto?: boolean;
+		cid?: number;
+	}): void {
 		if (vatglasses !== undefined) {
+			this.vatglassesEnabled = vatglasses;
 			this.controllerService.setVatglassesEnabled(vatglasses);
 		}
-		if (vatglassesAltitude !== undefined) {
+		if (vatglassesAuto !== undefined) {
+			this.vatglassesAuto = vatglassesAuto;
+			this.setVatglassesAutoAltitude();
+		}
+		if (cid !== undefined) {
+			this.trackedCid = cid ? String(cid) : null;
+			this.setVatglassesAutoAltitude();
+		}
+		if (vatglassesAltitude !== undefined && !(this.vatglassesAuto && this.trackedCid)) {
 			this.controllerService.setVatglassesAltitude(vatglassesAltitude);
+		}
+	}
+
+	private setVatglassesAutoAltitude(): void {
+		if (this.vatglassesEnabled && this.vatglassesAuto && this.trackedCid) {
+			const pilotAlt = this.pilotService.getAltitudeByCid(this.trackedCid);
+			if (pilotAlt !== null) {
+				this.controllerService.setVatglassesAltitude(pilotAlt);
+				this.options?.onVatglassesAltitudeChange?.(pilotAlt);
+			}
 		}
 	}
 
@@ -607,6 +639,7 @@ export class MapService {
 
 		if (pilots) {
 			removedIds.push(...this.pilotService.updateFeatures(pilots));
+			this.setVatglassesAutoAltitude();
 		}
 		if (airports) {
 			// resetNeeded = this.airportService.updateFeatures(airports) || resetNeeded;

@@ -16,6 +16,7 @@ type RBushFeature = {
 	maxX: number;
 	maxY: number;
 	altitude_agl: number;
+	cid: string;
 	feature: Feature<Point>;
 };
 
@@ -28,6 +29,7 @@ export class PilotService {
 
 	private rbush = new RBush<RBushFeature>();
 	private map = new Map<string, RBushFeature>();
+	private cidToId = new Map<string, string>();
 	private rendered = new Set<string>();
 	private renderPending = false;
 
@@ -146,7 +148,7 @@ export class PilotService {
 		this.highlighted.clear();
 	}
 
-	public setFeatures(pilots: PilotShort[]) {
+	public setFeatures(pilots: Required<PilotShort>[]) {
 		const tempItems = new Map<string, RBushFeature>();
 		for (const id of [...this.focused, ...this.highlighted]) {
 			const item = this.map.get(id);
@@ -193,10 +195,12 @@ export class PilotService {
 				maxX: p.coordinates[0],
 				maxY: p.coordinates[1],
 				altitude_agl: p.altitude_agl || 0,
+				cid: p.cid,
 				feature,
 			};
 
 			this.map.set(p.id, newItem);
+			this.cidToId.set(p.cid, p.id);
 			this.rbush.insert(newItem);
 		}
 	}
@@ -242,10 +246,12 @@ export class PilotService {
 				maxX: p.coordinates[0],
 				maxY: p.coordinates[1],
 				altitude_agl: p.altitude_agl || 0,
+				cid: p.cid,
 				feature,
 			};
 
 			this.map.set(p.id, newItem);
+			this.cidToId.set(p.cid, p.id);
 			this.rbush.insert(newItem);
 		}
 
@@ -258,7 +264,9 @@ export class PilotService {
 		}
 
 		for (const id of toRemove) {
+			const cid = this.map.get(id)?.cid;
 			this.map.delete(id);
+			if (cid) this.cidToId.delete(cid);
 		}
 
 		const removedIds: string[] = [];
@@ -422,6 +430,17 @@ export class PilotService {
 
 			geom.setCoordinates(coords);
 		}
+	}
+
+	public getAltitudeByCid(cid: string): number | null {
+		const id = this.cidToId.get(cid);
+		if (!id) return null;
+
+		const item = this.map.get(id);
+		if (!item?.feature) return null;
+
+		const altitude = item.feature.get("altitude_ms") as number | undefined;
+		return altitude !== undefined ? Math.round(altitude / 500) * 5 : null;
 	}
 
 	public moveToFeature(id: string, view?: View | undefined): Feature<Point> | null {

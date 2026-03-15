@@ -29,7 +29,7 @@ export async function createTraconFeature(id: string): Promise<{ tracon?: Featur
 		tracon.setId(`sector_${id}`);
 
 		const longitude = airport.longitude;
-		const latitude = airport.latitude - 17 / 60;
+		const latitude = airport.latitude - 0.49;
 		const label = createLabelFeature(longitude, latitude, id, "tracon");
 
 		return { tracon, label };
@@ -112,7 +112,7 @@ function createLabelFeature(lon: number, lat: number, label: string, type: "trac
 }
 
 function createCircleTracon(lon: number, lat: number): Polygon {
-	const radiusMeters = 25 * 1852;
+	const radiusMeters = 50 * 1852;
 	const center = fromLonLat([lon, lat]);
 	const circle = new Circle(center, radiusMeters);
 	const polygon = fromCircle(circle, 36);

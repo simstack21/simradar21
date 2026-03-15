@@ -6,6 +6,7 @@ import {
 	FunnelIcon,
 	GlassesIcon,
 	LayersIcon,
+	LinkIcon,
 	LocateIcon,
 	MaximizeIcon,
 	MinimizeIcon,
@@ -16,8 +17,11 @@ import {
 	SquareStackIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -31,12 +35,12 @@ export default function Controls() {
 
 	return (
 		<div className="flex flex-col gap-2">
-			{vatglasses && !isHidden && <SliderVatglasses />}
 			<div className="flex items-center justify-center gap-4">
 				<SwitchMultiView />
 				<SwitchVisibility />
 				<SwitchVatglasses />
 			</div>
+			{vatglasses && !isHidden && <SliderVatglasses />}
 			{!isHidden && <ButtonGroupControls />}
 		</div>
 	);
@@ -96,10 +100,19 @@ const SwitchVatglasses = () => {
 };
 
 const SliderVatglasses = () => {
-	const { vatglassesAltitude, setVatglassesAltitude } = useMapVisibilityStore();
+	const id = useId();
+	const { data: session } = useSession();
+	const { vatglassesAltitude, setVatglassesAltitude, vatglassesAuto, setVatglassesAuto } = useMapVisibilityStore();
 
 	return (
 		<div className="flex gap-2 items-center pt-0.5">
+			<Field orientation="horizontal" data-disabled={!session?.vatsim?.cid} className="gap-1 w-fit shrink-0">
+				<Checkbox id={id} checked={vatglassesAuto} onCheckedChange={setVatglassesAuto} disabled={!session?.vatsim?.cid} />
+				<FieldLabel htmlFor={id}>
+					<span className="sr-only">Toggle switch</span>
+					<LinkIcon className="size-4" aria-hidden="true" />
+				</FieldLabel>
+			</Field>
 			<Slider
 				value={vatglassesAltitude}
 				onValueChange={(value) => setVatglassesAltitude(value as number)}
@@ -107,10 +120,9 @@ const SliderVatglasses = () => {
 				max={500}
 				step={5}
 				className="w-full"
+				disabled={vatglassesAuto && !!session?.vatsim?.cid}
 			/>
-			<span className="text-xs font-mono leading-none shrink-0">
-				{vatglassesAltitude === 0 ? "AUTO (FLXXX)" : `FL${String(vatglassesAltitude).padStart(3, "0")}`}
-			</span>
+			<span className="text-xs font-mono leading-none">FL{String(vatglassesAltitude).padStart(3, "0")}</span>
 		</div>
 	);
 };

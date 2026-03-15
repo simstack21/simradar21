@@ -31,6 +31,7 @@ export interface DeltaTrackPoint {
 
 export interface PilotShort {
 	id: string;
+	cid?: string;
 	callsign?: string;
 	coordinates?: [number, number];
 	altitude_agl?: number;
