@@ -5,6 +5,8 @@ import axios from "axios";
 const RELEASE_URL = "https://api.github.com/repos/vatsimnetwork/simaware-tracon-project/releases/latest";
 const BASE_DATA_URL = "https://github.com/vatsimnetwork/simaware-tracon-project/releases/download/";
 
+const SCHEMA_VERSION = 2;
+
 let version: string | null = null;
 
 export async function updateTracons(): Promise<void> {
@@ -24,7 +26,7 @@ export async function updateTracons(): Promise<void> {
 		const labeledFeatures = setLabelPosition(closedFeatures);
 
 		await rdsSetSingle("static_tracons:all", labeledFeatures);
-		await rdsSetSingle("static_tracons:version", version || "1.0.0");
+		await rdsSetSingle("static_tracons:version", `${version || "1.0.0"}-s${SCHEMA_VERSION}`);
 
 		console.log(`✅ TRACON data updated to version ${version}`);
 	} catch (error) {
@@ -35,7 +37,7 @@ export async function updateTracons(): Promise<void> {
 async function initVersion(): Promise<void> {
 	if (!version) {
 		const redisVersion = await rdsGetSingle("static_tracons:version");
-		version = redisVersion || "0.0.0";
+		version = (redisVersion || "0.0.0").replace(/-s\d+$/, "");
 	}
 }
 

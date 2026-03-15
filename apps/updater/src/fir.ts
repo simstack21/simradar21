@@ -6,6 +6,8 @@ import { extractFirs } from "./prefixes.js";
 const RELEASE_URL = "https://api.github.com/repos/vatsimnetwork/vatspy-data-project/releases/latest";
 const BASE_DATA_URL = "https://github.com/vatsimnetwork/vatspy-data-project/releases/download/";
 
+const SCHEMA_VERSION = 1;
+
 let version: string | null = null;
 
 export async function updateFirs(): Promise<void> {
@@ -46,7 +48,7 @@ export async function updateFirs(): Promise<void> {
 		});
 
 		await rdsSetSingle("static_firs:all", newFeatures);
-		await rdsSetSingle("static_firs:version", version || "1.0.0");
+		await rdsSetSingle("static_firs:version", `${version || "1.0.0"}-s${SCHEMA_VERSION}`);
 
 		console.log(`✅ FIR data updated to version ${version}`);
 	} catch (error) {
@@ -57,7 +59,7 @@ export async function updateFirs(): Promise<void> {
 async function initVersion(): Promise<void> {
 	if (!version) {
 		const redisVersion = await rdsGetSingle("static_firs:version");
-		version = redisVersion || "0.0.0";
+		version = (redisVersion || "0.0.0").replace(/-s\d+$/, "");
 	}
 }
 

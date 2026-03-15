@@ -11,6 +11,8 @@ interface ContentsEntry {
 	type: "file" | "dir";
 }
 
+const SCHEMA_VERSION = 1;
+
 let sha: string | null = null;
 
 export async function updateVatglasses(): Promise<void> {
@@ -19,7 +21,8 @@ export async function updateVatglasses(): Promise<void> {
 	}
 
 	const latestSha = await fetchLatestSha();
-	if (!latestSha || latestSha === sha) return;
+	const shaBase = sha?.replace(/-s\d+$/, "");
+	if (!latestSha || latestSha === shaBase) return;
 
 	try {
 		const contents = await fetchContentsIndex();
@@ -37,8 +40,9 @@ export async function updateVatglasses(): Promise<void> {
 		}
 
 		await rdsSetSingle("static_vatglasses:all", datasets);
-		await rdsSetSingle("static_vatglasses:sha", latestSha);
-		sha = latestSha;
+		const versionedSha = `${latestSha}-s${SCHEMA_VERSION}`;
+		await rdsSetSingle("static_vatglasses:sha", versionedSha);
+		sha = versionedSha;
 
 		console.log(`✅ VATGlasses data updated to ${latestSha.slice(0, 7)} (${datasets.length} datasets)`);
 	} catch (error) {
