@@ -1,8 +1,8 @@
 import type { ControllerDelta, ControllerLong, ControllerMerged, ControllerShort, PilotLong } from "@sr24/types/interface";
 import type { VatsimData } from "@sr24/types/vatsim";
 import { haversineDistance } from "./utils/helpers.js";
+import { findAirportId, findFirId, findFirsByUir, findTraconId, reduceCallsign, resolveVatglassesPos } from "./utils/prefixes.js";
 import { getUserRatings } from "./utils/ratings.js";
-import { findPrefixMatch, reduceCallsign } from "./utils/sectors.js";
 
 let cachedLongs: ControllerLong[] = [];
 let cached: ControllerMerged[] = [];
@@ -35,14 +35,14 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 
 	getConnectionsCount(vatsimData, controllersLong, pilotsLong);
 
-	const uniqueCids = Array.from(new Set(controllersLong.filter((c) => c.user_ratings === null).map((c) => c.cid)));
-	const userRatings = await getUserRatings(uniqueCids);
-	for (const controller of controllersLong) {
-		const ratings = userRatings.get(controller.cid);
-		if (ratings) {
-			controller.user_ratings = ratings;
-		}
-	}
+	// const uniqueCids = Array.from(new Set(controllersLong.filter((c) => c.user_ratings === null).map((c) => c.cid)));
+	// const userRatings = await getUserRatings(uniqueCids);
+	// for (const controller of controllersLong) {
+	// 	const ratings = userRatings.get(controller.cid);
+	// 	if (ratings) {
+	// 		controller.user_ratings = ratings;
+	// 	}
+	// }
 
 	vatsimData.atis.forEach((atis) => {
 		controllersLong.push({
@@ -108,6 +108,7 @@ function getControllerShort(controller: ControllerShort, cachedController?: Cont
 			atis: controller.atis,
 			logon_time: controller.logon_time,
 			connections: controller.connections,
+			posId: controller.posId,
 		};
 	} else {
 		const controllerShort: ControllerShort = { callsign: controller.callsign, facility: controller.facility };
@@ -189,6 +190,39 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 	const merged = new Map<string, ControllerMerged>();
 
 	for (const c of controllersLong) {
+		if (c.facility === 1) {
+			const firs = findFirsByUir(c.callsign);
+
+			for (const fir of firs) {
+				let id = findFirId(fir);
+				if (!id) continue;
+
+				id = `fir_${id}`;
+				const vatglasses = resolveVatglassesPos(c.callsign, c.frequency, id);
+				const controllerShort: ControllerShort = {
+					callsign: c.callsign,
+					frequency: c.frequency,
+					facility: c.facility,
+					atis: c.atis,
+					logon_time: c.logon_time,
+					connections: c.connections,
+					posId: vatglasses?.posId,
+				};
+
+				const existing = merged.get(id);
+				if (existing) {
+					existing.controllers.push(controllerShort);
+				} else {
+					merged.set(id, {
+						id,
+						facility: "fir",
+						datasetId: vatglasses?.datasetId,
+						controllers: [controllerShort],
+					});
+				}
+			}
+		}
+
 		let id: string | null = null;
 		let facility: ControllerMerged["facility"] | null = null;
 
@@ -196,11 +230,11 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 
 		if (c.facility === 6 || c.facility === 1) {
 			// FIR
-			id = findPrefixMatch(levels, 6);
+			id = findFirId(c.callsign);
 			facility = "fir";
 		} else if (c.facility === 5) {
 			// TRACON
-			id = findPrefixMatch(levels, 5);
+			id = findTraconId(c.callsign);
 			// Fallback for circle tracon controllers
 			if (!id) {
 				id = levels[levels.length - 1];
@@ -209,11 +243,15 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 		} else {
 			// Airport: simply take the first segment
 			id = levels[levels.length - 1];
+			id = findAirportId(id);
 			facility = "airport";
 		}
 
 		if (!id) continue;
 
+		id = facility === "fir" ? `fir_${id}` : facility === "tracon" ? `tracon_${id}` : `airport_${id}`;
+
+		const vatglasses = facility !== "airport" ? resolveVatglassesPos(c.callsign, c.frequency, id) : null;
 		const controllerShort: ControllerShort = {
 			callsign: c.callsign,
 			frequency: c.frequency,
@@ -221,9 +259,8 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 			atis: c.atis,
 			logon_time: c.logon_time,
 			connections: c.connections,
+			posId: vatglasses?.posId,
 		};
-
-		id = facility === "fir" ? `fir_${id}` : facility === "tracon" ? `tracon_${id}` : `airport_${id}`;
 
 		const existing = merged.get(id);
 		if (existing) {
@@ -232,6 +269,7 @@ async function mergeControllers(controllersLong: ControllerLong[]): Promise<Cont
 			merged.set(id, {
 				id,
 				facility,
+				datasetId: vatglasses?.datasetId,
 				controllers: [controllerShort],
 			});
 		}

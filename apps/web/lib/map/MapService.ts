@@ -32,18 +32,12 @@ import { TrackService } from "./TrackService";
 
 type Options = {
 	onNavigate?: (href: string) => void;
+	onVatglassesAltitudeChange?: (altitude: number) => void;
 	autoTrackPoints?: boolean;
 	disableInteractions?: boolean;
 	disableCenterOnPageLoad?: boolean;
 	sunTime?: Date;
 };
-type Stats = {
-	pilots: {
-		total: number;
-		rendered: number;
-	};
-};
-type StatsListener = (stats: Stats) => void;
 
 export class MapService {
 	private static readonly MAP_PADDING = [204, 116, 140, 436];
@@ -60,7 +54,7 @@ export class MapService {
 	private sunService = new Sunservice();
 	private pilotService = new PilotService();
 	private airportService = new AirportService();
-	private controllerService = new ControllerService();
+	private controllerService = new ControllerService(this.getStoredControllers.bind(this));
 	private trackService = new TrackService();
 	private navigraphService = new NavigraphService();
 
@@ -73,6 +67,9 @@ export class MapService {
 	private clickFeatures = new Map<string, Feature<Point>>();
 	private clickOverlays = new Map<string, Overlay>();
 	private clickSelect: Select | undefined;
+	private trackedCid: string | null = null;
+	private vatglassesEnabled = false;
+	private vatglassesAuto = false;
 
 	private lastExtent: Extent | null = null;
 	private lastSettings: Partial<SettingValues> = {};
@@ -84,13 +81,6 @@ export class MapService {
 	private animationFrame?: number;
 
 	private followInterval: NodeJS.Timeout | null = null;
-
-	private statsListeners = new Set<StatsListener>();
-
-	subscribe(cb: StatsListener) {
-		this.statsListeners.add(cb);
-		return () => this.statsListeners.delete(cb);
-	}
 
 	public init(options?: Options): OlMap {
 		if (options) {
@@ -231,6 +221,44 @@ export class MapService {
 		if (minimalOverlays !== undefined) {
 			this.minimalOverlays = minimalOverlays;
 			this.updateRelatives();
+		}
+	}
+
+	public setVatglasses({
+		vatglasses,
+		vatglassesAltitude,
+		vatglassesAuto,
+		cid,
+	}: {
+		vatglasses?: boolean;
+		vatglassesAltitude?: number;
+		vatglassesAuto?: boolean;
+		cid?: number;
+	}): void {
+		if (vatglasses !== undefined) {
+			this.vatglassesEnabled = vatglasses;
+			this.controllerService.setVatglassesEnabled(vatglasses);
+		}
+		if (vatglassesAuto !== undefined) {
+			this.vatglassesAuto = vatglassesAuto;
+			this.setVatglassesAutoAltitude();
+		}
+		if (cid !== undefined) {
+			this.trackedCid = cid ? String(cid) : null;
+			this.setVatglassesAutoAltitude();
+		}
+		if (vatglassesAltitude !== undefined && !(this.vatglassesAuto && this.trackedCid)) {
+			this.controllerService.setVatglassesAltitude(vatglassesAltitude);
+		}
+	}
+
+	private setVatglassesAutoAltitude(): void {
+		if (this.vatglassesEnabled && this.vatglassesAuto && this.trackedCid) {
+			const pilotAlt = this.pilotService.getAltitudeByCid(this.trackedCid);
+			if (pilotAlt !== null) {
+				this.controllerService.setVatglassesAltitude(pilotAlt);
+				this.options?.onVatglassesAltitudeChange?.(pilotAlt);
+			}
 		}
 	}
 
@@ -611,6 +639,7 @@ export class MapService {
 
 		if (pilots) {
 			removedIds.push(...this.pilotService.updateFeatures(pilots));
+			this.setVatglassesAutoAltitude();
 		}
 		if (airports) {
 			// resetNeeded = this.airportService.updateFeatures(airports) || resetNeeded;
@@ -739,6 +768,10 @@ export class MapService {
 		}
 	}
 
+	private getStoredControllers(): ControllerMerged[] {
+		return Array.from(this.storedControllers.values());
+	}
+
 	private renderFeatures() {
 		const view = this.map?.getView();
 		if (!view) return;
@@ -749,8 +782,6 @@ export class MapService {
 		this.pilotService.renderFeatures(extent, resolution);
 		this.airportService.renderFeatures(extent, resolution);
 		this.navigraphService.renderFeatures(extent, resolution);
-
-		this.emit();
 	}
 
 	private toggleAnimation(enabled: boolean): void {
@@ -1035,17 +1066,5 @@ export class MapService {
 			clearInterval(this.followInterval);
 			this.followInterval = null;
 		}
-	}
-
-	private emit() {
-		this.statsListeners.forEach((cb) => {
-			const pilotStats = this.pilotService.getStats();
-			cb({
-				pilots: {
-					total: pilotStats.total,
-					rendered: pilotStats.rendered,
-				},
-			});
-		});
 	}
 }

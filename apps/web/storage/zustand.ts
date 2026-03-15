@@ -247,14 +247,38 @@ export const useFiltersStore = create<FilterState>()(
 	),
 );
 
-export const useMapVisibilityStore = create<{ isHidden: boolean; setHidden: (value: boolean) => void }>()(
+type MapVisibilityState = {
+	_hasHydrated: boolean;
+	isHidden: boolean;
+	setHidden: (value: boolean) => void;
+	vatglasses: boolean;
+	setVatglasses: (value: boolean) => void;
+	vatglassesAltitude: number;
+	setVatglassesAltitude: (value: number) => void;
+	vatglassesAuto: boolean;
+	setVatglassesAuto: (value: boolean) => void;
+};
+
+export const useMapVisibilityStore = create<MapVisibilityState>()(
 	persist(
 		(set) => ({
+			_hasHydrated: false,
 			isHidden: false,
 			setHidden: (value: boolean) => set({ isHidden: value }),
+			vatglasses: true,
+			setVatglasses: (value: boolean) => set({ vatglasses: value }),
+			vatglassesAltitude: 200,
+			setVatglassesAltitude: (value: number) => set({ vatglassesAltitude: value }),
+			vatglassesAuto: false,
+			setVatglassesAuto: (value: boolean) => set({ vatglassesAuto: value }),
 		}),
 		{
 			name: "simradar21-map-visibility",
+			onRehydrateStorage: () => (state) => {
+				if (state) {
+					state._hasHydrated = true;
+				}
+			},
 		},
 	),
 );

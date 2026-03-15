@@ -1,9 +1,12 @@
 import { rdsGetSingle, rdsSetSingle } from "@sr24/db/redis";
-import type { FIRFeature, FIRProperties, VatSpyDat, VatSpyFIRFeatureCollection } from "@sr24/types/db";
+import type { FIRFeature, FIRProperties, VatSpyFIRFeatureCollection } from "@sr24/types/db";
 import axios from "axios";
+import { extractFirs } from "./prefixes.js";
 
 const RELEASE_URL = "https://api.github.com/repos/vatsimnetwork/vatspy-data-project/releases/latest";
 const BASE_DATA_URL = "https://github.com/vatsimnetwork/vatspy-data-project/releases/download/";
+
+const SCHEMA_VERSION = 1;
 
 let version: string | null = null;
 
@@ -23,8 +26,7 @@ export async function updateFirs(): Promise<void> {
 		const vatSpyDat = vatSpyResponse.data;
 		if (!vatSpyDat) return;
 
-		const firs = extractVatSpyDat(vatSpyDat);
-
+		const firs = extractFirs(vatSpyDat);
 		const boundsResponse = await axios.get(firBoundJsonUrl, {
 			responseType: "json",
 		});
@@ -46,7 +48,7 @@ export async function updateFirs(): Promise<void> {
 		});
 
 		await rdsSetSingle("static_firs:all", newFeatures);
-		await rdsSetSingle("static_firs:version", version || "1.0.0");
+		await rdsSetSingle("static_firs:version", `${version || "1.0.0"}-s${SCHEMA_VERSION}`);
 
 		console.log(`✅ FIR data updated to version ${version}`);
 	} catch (error) {
@@ -57,7 +59,7 @@ export async function updateFirs(): Promise<void> {
 async function initVersion(): Promise<void> {
 	if (!version) {
 		const redisVersion = await rdsGetSingle("static_firs:version");
-		version = redisVersion || "0.0.0";
+		version = (redisVersion || "0.0.0").replace(/-s\d+$/, "");
 	}
 }
 
@@ -75,30 +77,4 @@ async function isNewRelease(): Promise<boolean> {
 	}
 
 	return false;
-}
-
-function extractVatSpyDat(vatSpyDat: string): VatSpyDat[] {
-	const firs: VatSpyDat[] = [];
-
-	const sectionStart = vatSpyDat.indexOf("[FIRs]");
-	if (sectionStart === -1) return [];
-
-	const lines = vatSpyDat.slice(sectionStart).split("\r\n");
-
-	for (let line of lines) {
-		line = line.trim();
-
-		if (line === "") break;
-		if (line.startsWith(";") || line.startsWith("[FIRs]")) continue;
-
-		const [icao, name, callsign_prefix, fir_bound] = line.split("|");
-		firs.push({
-			icao,
-			name,
-			callsign_prefix,
-			fir_bound,
-		});
-	}
-
-	return firs;
 }

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { pgDeleteStalePilots, pgUpsertPilots } from "@sr24/db/pg";
 import { rdsConnectBufferClient, rdsPub, rdsSetTrackpoints } from "@sr24/db/redis";
-import type { InitialData, RedisAll, WsDelta } from "@sr24/types/interface";
+import type { ControllerMerged, InitialData, RedisAll, WsDelta } from "@sr24/types/interface";
 import type { VatsimData, VatsimTransceivers } from "@sr24/types/vatsim";
 import axios from "axios";
 import { getAirportDelta, getAirportShort, mapAirports } from "./airport.js";
@@ -11,7 +11,7 @@ import { updateDashboardData } from "./dashboard.js";
 import { ensureNavigraphData } from "./navigraph.js";
 import { getPilotDelta, getPilotShort, mapPilots } from "./pilot.js";
 import { mapTrackPoints } from "./tracks.js";
-import { ensureSectorPrefixes } from "./utils/sectors.js";
+import { ensureSectorPrefixes } from "./utils/prefixes.js";
 
 axios.defaults.headers.common["x-identifier"] = process.env.VATSIM_API_IDENTIFIER || "simradar21-unknown";
 axios.defaults.headers.common["User-Agent"] = "simradar21/1.0";
@@ -66,7 +66,7 @@ async function fetchVatsimData(): Promise<void> {
 		const init: InitialData = {
 			pilots: pilotsLong.filter((p) => p.live === "live").map((p) => getPilotShort(p)),
 			airports: airportsLong.map((a) => getAirportShort(a)),
-			controllers: controllersMerged,
+			controllers: controllersMerged as Required<ControllerMerged>[],
 			timestamp: nowish,
 		};
 

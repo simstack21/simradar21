@@ -51,6 +51,7 @@ export function updatePilot(trackPoint: Required<TrackPoint> | undefined): void 
 function getPilotShort(pilot: PilotLong, trackPoint: Required<TrackPoint> | undefined): Required<PilotShort> {
 	return {
 		id: pilot.id,
+		cid: pilot.cid,
 		callsign: pilot.callsign,
 		coordinates: trackPoint?.coordinates || (fromLonLat([pilot.longitude, pilot.latitude]) as [number, number]),
 		altitude_ms: trackPoint?.altitude_ms || pilot.altitude_ms,

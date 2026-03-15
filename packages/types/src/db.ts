@@ -44,11 +44,27 @@ interface SimAwareTRACONProperties {
 
 export type SimAwareTraconFeature = Feature<MultiPolygon, SimAwareTRACONProperties>;
 
-export interface VatSpyDat {
+export interface VatSpyFir {
 	icao: string;
 	name: string;
 	callsign_prefix: string;
 	fir_bound: string;
+}
+
+export interface VatSpyAirport {
+	icao: string;
+	name: string;
+	latitude: number;
+	longitude: number;
+	lid: string;
+	fir: string;
+	isPsuedo: boolean;
+}
+
+export interface VatSpyUir {
+	callsign_prefix: string;
+	name: string;
+	firs: string[];
 }
 
 interface VatSpyFIRProperties {
@@ -135,3 +151,51 @@ export interface NavigraphPackage {
 	r2Key: string;
 	package_status: "current" | "outdated" | "future";
 }
+
+export interface VatglassesSector {
+	points: [string | number, string | number][];
+	min?: number;
+	max?: number;
+	runways?: { icao: string; runway: string | string[] }[];
+}
+
+export interface VatglassesAirspaceEntry {
+	key?: string;
+	id: string;
+	group: string;
+	owner?: string[];
+	sectors: VatglassesSector[];
+}
+
+export type VatglassesDynamicOwnership = Record<string, { airspace: Record<string, string[]> }>;
+
+export interface VatglassesPosition {
+	pre?: string | string[];
+	type: string;
+	frequency?: string;
+	callsign?: string;
+	colours?: { hex: string; online?: string | string[] }[];
+}
+
+export interface VatglassesGroup {
+	name: string;
+	colour?: string;
+	color?: string;
+}
+
+export interface VatglassesAirport {
+	runways?: string[];
+}
+
+export interface VatglassesDataset {
+	code: string;
+	airspace: VatglassesAirspaceEntry[];
+	positions: Record<string, VatglassesPosition>;
+	groups: Record<string, VatglassesGroup>;
+	airports?: Record<string, VatglassesAirport>;
+}
+
+export type TraconPrefix = {
+	prefix: string;
+	countryCode: string;
+};

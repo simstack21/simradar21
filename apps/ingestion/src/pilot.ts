@@ -148,14 +148,14 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 		}
 	}
 
-	const uniqueCids = Array.from(new Set(newPilotsLong.filter((p) => p.user_ratings === null).map((p) => p.cid)));
-	const userRatings = await getUserRatings(uniqueCids);
-	for (const pilot of newPilotsLong) {
-		const ratings = userRatings.get(pilot.cid);
-		if (ratings) {
-			pilot.user_ratings = ratings;
-		}
-	}
+	// const uniqueCids = Array.from(new Set(newPilotsLong.filter((p) => p.user_ratings === null).map((p) => p.cid)));
+	// const userRatings = await getUserRatings(uniqueCids);
+	// for (const pilot of newPilotsLong) {
+	// 	const ratings = userRatings.get(pilot.cid);
+	// 	if (ratings) {
+	// 		pilot.user_ratings = ratings;
+	// 	}
+	// }
 
 	await rdsSetMultiple(newPilotsLong, "pilot", (p) => p.id, 12 * 60 * 60);
 
@@ -189,6 +189,7 @@ export function getPilotShort(p: PilotLong, c?: PilotLong): PilotShort {
 	if (!c) {
 		return {
 			id: p.id,
+			cid: p.cid,
 			callsign: p.callsign,
 			coordinates: fromLonLat([p.longitude, p.latitude]),
 			altitude_agl: p.altitude_agl,
@@ -206,6 +207,7 @@ export function getPilotShort(p: PilotLong, c?: PilotLong): PilotShort {
 	} else {
 		const pilotShort: PilotShort = { id: p.id };
 
+		if (p.cid !== c.cid) pilotShort.cid = p.cid;
 		if (p.longitude !== c.longitude || p.latitude !== c.latitude) pilotShort.coordinates = fromLonLat([p.longitude, p.latitude]);
 		if (p.altitude_agl !== c.altitude_agl) pilotShort.altitude_agl = p.altitude_agl;
 		if (p.altitude_ms !== c.altitude_ms) pilotShort.altitude_ms = p.altitude_ms;

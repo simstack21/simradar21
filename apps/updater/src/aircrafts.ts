@@ -4,6 +4,8 @@ import axios from "axios";
 const RELEASE_URL = "https://api.github.com/repos/simstack21/simstack21-data/releases/latest";
 const BASE_DATA_URL = "https://github.com/simstack21/simstack21-data/releases/download/";
 
+const SCHEMA_VERSION = 1;
+
 let version: string | null = null;
 let release: string | null = null;
 
@@ -21,7 +23,7 @@ export async function updateAircrafts(): Promise<void> {
 		});
 
 		await rdsSetSingle("static_aircrafts:all", response.data);
-		await rdsSetSingle("static_aircrafts:version", version || "1.0.0");
+		await rdsSetSingle("static_aircrafts:version", `${version || "1.0.0"}-s${SCHEMA_VERSION}`);
 
 		console.log(`✅ Aircrafts data updated to version ${version}`);
 	} catch (error) {
@@ -32,7 +34,7 @@ export async function updateAircrafts(): Promise<void> {
 async function initVersion(): Promise<void> {
 	if (!version) {
 		const redisVersion = await rdsGetSingle("static_aircrafts:version");
-		version = redisVersion || "0.0.0";
+		version = (redisVersion || "0.0.0").replace(/-s\d+$/, "");
 	}
 }
 

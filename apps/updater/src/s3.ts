@@ -8,7 +8,7 @@ const gzipAsync = promisify(gzip);
 const accountId = process.env.CF_ACCOUNT_ID || "";
 const accessKeyId = process.env.R2_ACCESS_KEY_ID || "";
 const secret = process.env.R2_SECRET_ACCESS_KEY || "";
-const bucket = process.env.R2_BUCKET_NAME || "";
+const bucket = process.env.NODE_ENV === "production" ? process.env.R2_BUCKET_NAME || "" : process.env.R2_DEV_BUCKET_NAME || "";
 const privateBucket = process.env.R2_PRIVATE_BUCKET_NAME || "";
 
 const r2 = new S3Client({
@@ -24,6 +24,7 @@ export async function updateR2Storage(): Promise<void> {
 		"static_tracons:version",
 		"static_airlines:version",
 		"static_aircrafts:version",
+		"static_vatglasses:sha",
 	]);
 	const manifest = {
 		airportsVersion: versions[0],
@@ -31,6 +32,7 @@ export async function updateR2Storage(): Promise<void> {
 		traconsVersion: versions[2],
 		airlinesVersion: versions[3],
 		aircraftsVersion: versions[4],
+		vatglassesSha: versions[5],
 	};
 
 	await uploadManifestToR2(manifest);
@@ -41,13 +43,15 @@ export async function updateR2Storage(): Promise<void> {
 		"static_tracons:all",
 		"static_airlines:all",
 		"static_aircrafts:all",
+		"static_vatglasses:all",
 	]);
 	await uploadJsonToR2(`airports_${manifest.airportsVersion}.json`, datas[0]);
 	await uploadJsonToR2(`firs_${manifest.firsVersion}.json`, datas[1]);
 	await uploadJsonToR2(`tracons_${manifest.traconsVersion}.json`, datas[2]);
 	await uploadJsonToR2(`airlines_${manifest.airlinesVersion}.json`, datas[3]);
 	await uploadJsonToR2(`aircrafts_${manifest.aircraftsVersion}.json`, datas[4]);
-	console.log("✅ R2 storage update completed!");
+	await uploadJsonToR2(`vatglasses_${manifest.vatglassesSha}.json`, datas[5]);
+	console.log(`✅ R2 storage update completed (${bucket})!`);
 }
 
 export async function uploadJsonToR2(key: string, data: unknown) {

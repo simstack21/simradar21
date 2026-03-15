@@ -1,10 +1,13 @@
 "use client";
 
+import useMediaQuery from "@mui/material/useMediaQuery";
 import {
 	EyeIcon,
 	EyeOffIcon,
 	FunnelIcon,
+	GlassesIcon,
 	LayersIcon,
+	LinkIcon,
 	LocateIcon,
 	MaximizeIcon,
 	MinimizeIcon,
@@ -15,24 +18,45 @@ import {
 	SquareStackIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { useFiltersStore, useMapPageStore, useMapVisibilityStore } from "@/storage/zustand";
 import { mapService } from "../../lib";
 
 export default function Controls() {
-	const { isHidden, setHidden } = useMapVisibilityStore();
+	const { isHidden, vatglasses } = useMapVisibilityStore();
+	const isMobile = useMediaQuery("(max-width: 1024px)");
+
+	if (isMobile) {
+		return (
+			<div className="flex flex-col gap-2">
+				{vatglasses && !isHidden && <SliderVatglasses />}
+				<div className="flex items-center justify-center gap-4">
+					<SwitchVisibility />
+					<SwitchVatglasses />
+					{!isHidden && <ButtonGroupControls />}
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex flex-col gap-2">
 			<div className="flex items-center justify-center gap-4">
-				{!isHidden && <SwitchMultiView />}
-				<SwitchVisibility checked={!isHidden} onCheckedChange={(checked) => setHidden(!checked)} />
+				<SwitchMultiView />
+				<SwitchVisibility />
+				<SwitchVatglasses />
 			</div>
+			{vatglasses && !isHidden && <SliderVatglasses />}
 			{!isHidden && <ButtonGroupControls />}
 		</div>
 	);
@@ -42,6 +66,9 @@ const SwitchMultiView = () => {
 	const id = useId();
 	const router = useRouter();
 	const pathname = usePathname();
+	const { isHidden } = useMapVisibilityStore();
+
+	if (isHidden) return null;
 
 	const isMultiView = pathname.startsWith("/multi");
 
@@ -56,16 +83,62 @@ const SwitchMultiView = () => {
 	);
 };
 
-const SwitchVisibility = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (checked: boolean) => void }) => {
+const SwitchVisibility = () => {
 	const id = useId();
+	const { isHidden, setHidden } = useMapVisibilityStore();
 
 	return (
 		<div className="flex items-center gap-2">
-			<Switch id={id} checked={checked} onCheckedChange={onCheckedChange} aria-label="Toggle switch" />
+			<Switch id={id} checked={!isHidden} onCheckedChange={(checked) => setHidden(!checked)} aria-label="Toggle switch" />
 			<Label htmlFor={id}>
 				<span className="sr-only">Toggle switch</span>
-				{checked ? <EyeIcon className="size-4" aria-hidden="true" /> : <EyeOffIcon className="size-4" aria-hidden="true" />}
+				{!isHidden ? <EyeIcon className="size-4" aria-hidden="true" /> : <EyeOffIcon className="size-4" aria-hidden="true" />}
 			</Label>
+		</div>
+	);
+};
+
+const SwitchVatglasses = () => {
+	const id = useId();
+	const { vatglasses, setVatglasses, isHidden } = useMapVisibilityStore();
+
+	if (isHidden) return null;
+
+	return (
+		<div className="flex items-center gap-2">
+			<Switch id={id} checked={vatglasses} onCheckedChange={(checked) => setVatglasses(checked)} aria-label="Toggle switch" />
+			<Label htmlFor={id}>
+				<span className="sr-only">Toggle switch</span>
+				<GlassesIcon className="size-4" aria-hidden="true" />
+			</Label>
+		</div>
+	);
+};
+
+const SliderVatglasses = () => {
+	const id = useId();
+	const { data: session } = useSession();
+	const { vatglassesAltitude, setVatglassesAltitude, vatglassesAuto, setVatglassesAuto } = useMapVisibilityStore();
+
+	return (
+		<div className="flex gap-2 items-center pt-0.5">
+			<Field orientation="horizontal" data-disabled={!session?.vatsim?.cid} className="gap-1 w-fit shrink-0">
+				<Checkbox id={id} checked={vatglassesAuto} onCheckedChange={setVatglassesAuto} disabled={!session?.vatsim?.cid} />
+				<FieldLabel htmlFor={id}>
+					<span className="sr-only">Toggle switch</span>
+					<LinkIcon className="size-4" aria-hidden="true" />
+				</FieldLabel>
+			</Field>
+			<Slider
+				value={vatglassesAltitude}
+				onValueChange={(value) => setVatglassesAltitude(value as number)}
+				min={0}
+				max={500}
+				step={5}
+				className="w-full"
+				disabled={vatglassesAuto && !!session?.vatsim?.cid}
+			/>
+			<span className="text-xs font-mono leading-none">FL{String(vatglassesAltitude).padStart(3, "0")}</span>
 		</div>
 	);
 };
@@ -90,6 +163,8 @@ const ButtonGroupControls = () => {
 	const { active: filterActive } = useFiltersStore();
 	const { manualPage, setManualPage } = useMapPageStore();
 	const [isFullscreen, setIsFullscreen] = useState(false);
+
+	const isMobile = useMediaQuery("(max-width: 1024px)");
 
 	const onFullscreen = async () => {
 		try {
@@ -116,69 +191,81 @@ const ButtonGroupControls = () => {
 
 	return (
 		<div className="inline-flex w-fit -space-x-px rounded-md shadow-xs rtl:space-x-reverse">
+			{!isMobile && (
+				<>
+					<Tooltip>
+						<TooltipTrigger
+							delay={100}
+							render={
+								<Button className="rounded-none rounded-l-md shadow-none focus-visible:z-10" variant="outline" onClick={onFullscreen}>
+									{isFullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
+									<span className="sr-only">Fullscreen</span>
+								</Button>
+							}
+						></TooltipTrigger>
+						<TooltipContent className="pr-1.5">
+							<div className="flex items-center gap-2">
+								Fullscreen <Kbd>F11</Kbd>
+							</div>
+						</TooltipContent>
+					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger
+							delay={100}
+							render={
+								<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => mapService.setView({ zoomStep: 1 })}>
+									<PlusIcon />
+									<span className="sr-only">Zoom In</span>
+								</Button>
+							}
+						></TooltipTrigger>
+						<TooltipContent>
+							<div className="flex items-center gap-2">Zoom In</div>
+						</TooltipContent>
+					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger
+							delay={100}
+							render={
+								<Button
+									className="rounded-none shadow-none focus-visible:z-10"
+									variant="outline"
+									onClick={() => mapService.setView({ zoomStep: -1 })}
+								>
+									<MinusIcon />
+									<span className="sr-only">Zoom Out</span>
+								</Button>
+							}
+						></TooltipTrigger>
+						<TooltipContent>
+							<div className="flex items-center gap-2">Zoom Out</div>
+						</TooltipContent>
+					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger
+							delay={100}
+							render={
+								<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={onCenterOnLocation}>
+									<LocateIcon />
+									<span className="sr-only">Locate</span>
+								</Button>
+							}
+						></TooltipTrigger>
+						<TooltipContent>
+							<div className="flex items-center gap-2">Locate</div>
+						</TooltipContent>
+					</Tooltip>
+				</>
+			)}
 			<Tooltip>
 				<TooltipTrigger
 					delay={100}
 					render={
-						<Button className="rounded-none rounded-l-md shadow-none focus-visible:z-10" variant="outline" onClick={onFullscreen}>
-							{isFullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
-							<span className="sr-only">Fullscreen</span>
-						</Button>
-					}
-				></TooltipTrigger>
-				<TooltipContent className="pr-1.5">
-					<div className="flex items-center gap-2">
-						Fullscreen <Kbd>F11</Kbd>
-					</div>
-				</TooltipContent>
-			</Tooltip>
-			<Tooltip>
-				<TooltipTrigger
-					delay={100}
-					render={
-						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => mapService.setView({ zoomStep: 1 })}>
-							<PlusIcon />
-							<span className="sr-only">Zoom In</span>
-						</Button>
-					}
-				></TooltipTrigger>
-				<TooltipContent>
-					<div className="flex items-center gap-2">Zoom In</div>
-				</TooltipContent>
-			</Tooltip>
-			<Tooltip>
-				<TooltipTrigger
-					delay={100}
-					render={
-						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => mapService.setView({ zoomStep: -1 })}>
-							<MinusIcon />
-							<span className="sr-only">Zoom Out</span>
-						</Button>
-					}
-				></TooltipTrigger>
-				<TooltipContent>
-					<div className="flex items-center gap-2">Zoom Out</div>
-				</TooltipContent>
-			</Tooltip>
-			<Tooltip>
-				<TooltipTrigger
-					delay={100}
-					render={
-						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={onCenterOnLocation}>
-							<LocateIcon />
-							<span className="sr-only">Locate</span>
-						</Button>
-					}
-				></TooltipTrigger>
-				<TooltipContent>
-					<div className="flex items-center gap-2">Locate</div>
-				</TooltipContent>
-			</Tooltip>
-			<Tooltip>
-				<TooltipTrigger
-					delay={100}
-					render={
-						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => mapService.setView({ rotation: 0 })}>
+						<Button
+							className={cn("rounded-none shadow-none focus-visible:z-10", isMobile && "rounded-l-md")}
+							variant="outline"
+							onClick={() => mapService.setView({ rotation: 0 })}
+						>
 							<RefreshCcwDotIcon />
 							<span className="sr-only">Reset Rotation</span>
 						</Button>

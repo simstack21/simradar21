@@ -8,8 +8,13 @@ import type { RgbaColor } from "react-colorful";
 import { toast } from "sonner";
 import { createAirportFeature, createFirFeature, createTraconFeature, stripPrefix } from "./controllers";
 import { type ControllerStyleVars, getAirportStyle, getFirStyle, getLabelStyle, getTraconStyle } from "./styles/controller";
+import { VatglassesService } from "./VatglassesService";
 
 export class ControllerService {
+	constructor(private getControllers: () => ControllerMerged[]) {}
+
+	private vatglassesService = new VatglassesService(this.getControllers.bind(this));
+
 	private firSource = new VectorSource({
 		useSpatialIndex: false,
 	});
@@ -29,6 +34,11 @@ export class ControllerService {
 	private highlighted = new Set<string>();
 
 	private styleVars: ControllerStyleVars = {};
+	private vatglassesEnabled: boolean | undefined;
+
+	private needsVatglassesFallback(c: ControllerMerged): boolean {
+		return !c.datasetId || c.controllers.every((ctrl) => !ctrl.posId);
+	}
 
 	public init(): VectorLayer[] {
 		this.firLayer = new VectorLayer({
@@ -64,8 +74,9 @@ export class ControllerService {
 			declutter: true,
 			zIndex: 10,
 		});
+		const vatglassesLayer = this.vatglassesService.init();
 
-		return [this.firLayer, this.traconLayer, this.airportLayer, this.labelLayer];
+		return [this.firLayer, this.traconLayer, this.airportLayer, this.labelLayer, vatglassesLayer];
 	}
 
 	public getSource(): VectorSource<Feature<Point>> {
@@ -76,24 +87,37 @@ export class ControllerService {
 		// No theme changes yet
 	}
 
-	public hoverSector(feature: Feature<Point> | undefined | null, hovered: boolean, event: "hovered" | "clicked"): void {
-		if (feature?.get("type") === "tracon") {
-			const id = feature.getId()?.toString();
-			if (id) {
-				const multiFeature = this.traconSource.getFeatureById(id);
-				if (multiFeature) {
-					multiFeature.set(event, hovered);
-				}
-			}
-		}
+	public setVatglassesAltitude(altitude: number): void {
+		this.vatglassesService.setAltitude(altitude);
+	}
 
-		if (feature?.get("type") === "fir") {
-			const id = feature.getId()?.toString();
-			if (id) {
-				const multiFeature = this.firSource.getFeatureById(id);
-				if (multiFeature) {
-					multiFeature.set(event, hovered);
-				}
+	public setVatglassesEnabled(enabled: boolean): void {
+		this.vatglassesService.setVatglassesEnabled(enabled);
+		if (this.vatglassesEnabled === enabled) return;
+		this.vatglassesEnabled = enabled;
+
+		this.set.clear();
+		this.firSource.clear();
+		this.traconSource.clear();
+		this.airportSource.clear();
+		this.labelSource.clear();
+		this.highlighted.clear();
+
+		this.setFeatures(this.getControllers());
+	}
+
+	public hoverSector(feature: Feature<Point> | undefined | null, hovered: boolean, event: "hovered" | "clicked"): void {
+		const type = feature?.get("type") as string | undefined;
+		const id = feature?.getId()?.toString();
+		if (!type || !id) return;
+
+		if (type === "tracon" || type === "fir") {
+			const source = type === "tracon" ? this.traconSource : this.firSource;
+			const multiFeature = source.getFeatureById(id);
+			if (multiFeature && !multiFeature.get("isVatglasses")) {
+				multiFeature.set(event, hovered);
+			} else if (this.vatglassesEnabled) {
+				this.vatglassesService.hoverSector(feature, hovered, event);
 			}
 		}
 	}
@@ -110,7 +134,7 @@ export class ControllerService {
 		this.highlighted.clear();
 	}
 
-	public async setFeatures(controllers: ControllerMerged[]) {
+	public async setFeatures(controllers: ControllerMerged[]): Promise<void> {
 		const tempLabels = new Map<string, Feature<Point>>();
 		const tempSectors = new Map<string, Feature<MultiPolygon | Polygon>>();
 		for (const id of this.highlighted) {
@@ -146,16 +170,20 @@ export class ControllerService {
 
 				if (c.facility === "tracon") {
 					const { tracon, label } = await createTraconFeature(id);
-					if (tempSector) {
-						traconFeatures.push(tempSector);
-					} else if (tracon) {
-						traconFeatures.push(tracon);
-					}
 
+					// always show labels
 					if (tempLabel) {
 						labelFeatures.push(tempLabel);
 					} else if (label) {
 						labelFeatures.push(label);
+					}
+
+					const traconFeature = tempSector || tracon;
+					if (traconFeature) {
+						if (this.vatglassesEnabled && !this.needsVatglassesFallback(c)) {
+							traconFeature.set("isVatglasses", true);
+						}
+						traconFeatures.push(traconFeature);
 					}
 
 					return;
@@ -163,16 +191,21 @@ export class ControllerService {
 
 				if (c.facility === "fir") {
 					const { fir, label } = await createFirFeature(id);
-					if (tempSector) {
-						firFeatures.push(tempSector);
-					} else if (fir) {
-						firFeatures.push(fir);
-					}
 
+					// always show labels
 					if (tempLabel) {
 						labelFeatures.push(tempLabel);
 					} else if (label) {
 						labelFeatures.push(label);
+					}
+
+					// show only sector feature when no vatglasses or no vatglasses dataset
+					if (!this.vatglassesEnabled || this.needsVatglassesFallback(c)) {
+						if (tempSector) {
+							firFeatures.push(tempSector);
+						} else if (fir) {
+							firFeatures.push(fir);
+						}
 					}
 
 					return;
@@ -191,6 +224,8 @@ export class ControllerService {
 		this.traconSource.addFeatures(traconFeatures);
 		this.airportSource.addFeatures(airportFeatures);
 		this.labelSource.addFeatures(labelFeatures);
+
+		this.vatglassesService.setFeatures(controllers);
 	}
 
 	public async updateFeatures(controllers: ControllerDelta): Promise<string[]> {
@@ -223,11 +258,15 @@ export class ControllerService {
 
 			if (c.facility === "tracon") {
 				const { tracon, label } = await createTraconFeature(id);
-				if (tracon) {
-					this.traconSource.addFeature(tracon);
-				}
+
+				// always show labels
 				if (label) {
 					this.labelSource.addFeature(label);
+				}
+
+				// show only sector feature when no vatglasses or no vatglasses dataset
+				if (tracon && (!this.vatglassesEnabled || this.needsVatglassesFallback(c))) {
+					this.traconSource.addFeature(tracon);
 				}
 
 				continue;
@@ -235,11 +274,15 @@ export class ControllerService {
 
 			if (c.facility === "fir") {
 				const { fir, label } = await createFirFeature(id);
-				if (fir) {
-					this.firSource.addFeature(fir);
-				}
+
+				// always show labels
 				if (label) {
 					this.labelSource.addFeature(label);
+				}
+
+				// show only sector feature when no vatglasses or no vatglasses dataset
+				if (fir && (!this.vatglassesEnabled || this.needsVatglassesFallback(c))) {
+					this.firSource.addFeature(fir);
 				}
 
 				continue;
@@ -287,6 +330,8 @@ export class ControllerService {
 		for (const id of toRemove) {
 			this.set.delete(id);
 		}
+
+		this.vatglassesService.setFeatures(this.getControllers());
 
 		const removedIds: string[] = [];
 

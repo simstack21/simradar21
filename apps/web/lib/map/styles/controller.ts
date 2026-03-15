@@ -27,7 +27,7 @@ export function getLabelStyle(vars?: ControllerStyleVars) {
 		const active = !!(feature.get("clicked") || feature.get("hovered"));
 		const text = feature.get("label") as string;
 
-		if ((type === "tracon" && resolution > 3500) || (type === "fir" && resolution > 6000)) return;
+		if ((type === "tracon" && resolution > 3500) || (type === "fir" && resolution > 7000)) return;
 
 		const cacheKey = `${active}_${type}`;
 
@@ -147,18 +147,27 @@ export function getTraconStyle(vars?: ControllerStyleVars) {
 		color: vars?.traconColor ? `rgb(${vars.traconColor.r}, ${vars.traconColor.g}, ${vars.traconColor.b})` : "rgb(222, 89, 234)",
 	});
 	const activeStroke = new Stroke({ color: "rgb(234, 89, 121)" });
+	const dashedStroke = new Stroke({
+		color: vars?.traconColor ? `rgb(${vars.traconColor.r}, ${vars.traconColor.g}, ${vars.traconColor.b})` : "rgb(222, 89, 234)",
+		lineDash: [5, 5],
+	});
+	const activeDashedStroke = new Stroke({
+		color: "rgb(234, 89, 121)",
+		lineDash: [5, 5],
+	});
 
 	return (feature: FeatureLike) => {
 		const active = !!(feature.get("clicked") || feature.get("hovered"));
+		const isVatglasses = !!feature.get("isVatglasses");
 
-		const cacheKey = `${active}`;
+		const cacheKey = `${active}_${isVatglasses}`;
 		if (styleCache.has(cacheKey)) {
 			return styleCache.get(cacheKey);
 		}
 
 		const style = new Style({
-			fill: active ? activeFill : fill,
-			stroke: active ? activeStroke : stroke,
+			fill: isVatglasses ? undefined : active ? activeFill : fill,
+			stroke: isVatglasses ? (active ? activeDashedStroke : dashedStroke) : active ? activeStroke : stroke,
 		});
 		styleCache.set(cacheKey, style);
 

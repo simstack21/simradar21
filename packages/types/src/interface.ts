@@ -31,6 +31,7 @@ export interface DeltaTrackPoint {
 
 export interface PilotShort {
 	id: string;
+	cid?: string;
 	callsign?: string;
 	coordinates?: [number, number];
 	altitude_agl?: number;
@@ -149,6 +150,7 @@ export interface ControllerShort {
 	atis?: string[] | null;
 	connections?: number;
 	logon_time?: number;
+	posId?: string;
 	booking?: {
 		start: string;
 		end: string;
@@ -175,6 +177,7 @@ export interface ControllerMerged {
 	id: string;
 	facility: "airport" | "tracon" | "fir";
 	controllers: ControllerShort[];
+	datasetId?: string;
 }
 
 export interface AirportShort {
@@ -203,7 +206,7 @@ export interface PilotDelta {
 
 export interface ControllerDelta {
 	updated: ControllerMerged[];
-	added: Required<ControllerMerged>[];
+	added: ControllerMerged[];
 }
 
 export interface AirportDelta {
