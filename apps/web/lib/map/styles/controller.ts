@@ -27,7 +27,7 @@ export function getLabelStyle(vars?: ControllerStyleVars) {
 		const active = !!(feature.get("clicked") || feature.get("hovered"));
 		const text = feature.get("label") as string;
 
-		if ((type === "tracon" && resolution > 3500) || (type === "fir" && resolution > 6000)) return;
+		if ((type === "tracon" && resolution > 3500) || (type === "fir" && resolution > 7000)) return;
 
 		const cacheKey = `${active}_${type}`;
 

@@ -13,7 +13,7 @@ import { VatglassesService } from "./VatglassesService";
 export class ControllerService {
 	constructor(private getControllers: () => ControllerMerged[]) {}
 
-	private vatglassesService = new VatglassesService(this.getControllers);
+	private vatglassesService = new VatglassesService(this.getControllers.bind(this));
 
 	private firSource = new VectorSource({
 		useSpatialIndex: false,
@@ -103,7 +103,7 @@ export class ControllerService {
 		this.labelSource.clear();
 		this.highlighted.clear();
 
-		void this.setFeatures(this.getControllers());
+		this.setFeatures(this.getControllers());
 	}
 
 	public hoverSector(feature: Feature<Point> | undefined | null, hovered: boolean, event: "hovered" | "clicked"): void {

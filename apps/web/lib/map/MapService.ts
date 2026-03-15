@@ -53,7 +53,7 @@ export class MapService {
 	private sunService = new Sunservice();
 	private pilotService = new PilotService();
 	private airportService = new AirportService();
-	private controllerService = new ControllerService(() => this.sharedControllers);
+	private controllerService = new ControllerService(this.getStoredControllers.bind(this));
 	private trackService = new TrackService();
 	private navigraphService = new NavigraphService();
 
@@ -72,7 +72,6 @@ export class MapService {
 
 	private storedControllers = new Map<string, ControllerMerged>();
 	private storedAirports = new Map<string, AirportShort>();
-	private sharedControllers: ControllerMerged[] = [];
 
 	private animationTimestamp = 0;
 	private animationFrame?: number;
@@ -553,7 +552,6 @@ export class MapService {
 			this.airportService.setFeatures(airports);
 		}
 		if (controllers) {
-			this.sharedControllers = controllers;
 			await this.controllerService.setFeatures(controllers);
 		}
 		if (trackPoints && autoTrackId) {
@@ -587,7 +585,6 @@ export class MapService {
 			// this.airportService.setFeatures(airports);
 		}
 		if (controllers) {
-			this.sharedControllers = controllers;
 			await this.controllerService.setFeatures(controllers);
 		}
 
@@ -736,6 +733,10 @@ export class MapService {
 			}
 			this.storedControllers = nextControllers;
 		}
+	}
+
+	private getStoredControllers(): ControllerMerged[] {
+		return Array.from(this.storedControllers.values());
 	}
 
 	private renderFeatures() {
