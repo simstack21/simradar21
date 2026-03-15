@@ -65,7 +65,7 @@ export default function useInitializer() {
 
 	useEffect(() => {
 		if (toastIdRef.current) {
-			if (Object.keys(status).length === 6) {
+			if (Object.keys(status).length === 7) {
 				toast.dismiss(toastIdRef.current);
 				return;
 			}

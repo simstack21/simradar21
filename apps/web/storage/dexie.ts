@@ -76,66 +76,45 @@ async function dxInitDatabases(setStatus?: StatusSetter): Promise<void> {
 	const storedManifest = (await db.manifest.get("databaseVersions")) as Manifest | undefined;
 
 	if (latestManifest.airportsVersion !== storedManifest?.versions.airportsVersion) {
-		fetchApi<StaticAirport[]>(`${R2_BUCKET_URL}/airports_${latestManifest.airportsVersion}.json`, {
-			cache: "no-store",
-		}).then(async (res) => {
-			await storeData(res, db.airports as EntityTable<any, "id">);
-			setStatus?.((prev) => ({ ...prev, airports: true }));
-		});
+		const res = await fetchApi<StaticAirport[]>(`${R2_BUCKET_URL}/airports_${latestManifest.airportsVersion}.json`, { cache: "no-store" });
+		await storeData(res, db.airports as EntityTable<any, "id">);
 	}
+	setStatus?.((prev) => ({ ...prev, airports: true }));
 
 	if (latestManifest.firsVersion !== storedManifest?.versions.firsVersion) {
-		fetchApi<FIRFeature[]>(`${R2_BUCKET_URL}/firs_${latestManifest.firsVersion}.json`, {
-			cache: "no-store",
-		}).then(async (res) => {
-			const entries: DexieFeature[] = res.map((f) => ({
-				id: f.properties.id,
-				feature: f,
-			}));
-			await storeData(entries, db.firs as EntityTable<any, "id">);
-			setStatus?.((prev) => ({ ...prev, firs: true }));
-		});
+		const res = await fetchApi<FIRFeature[]>(`${R2_BUCKET_URL}/firs_${latestManifest.firsVersion}.json`, { cache: "no-store" });
+		const entries: DexieFeature[] = res.map((f) => ({ id: f.properties.id, feature: f }));
+		await storeData(entries, db.firs as EntityTable<any, "id">);
 	}
+	setStatus?.((prev) => ({ ...prev, firs: true }));
 
 	if (latestManifest.traconsVersion !== storedManifest?.versions.traconsVersion) {
-		fetchApi<SimAwareTraconFeature[]>(`${R2_BUCKET_URL}/tracons_${latestManifest.traconsVersion}.json`, {
-			cache: "no-store",
-		}).then(async (res) => {
-			const entries: DexieFeature[] = res.map((f) => ({
-				id: typeof f.properties.prefix === "string" ? f.properties.prefix : f.properties.prefix.join(":"),
-				feature: f,
-			}));
-			await storeData(entries, db.tracons as EntityTable<any, "id">);
-			setStatus?.((prev) => ({ ...prev, tracons: true }));
-		});
+		const res = await fetchApi<SimAwareTraconFeature[]>(`${R2_BUCKET_URL}/tracons_${latestManifest.traconsVersion}.json`, { cache: "no-store" });
+		const entries: DexieFeature[] = res.map((f) => ({
+			id: typeof f.properties.prefix === "string" ? f.properties.prefix : f.properties.prefix.join(":"),
+			feature: f,
+		}));
+		await storeData(entries, db.tracons as EntityTable<any, "id">);
 	}
+	setStatus?.((prev) => ({ ...prev, tracons: true }));
 
 	if (latestManifest.airlinesVersion !== storedManifest?.versions.airlinesVersion) {
-		fetchApi<StaticAirline[]>(`${R2_BUCKET_URL}/airlines_${latestManifest.airlinesVersion}.json`, {
-			cache: "no-store",
-		}).then(async (res) => {
-			await storeData(res, db.airlines as EntityTable<any, "id">);
-			setStatus?.((prev) => ({ ...prev, airlines: true }));
-		});
+		const res = await fetchApi<StaticAirline[]>(`${R2_BUCKET_URL}/airlines_${latestManifest.airlinesVersion}.json`, { cache: "no-store" });
+		await storeData(res, db.airlines as EntityTable<any, "id">);
 	}
+	setStatus?.((prev) => ({ ...prev, airlines: true }));
 
 	if (latestManifest.aircraftsVersion !== storedManifest?.versions.aircraftsVersion) {
-		fetchApi<StaticAircraftType[]>(`${R2_BUCKET_URL}/aircrafts_${latestManifest.aircraftsVersion}.json`, {
-			cache: "no-store",
-		}).then(async (res) => {
-			await storeData(res, db.aircrafts as EntityTable<StaticAircraftType, "icao">);
-			setStatus?.((prev) => ({ ...prev, aircrafts: true }));
-		});
+		const res = await fetchApi<StaticAircraftType[]>(`${R2_BUCKET_URL}/aircrafts_${latestManifest.aircraftsVersion}.json`, { cache: "no-store" });
+		await storeData(res, db.aircrafts as EntityTable<StaticAircraftType, "icao">);
 	}
+	setStatus?.((prev) => ({ ...prev, aircrafts: true }));
 
 	if (latestManifest.vatglassesVersion !== storedManifest?.versions.vatglassesVersion) {
-		fetchApi<VatglassesDataset[]>(`${R2_BUCKET_URL}/vatglasses_${latestManifest.vatglassesVersion}.json`, {
-			cache: "no-store",
-		}).then(async (res) => {
-			await storeData(res, db.vatglasses as EntityTable<VatglassesDataset, "code">);
-			setStatus?.((prev) => ({ ...prev, vatglasses: true }));
-		});
+		const res = await fetchApi<VatglassesDataset[]>(`${R2_BUCKET_URL}/vatglasses_${latestManifest.vatglassesVersion}.json`, { cache: "no-store" });
+		await storeData(res, db.vatglasses as EntityTable<VatglassesDataset, "code">);
 	}
+	setStatus?.((prev) => ({ ...prev, vatglasses: true }));
 
 	const ngData = await ensureNavigraphData(storedManifest?.versions.navigraphCycle);
 	if (ngData) {
