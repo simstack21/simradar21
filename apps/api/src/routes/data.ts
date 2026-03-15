@@ -5,6 +5,7 @@ import { ensureUser, getFlightsByCallsign, getFlightsByRegistration, getPilotRep
 import { getNavigraphPackage } from "../services/navigraph.js";
 import { bookingsStore } from "../stores/bookings.js";
 import { getCachedImgs } from "../stores/planespotters.js";
+import { getMemberRatingByCid } from "../stores/ratings.js";
 import { getDataVersions } from "../stores/static.js";
 import { getVatglassesDynamicOwnership } from "../stores/vatglasses.js";
 
@@ -133,6 +134,23 @@ const dataRoutes: FastifyPluginAsync = async (app) => {
 	app.get("/navigraph/packages/public", async () => {
 		return await getNavigraphPackage("outdated");
 	});
+
+	app.get(
+		"/member/ratings/:cid",
+		{
+			schema: {
+				params: {
+					type: "object",
+					properties: { cid: { type: "string", minLength: 6 } },
+					required: ["cid"],
+				},
+			},
+		},
+		async (request) => {
+			const { cid } = request.params as { cid: string };
+			return await getMemberRatingByCid(cid);
+		},
+	);
 };
 
 export default dataRoutes;

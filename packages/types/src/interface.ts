@@ -67,7 +67,6 @@ export interface PilotLong {
 	qnh_mb: number;
 	flight_plan: PilotFlightPlan | null;
 	times: PilotTimes | null;
-	user_ratings: UserRatings | null;
 	logon_time: Date;
 	last_update: Date;
 	live: "pre" | "live" | "off";
@@ -166,7 +165,6 @@ export interface ControllerLong {
 	facility: number;
 	atis: string[] | null;
 	connections: number;
-	user_ratings: UserRatings | null;
 	server: string;
 	visual_range: number;
 	logon_time: number;

@@ -33,7 +33,6 @@ model Pilot {
     qnh_mb         Float
     flight_plan    Json?
     times          Json?
-    user_ratings   Json?
     overrides      Json?
     logon_time     DateTime
     last_update    DateTime        @default(now())

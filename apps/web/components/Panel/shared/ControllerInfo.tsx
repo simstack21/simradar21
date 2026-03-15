@@ -1,15 +1,16 @@
 "use client";
 
 import type { FIRFeature, SimAwareTraconFeature, StaticAirport } from "@sr24/types/db";
-import type { ControllerLong } from "@sr24/types/interface";
+import type { ControllerLong, UserRatings } from "@sr24/types/interface";
 import { ChartNoAxesCombinedIcon, CheckIcon, CopyIcon, EyeIcon, EyeOffIcon, TowerControlIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BadgeControllerRating, BadgePilotRating, BadgeUserHours } from "@/components/shared/Badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { fetchApi } from "@/lib/api";
 import { getOnlineTime } from "@/lib/helpers";
 import { getControllerColor } from "@/lib/panels";
 import { getControllerRatingLong, getControllerRatingShort, getPilotRatingShort } from "@/lib/ratings";
@@ -25,6 +26,14 @@ export default function ControllerInfo({
 }) {
 	const [showAtis, setShowAtis] = useState(false);
 	const [copied, setCopied] = useState(false);
+
+	const [userRatings, setUserRatings] = useState<UserRatings | null>(null);
+
+	useEffect(() => {
+		fetchApi<UserRatings>(`/data/member/ratings/${controller.cid}`)
+			.then((data) => setUserRatings(data))
+			.catch(() => setUserRatings(null));
+	}, [controller.cid]);
 
 	const atis = controller.atis?.join("\n") || "No ATIS information available.";
 
@@ -51,15 +60,9 @@ export default function ControllerInfo({
 					<span>{getControllerName(controller.facility, sector, airport)}</span>
 					{controller.facility !== -1 && (
 						<div className="flex items-center gap-2 -ml-0.5">
-							<BadgeUserHours hours={controller.user_ratings?.controller_hours || 0} className="no-underline" />
-							<BadgeControllerRating
-								rating={controller.user_ratings?.controller_rating}
-								text={getControllerRatingShort(controller.user_ratings?.controller_rating)}
-							/>
-							<BadgePilotRating
-								rating={controller.user_ratings?.pilot_rating || 0}
-								text={getPilotRatingShort(controller.user_ratings?.pilot_rating)}
-							/>
+							<BadgeUserHours hours={userRatings?.controller_hours || 0} className="no-underline" />
+							<BadgeControllerRating rating={userRatings?.controller_rating} text={getControllerRatingShort(userRatings?.controller_rating)} />
+							<BadgePilotRating rating={userRatings?.pilot_rating || 0} text={getPilotRatingShort(userRatings?.pilot_rating)} />
 						</div>
 					)}
 				</CardDescription>
@@ -87,7 +90,7 @@ export default function ControllerInfo({
 				</div>
 				<div className="flex flex-col">
 					<span className="text-muted-foreground">Controller Rating</span>
-					<span>{getControllerRatingLong(controller.user_ratings?.controller_rating)}</span>
+					<span>{getControllerRatingLong(userRatings?.controller_rating)}</span>
 				</div>
 				{showAtis && (
 					<div className="absolute inset-0 z-10 bg-muted">

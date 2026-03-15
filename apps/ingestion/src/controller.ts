@@ -2,9 +2,7 @@ import type { ControllerDelta, ControllerLong, ControllerMerged, ControllerShort
 import type { VatsimData } from "@sr24/types/vatsim";
 import { haversineDistance } from "./utils/helpers.js";
 import { findAirportId, findFirId, findFirsByUir, findTraconId, reduceCallsign, resolveVatglassesPos } from "./utils/prefixes.js";
-import { getUserRatings } from "./utils/ratings.js";
 
-let cachedLongs: ControllerLong[] = [];
 let cached: ControllerMerged[] = [];
 let updated: ControllerMerged[] = [];
 let added: ControllerMerged[] = [];
@@ -15,7 +13,6 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 			if (controller.facility === 0 && !controller.callsign.includes("OBS")) return null;
 			if (controller.frequency === "199.998") return null;
 
-			const cachedController = cachedLongs.find((c) => c.cid === String(controller.cid));
 			return {
 				callsign: controller.callsign,
 				frequency: parseFrequencyToKHz(controller.frequency),
@@ -26,7 +23,6 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 				name: controller.name,
 				server: controller.server,
 				visual_range: controller.visual_range,
-				user_ratings: cachedController?.user_ratings || null,
 				logon_time: new Date(controller.logon_time).getTime(),
 				timestamp: new Date(controller.last_updated).getTime(),
 			};
@@ -34,15 +30,6 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 		.filter((c) => c !== null);
 
 	getConnectionsCount(vatsimData, controllersLong, pilotsLong);
-
-	// const uniqueCids = Array.from(new Set(controllersLong.filter((c) => c.user_ratings === null).map((c) => c.cid)));
-	// const userRatings = await getUserRatings(uniqueCids);
-	// for (const controller of controllersLong) {
-	// 	const ratings = userRatings.get(controller.cid);
-	// 	if (ratings) {
-	// 		controller.user_ratings = ratings;
-	// 	}
-	// }
 
 	vatsimData.atis.forEach((atis) => {
 		controllersLong.push({
@@ -55,7 +42,6 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 			name: atis.name,
 			server: atis.server,
 			visual_range: atis.visual_range,
-			user_ratings: null,
 			logon_time: new Date(atis.logon_time).getTime(),
 			timestamp: new Date(atis.last_updated).getTime(),
 		});
@@ -63,8 +49,6 @@ export async function mapControllers(vatsimData: VatsimData, pilotsLong: PilotLo
 
 	const merged = await mergeControllers(controllersLong);
 	setControllerDelta(merged);
-
-	cachedLongs = controllersLong;
 
 	return [controllersLong, merged];
 }

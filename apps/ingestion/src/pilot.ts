@@ -5,7 +5,6 @@ import type { PilotDelta, PilotFlightPlan, PilotLong, PilotShort, PilotTimes } f
 import type { VatsimData, VatsimPilot, VatsimPilotFlightPlan, VatsimPrefile } from "@sr24/types/vatsim";
 import { parseRouteString } from "./navigraph.js";
 import { fromLonLat, haversineDistance } from "./utils/helpers.js";
-import { getUserRatings } from "./utils/ratings.js";
 
 const TAXI_TIME_MS = 5 * 60 * 1000;
 
@@ -54,7 +53,6 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 					flight_plan: await mapPilotFlightPlan(pilot.flight_plan),
 					logon_time: new Date(pilot.logon_time),
 					times: null,
-					user_ratings: cachedPilot.user_ratings || null,
 					overrides: cachedPilot.overrides || null,
 					live: "live",
 				};
@@ -71,7 +69,6 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 					flight_plan: existing?.flight_plan || (await mapPilotFlightPlan(pilot.flight_plan)),
 					logon_time: new Date(pilot.logon_time),
 					times: existing?.times || null,
-					user_ratings: existing?.user_ratings || null,
 					live: "live",
 					overrides: existing?.overrides || null,
 					...updatedFields,
@@ -125,7 +122,6 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 				qnh_mb: 1013,
 				flight_plan: await mapPilotFlightPlan(prefile.flight_plan),
 				times: null,
-				user_ratings: null,
 				overrides: null,
 				logon_time: new Date(prefile.last_updated),
 				last_update: new Date(prefile.last_updated),
@@ -147,15 +143,6 @@ export async function mapPilots(vatsimData: VatsimData): Promise<PilotLong[]> {
 			newPilotsLong.push(p);
 		}
 	}
-
-	// const uniqueCids = Array.from(new Set(newPilotsLong.filter((p) => p.user_ratings === null).map((p) => p.cid)));
-	// const userRatings = await getUserRatings(uniqueCids);
-	// for (const pilot of newPilotsLong) {
-	// 	const ratings = userRatings.get(pilot.cid);
-	// 	if (ratings) {
-	// 		pilot.user_ratings = ratings;
-	// 	}
-	// }
 
 	await rdsSetMultiple(newPilotsLong, "pilot", (p) => p.id, 12 * 60 * 60);
 
