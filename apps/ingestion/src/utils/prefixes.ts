@@ -115,7 +115,10 @@ export function findTraconId(callsign: string): string | null {
 	let bestLen = 0;
 
 	for (const prefix in traconPrefixes) {
-		if (matchesPrefix(callsign, prefix) && prefix.length > bestLen) {
+		const prefixRoot = prefix.split("_")[0];
+		const matches = matchesPrefix(callsign, prefix) || (prefixRoot.length > 0 && callsign.startsWith(`${prefixRoot}_`));
+        
+		if (matches && prefix.length > bestLen) {
 			bestMatch = traconPrefixes[prefix].prefix;
 			bestLen = prefix.length;
 		}
