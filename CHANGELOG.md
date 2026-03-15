@@ -3,7 +3,9 @@
 # [0.9.1-beta]
 
 ## New Features
-- [BETA]: VATGlasses integration with improved performance over current solutions + auto tracking
+- [BETA]: VATGlasses integration
+- [BETA]: VATGlasses auto tracking, when logged in
+- [BETA]: Improved VATGlasses performance and UX over current solutions (esp. on mobile devices)
 - Display planespotters.net aircraft images for valid registrations
 - Display users' hours and ratings at a glance
 

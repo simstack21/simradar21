@@ -1,5 +1,6 @@
 "use client";
 
+import useMediaQuery from "@mui/material/useMediaQuery";
 import {
 	EyeIcon,
 	EyeOffIcon,
@@ -27,11 +28,26 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { useFiltersStore, useMapPageStore, useMapVisibilityStore } from "@/storage/zustand";
 import { mapService } from "../../lib";
 
 export default function Controls() {
 	const { isHidden, vatglasses } = useMapVisibilityStore();
+	const isMobile = useMediaQuery("(max-width: 1024px)");
+
+	if (isMobile) {
+		return (
+			<div className="flex flex-col gap-2">
+				{vatglasses && !isHidden && <SliderVatglasses />}
+				<div className="flex items-center justify-center gap-4">
+					<SwitchVisibility />
+					<SwitchVatglasses />
+					{!isHidden && <ButtonGroupControls />}
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex flex-col gap-2">
@@ -148,6 +164,8 @@ const ButtonGroupControls = () => {
 	const { manualPage, setManualPage } = useMapPageStore();
 	const [isFullscreen, setIsFullscreen] = useState(false);
 
+	const isMobile = useMediaQuery("(max-width: 1024px)");
+
 	const onFullscreen = async () => {
 		try {
 			if (!document.fullscreenElement) {
@@ -173,69 +191,81 @@ const ButtonGroupControls = () => {
 
 	return (
 		<div className="inline-flex w-fit -space-x-px rounded-md shadow-xs rtl:space-x-reverse">
+			{!isMobile && (
+				<>
+					<Tooltip>
+						<TooltipTrigger
+							delay={100}
+							render={
+								<Button className="rounded-none rounded-l-md shadow-none focus-visible:z-10" variant="outline" onClick={onFullscreen}>
+									{isFullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
+									<span className="sr-only">Fullscreen</span>
+								</Button>
+							}
+						></TooltipTrigger>
+						<TooltipContent className="pr-1.5">
+							<div className="flex items-center gap-2">
+								Fullscreen <Kbd>F11</Kbd>
+							</div>
+						</TooltipContent>
+					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger
+							delay={100}
+							render={
+								<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => mapService.setView({ zoomStep: 1 })}>
+									<PlusIcon />
+									<span className="sr-only">Zoom In</span>
+								</Button>
+							}
+						></TooltipTrigger>
+						<TooltipContent>
+							<div className="flex items-center gap-2">Zoom In</div>
+						</TooltipContent>
+					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger
+							delay={100}
+							render={
+								<Button
+									className="rounded-none shadow-none focus-visible:z-10"
+									variant="outline"
+									onClick={() => mapService.setView({ zoomStep: -1 })}
+								>
+									<MinusIcon />
+									<span className="sr-only">Zoom Out</span>
+								</Button>
+							}
+						></TooltipTrigger>
+						<TooltipContent>
+							<div className="flex items-center gap-2">Zoom Out</div>
+						</TooltipContent>
+					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger
+							delay={100}
+							render={
+								<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={onCenterOnLocation}>
+									<LocateIcon />
+									<span className="sr-only">Locate</span>
+								</Button>
+							}
+						></TooltipTrigger>
+						<TooltipContent>
+							<div className="flex items-center gap-2">Locate</div>
+						</TooltipContent>
+					</Tooltip>
+				</>
+			)}
 			<Tooltip>
 				<TooltipTrigger
 					delay={100}
 					render={
-						<Button className="rounded-none rounded-l-md shadow-none focus-visible:z-10" variant="outline" onClick={onFullscreen}>
-							{isFullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
-							<span className="sr-only">Fullscreen</span>
-						</Button>
-					}
-				></TooltipTrigger>
-				<TooltipContent className="pr-1.5">
-					<div className="flex items-center gap-2">
-						Fullscreen <Kbd>F11</Kbd>
-					</div>
-				</TooltipContent>
-			</Tooltip>
-			<Tooltip>
-				<TooltipTrigger
-					delay={100}
-					render={
-						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => mapService.setView({ zoomStep: 1 })}>
-							<PlusIcon />
-							<span className="sr-only">Zoom In</span>
-						</Button>
-					}
-				></TooltipTrigger>
-				<TooltipContent>
-					<div className="flex items-center gap-2">Zoom In</div>
-				</TooltipContent>
-			</Tooltip>
-			<Tooltip>
-				<TooltipTrigger
-					delay={100}
-					render={
-						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => mapService.setView({ zoomStep: -1 })}>
-							<MinusIcon />
-							<span className="sr-only">Zoom Out</span>
-						</Button>
-					}
-				></TooltipTrigger>
-				<TooltipContent>
-					<div className="flex items-center gap-2">Zoom Out</div>
-				</TooltipContent>
-			</Tooltip>
-			<Tooltip>
-				<TooltipTrigger
-					delay={100}
-					render={
-						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={onCenterOnLocation}>
-							<LocateIcon />
-							<span className="sr-only">Locate</span>
-						</Button>
-					}
-				></TooltipTrigger>
-				<TooltipContent>
-					<div className="flex items-center gap-2">Locate</div>
-				</TooltipContent>
-			</Tooltip>
-			<Tooltip>
-				<TooltipTrigger
-					delay={100}
-					render={
-						<Button className="rounded-none shadow-none focus-visible:z-10" variant="outline" onClick={() => mapService.setView({ rotation: 0 })}>
+						<Button
+							className={cn("rounded-none shadow-none focus-visible:z-10", isMobile && "rounded-l-md")}
+							variant="outline"
+							onClick={() => mapService.setView({ rotation: 0 })}
+						>
 							<RefreshCcwDotIcon />
 							<span className="sr-only">Reset Rotation</span>
 						</Button>
