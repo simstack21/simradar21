@@ -1,5 +1,5 @@
 import { rdsGetSingle, rdsSetSingle } from "@sr24/db/redis";
-import type { SimAwareTraconFeature, VatSpyAirport, VatSpyFir, VatSpyUir } from "@sr24/types/db";
+import type { SimAwareTraconFeature, TraconPrefix, VatSpyAirport, VatSpyFir, VatSpyUir } from "@sr24/types/db";
 import axios from "axios";
 
 const RELEASE_URL = "https://api.github.com/repos/vatsimnetwork/vatspy-data-project/releases/latest";
@@ -156,10 +156,10 @@ async function storeFirPrefixes(firs: VatSpyFir[]): Promise<void> {
 }
 
 async function storeTraconPrefixes(airports: VatSpyAirport[]): Promise<void> {
-	const prefixes: Record<string, string> = {};
+	const prefixes: Record<string, TraconPrefix> = {};
 
 	for (const airport of airports) {
-		prefixes[airport.lid] = airport.icao;
+		prefixes[airport.lid] = { prefix: airport.icao, countryCode: airport.icao.slice(0, 2) };
 	}
 
 	const features = (await rdsGetSingle("static_tracons:all")) as SimAwareTraconFeature[] | undefined;
@@ -172,9 +172,20 @@ async function storeTraconPrefixes(airports: VatSpyAirport[]): Promise<void> {
 		const featurePrefixes = f.properties.prefix;
 
 		if (typeof featurePrefixes === "string") {
-			prefixes[featurePrefixes] = featurePrefixes;
+			const existing = prefixes[featurePrefixes];
+			if (existing) {
+				existing.prefix = featurePrefixes;
+			} else {
+				prefixes[featurePrefixes] = { prefix: featurePrefixes, countryCode: featurePrefixes.slice(0, 2) };
+			}
 		} else {
-			prefixes[featurePrefixes.join(":")] = featurePrefixes.join(":");
+			const joined = featurePrefixes.join(":");
+			const existing = prefixes[joined];
+			if (existing) {
+				existing.prefix = joined;
+			} else {
+				prefixes[joined] = { prefix: joined, countryCode: joined.slice(0, 2) };
+			}
 		}
 	});
 

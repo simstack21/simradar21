@@ -106,7 +106,7 @@ export async function getVatglassesSectors(
 			const owner = (as.key ? dynamicForCode?.[as.key] : undefined) ?? as.owner;
 			const firstActiveOwner = owner?.find((o) => activeForCode.has(o));
 			if (firstActiveOwner === c.posId) {
-				rawSectors.push(...as.sectors.filter((s) => !s.runways));
+				rawSectors.push(...as.sectors);
 			}
 		}
 	}

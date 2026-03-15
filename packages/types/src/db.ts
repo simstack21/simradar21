@@ -194,3 +194,8 @@ export interface VatglassesDataset {
 	groups: Record<string, VatglassesGroup>;
 	airports?: Record<string, VatglassesAirport>;
 }
+
+export type TraconPrefix = {
+	prefix: string;
+	countryCode: string;
+};

@@ -1,5 +1,5 @@
 import { rdsGetSingle } from "@sr24/db/redis";
-import type { VatglassesDataset } from "@sr24/types/db";
+import type { TraconPrefix, VatglassesDataset } from "@sr24/types/db";
 
 let currentVatspyVersion: string | null = null;
 let currentAirportsVersion: string | null = null;
@@ -8,9 +8,9 @@ let currentVatglassesSha: string | null = null;
 let firPrefixes: Record<string, string> = {};
 let airportPrefixes: Record<string, string> = {};
 let uirPrefixes: Record<string, string[]> = {};
-let traconPrefixes: Record<string, string> = {};
+let traconPrefixes: Record<string, TraconPrefix> = {};
 
-// index: 2-char / 3-char / full code / hyphen-split segment → dataset
+const traconCodeToCountry = new Map<string, string>();
 const vatglassesIndex = new Map<string, VatglassesDataset>();
 
 export async function ensureSectorPrefixes(): Promise<void> {
@@ -23,9 +23,13 @@ export async function ensureSectorPrefixes(): Promise<void> {
 			firPrefixes = newFirPrefixes;
 		}
 
-		const newTraconPrefixes = (await rdsGetSingle("static_tracons:prefixes")) as Record<string, string> | undefined;
+		const newTraconPrefixes = (await rdsGetSingle("static_tracons:prefixes")) as Record<string, TraconPrefix> | undefined;
 		if (newTraconPrefixes) {
 			traconPrefixes = newTraconPrefixes;
+			traconCodeToCountry.clear();
+			for (const [key, value] of Object.entries(traconPrefixes)) {
+				traconCodeToCountry.set(key, value.countryCode.toLowerCase());
+			}
 		}
 
 		const newUirPrefixes = (await rdsGetSingle("static_uirs:prefixes")) as Record<string, string[]> | undefined;
@@ -63,14 +67,19 @@ export async function ensureSectorPrefixes(): Promise<void> {
 	}
 }
 
-function resolveVatglassesDataset(code: string): VatglassesDataset | null {
+function resolveVatglassesDataset(code: string, countryCode?: string): VatglassesDataset | null {
 	const lower = code.toLowerCase();
+	if (countryCode) {
+		const byCountry = vatglassesIndex.get(countryCode.toLowerCase());
+		if (byCountry) return byCountry;
+	}
 	return vatglassesIndex.get(lower.slice(0, 2)) ?? vatglassesIndex.get(lower.slice(1, 4)) ?? vatglassesIndex.get(lower) ?? null;
 }
 
 export function resolveVatglassesPos(callsign: string, frequency: number, mergedId: string): { datasetId: string; posId: string } | null {
 	const code = mergedId.replace(/^[^_]+_/, "");
-	const dataset = resolveVatglassesDataset(code);
+	const countryCode = traconCodeToCountry.get(code);
+	const dataset = resolveVatglassesDataset(code, countryCode);
 	if (!dataset) return null;
 
 	for (const [posId, pos] of Object.entries(dataset.positions)) {
@@ -107,7 +116,7 @@ export function findTraconId(callsign: string): string | null {
 
 	for (const prefix in traconPrefixes) {
 		if (matchesPrefix(callsign, prefix) && prefix.length > bestLen) {
-			bestMatch = traconPrefixes[prefix];
+			bestMatch = traconPrefixes[prefix].prefix;
 			bestLen = prefix.length;
 		}
 	}
