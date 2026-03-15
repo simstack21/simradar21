@@ -262,8 +262,10 @@ export function UpdateModal() {
 	useEffect(() => {
 		const stored = localStorage.getItem(VERSION_KEY);
 		if (!stored) {
+			localStorage.removeItem("simradar21-db");
 			setModal("welcome");
 		} else if (stored !== APP_VERSION) {
+			localStorage.removeItem("simradar21-db");
 			setModal("changelog");
 		}
 	}, []);
