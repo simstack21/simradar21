@@ -16,6 +16,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import ChangelogImage from "@/assets/images/changelogs/v0.9.2-beta.png";
 import Simradar21Logo from "@/assets/images/logos/simradar21_icon.svg";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -202,7 +203,55 @@ function ChangelogContent() {
 			</div>
 			<ScrollArea className="flex flex-col p-2 overflow-hidden">
 				<div className="flex flex-col gap-4">
+					<Image src={ChangelogImage.src} width={1280} height={720} alt="Changelog Image" className="rounded-lg" />
 					<div className="flex flex-col gap-2">
+						<span className="flex items-center gap-2 text-lg font-bold">
+							<FlameIcon size={20} className="stroke-yellow" />
+							New Features
+						</span>
+						<ul className="list-disc list-outside pl-7 text-muted-foreground text-sm">
+							<li>
+								[<span className="text-red">BETA</span>] <span className="text-yellow">VATGlasses</span> integration with improved performance and UX,
+								especially on mobile devices. <br /> Including auto tracking when logged in.
+							</li>
+							<li>
+								Display <span className="text-yellow">planespotters.net</span> aircraft images for valid registrations.
+							</li>
+							<li>
+								Display users' <span className="text-yellow">hours and ratings</span> at a glance.
+							</li>
+						</ul>
+					</div>
+					<div className="flex flex-col gap-2">
+						<span className="flex items-center gap-2 text-lg font-bold">
+							<CircleAlertIcon size={20} className="stroke-red shrink-0" />
+							Major Fixes
+						</span>
+						<ul className="list-disc list-outside pl-7 text-muted-foreground text-sm">
+							<li>Fix missing and incorrect FIRs</li>
+							<li>Fix missing and incorrect UIRs</li>
+							<li>Fix missing and incorrect TRACONs</li>
+							<li>Fix missing TWR, GND, DEL (especially in US airspace)</li>
+							<li>Fix missing pilots after long idle sessions</li>
+						</ul>
+					</div>
+					<div className="flex flex-col gap-2">
+						<span className="flex items-center gap-2 text-lg font-bold">
+							<BugIcon size={20} className="stroke-green" />
+							Improvements & Fixes
+						</span>
+						<ul className="list-disc list-outside pl-7 text-muted-foreground text-sm">
+							<li>Fix temporary live feed disconnects caused by data processing bug</li>
+							<li>Fix cruise altitude rounding to display exact thousands</li>
+							<li>Fix replay page layout on mobile devices</li>
+							<li>Fix booking page to show correct times</li>
+							<li>Fix/stop map interactions when hovering over an overlay</li>
+							<li>Fix disappearing airport icons on bookings page</li>
+							<li>Fix world-wrapping coordinates for flight tracks and Navigraph routes</li>
+							<li>Improve live feed revalidation logic</li>
+						</ul>
+					</div>
+					{/* <div className="flex flex-col gap-2">
 						<span className="flex items-center gap-2 text-lg font-bold">
 							<CircleAlertIcon size={20} className="stroke-red shrink-0" />
 							Known Issues
@@ -213,27 +262,7 @@ function ChangelogContent() {
 								persists, simply reload the page for a temporary fix.
 							</li>
 						</ul>
-					</div>
-					{/* <div className="flex flex-col gap-2">
-						<span className="flex items-center gap-2 text-lg font-bold">
-							<FlameIcon size={20} className="stroke-yellow" />
-							New Features
-						</span>
-						<ul className="list-disc list-outside pl-7 text-muted-foreground text-sm">
-							<li>Some pilot markers might not be updated correctly after long idle sessions. Simply reload the page for a temporary fix.</li>
-						</ul>
 					</div> */}
-					<div className="flex flex-col gap-2">
-						<span className="flex items-center gap-2 text-lg font-bold">
-							<BugIcon size={20} className="stroke-green" />
-							Improvements & Fixes
-						</span>
-						<ul className="list-disc list-outside pl-7 text-muted-foreground text-sm">
-							<li>Fix pilot route highlighting</li>
-							<li>Potential fix for missing pilot markers after long idle sessions</li>
-							<li>Add link to Github milestones</li>
-						</ul>
-					</div>
 				</div>
 				<ScrollBar />
 			</ScrollArea>
