@@ -73,7 +73,7 @@ function resolveVatglassesDataset(code: string, countryCode?: string): Vatglasse
 		const byCountry = vatglassesIndex.get(countryCode.toLowerCase());
 		if (byCountry) return byCountry;
 	}
-	return vatglassesIndex.get(lower.slice(0, 2)) ?? vatglassesIndex.get(lower.slice(1, 4)) ?? vatglassesIndex.get(lower) ?? null;
+	return vatglassesIndex.get(lower.slice(0, 2)) ?? vatglassesIndex.get(lower.slice(1, 4)) ?? vatglassesIndex.get(lower.slice(0, 4)) ?? null;
 }
 
 export function resolveVatglassesPos(callsign: string, frequency: number, mergedId: string): { datasetId: string; posId: string } | null {
