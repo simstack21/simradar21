@@ -114,7 +114,7 @@ export class ControllerService {
 		if (type === "tracon" || type === "fir") {
 			const source = type === "tracon" ? this.traconSource : this.firSource;
 			const multiFeature = source.getFeatureById(id);
-			if (multiFeature) {
+			if (multiFeature && !multiFeature.get("isVatglasses")) {
 				multiFeature.set(event, hovered);
 			} else if (this.vatglassesEnabled) {
 				this.vatglassesService.hoverSector(feature, hovered, event);
@@ -178,13 +178,12 @@ export class ControllerService {
 						labelFeatures.push(label);
 					}
 
-					// show only sector feature when no vatglasses or no vatglasses dataset
-					if (!this.vatglassesEnabled || this.needsVatglassesFallback(c)) {
-						if (tempSector) {
-							traconFeatures.push(tempSector);
-						} else if (tracon) {
-							traconFeatures.push(tracon);
+					const traconFeature = tempSector || tracon;
+					if (traconFeature) {
+						if (this.vatglassesEnabled && !this.needsVatglassesFallback(c)) {
+							traconFeature.set("isVatglasses", true);
 						}
+						traconFeatures.push(traconFeature);
 					}
 
 					return;
